@@ -1,0 +1,1 @@
+ssh -i ~/.ssh/mini.key ubuntu@ananas-project.dns-dynamic.net

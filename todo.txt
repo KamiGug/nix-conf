@@ -1,0 +1,5 @@
+ssh module
+move de out of system-modules
+niri
+plasma home manager
+

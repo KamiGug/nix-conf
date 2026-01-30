@@ -1,0 +1,6 @@
+keys:
+  - &secret_key age1dmawdc96sk8yent9u9wvmwzxk6ean4zpkq6n7msx952ppnnxj90q5utu5u
+
+creation_rules:
+  - path_regex: secrets\.ya?ml
+    age: *secret_key

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#todo: read first argument for context of build
+#todo: add switch to go into bash at build
+
+#todo: add timestamp + rand as a variable
+timestamp="$(date +%s)"
+name="test-tmp-${timestamp}"
+docker build -t "${name}" . && docker run --rm --name "${name}" -it "${name}"
+docker rmi "${name}" > /dev/null 2>&1

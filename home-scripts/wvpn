@@ -1,0 +1,3 @@
+#!/bin/sh
+cd ~/.vpn
+sudo openvpn --config dsd-cloud.ovpn

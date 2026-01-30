@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+session_name="${BACKGROUND_SESSION_NAME:-background}"
+cmd="${SHELL:-/bin/zsh}"
+window_name=""
+
+positional=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -n|--name)
+      window_name="$2"
+      shift 2
+      ;;
+
+    -s|--session)
+      session_name="$2"
+      shift 2
+      ;;
+
+    -c|--cmd)
+      cmd="$2"
+      shift 2
+      ;;
+
+    --)
+      shift
+      break
+      ;;
+
+    --*)
+      echo "Unknown option: $1"
+      ;;
+
+    -*)
+      break
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
+  esac
+done
+
+while getopts ":n:s:c:" opt; do
+  case $opt in
+    n)
+      window_name="$OPTARG"
+      ;;
+    s)
+      session_name="$OPTARG"
+      ;;
+    c)
+      cmd="$OPTARG"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+    *)
+      echo "Option -$OPTARG requires an argument." >&2
+      ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+positional+=("$@")
+
+
+
+if [[ -z "$cmd" ]]; then
+  echo "Usage: add-to-tmux-session [--name <session-name>] <command>" >&2
+  return 1
+fi
+if ! tmux has-session -t "$session_name" 2>/dev/null; then
+  tmux new-session -d -s "$session_name"
+  fi
+if [[ -z "$window_name" ]]; then
+  window_name="$(basename "$(echo "$cmd" | awk '{print $1}')")-$(date +%s)"
+fi
+
+tmux new-window -t "$session_name" -n "$window_name" "$cmd"
+

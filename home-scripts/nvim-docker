@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --- determine git root (fallback to pwd) ---
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+    WORKDIR="$(git rev-parse --show-toplevel)"
+else
+    WORKDIR="$PWD"
+fi
+
+WORKDIR_NAME="$(basename "$WORKDIR")"
+
+# --- host XDG paths (data & cache only) ---
+NVIM_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvim"
+NVIM_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/nvim"
+NVIM_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/nvim"
+
+# --- lazygit ---
+LAZYGIT_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/lazygit"
+LAZYGIT_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/lazygit"
+LAZYGIT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/lazygit"
+
+# --- git config ---
+GITCONFIG_FILE="$HOME/.gitconfig"
+GITCONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/git"
+
+mkdir -p \
+  "$NVIM_DATA_DIR" \
+  "$NVIM_CACHE_DIR" \
+  "$LAZYGIT_CONFIG_DIR" \
+  "$LAZYGIT_DATA_DIR" \
+  "$NVIM_STATE_DIR" \
+  "$GITCONFIG_DIR" \
+  "$LAZYGIT_STATE_DIR"
+
+# --- image selection ---
+IMAGE_TAG="${IMAGE_TAG:-nvim-container:latest}"
+
+docker run --rm -it \
+  --name "nvim-${WORKDIR_NAME}" \
+  --user "$(id -u):$(id -g)" \
+  \
+  -e HOME=/home/nvimuser \
+  -e XDG_CONFIG_HOME=/home/nvimuser/.config \
+  -e XDG_DATA_HOME=/home/nvimuser/.local/share \
+  -e XDG_CACHE_HOME=/home/nvimuser/.cache \
+  -e XDG_STATE_HOME=/state \
+  \
+  -v /etc/passwd:/etc/passwd:ro \
+  -v /etc/group:/etc/group:ro \
+  \
+  -v "$NVIM_DATA_DIR:/home/nvimuser/.local/share/nvim" \
+  -v "$NVIM_CACHE_DIR:/home/nvimuser/.cache/nvim" \
+  -v "$NVIM_STATE_DIR:/state/nvim" \
+  \
+  -v "$WORKDIR:/work" \
+  -w /work \
+  \
+  -v "$LAZYGIT_CONFIG_DIR:/home/nvimuser/.config/lazygit:ro" \
+  -v "$LAZYGIT_DATA_DIR:/home/nvimuser/.local/share/lazygit" \
+  -v "$LAZYGIT_STATE_DIR:/state/lazygit" \
+  \
+  ${GITCONFIG_FILE:+-v "$GITCONFIG_FILE:/home/nvimuser/.gitconfig:ro"} \
+  ${GITCONFIG_DIR:+-v "$GITCONFIG_DIR:/home/nvimuser/.config/git:ro"} \
+  \
+  "$IMAGE_TAG" nvim "$@"

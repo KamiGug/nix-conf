@@ -1,0 +1,4 @@
+#!/bin/sh
+for i in "${@}"; do
+	lsof -ti :$i | xargs kill -9;
+done;
