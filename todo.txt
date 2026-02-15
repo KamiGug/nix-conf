@@ -2,4 +2,4 @@ ssh module
 move de out of system-modules
 niri
 plasma home manager
-
+.dev (bashly based project management) / taskfile + lefthook

@@ -1,6 +1,9 @@
-{ inputs, ... }:
-{
-  system = { config, pkgs, ... }: {
+{inputs, ...}: {
+  system = {
+    config,
+    pkgs,
+    ...
+  }: {
     users.users.root = {
       isNormalUser = false;
       shell = pkgs.zsh;
@@ -9,15 +12,21 @@
     programs.zsh.enable = true;
   };
 
-  home = { pkgs, config, homeModules, ... }: {
+  home = {
+    pkgs,
+    config,
+    homeModules,
+    ...
+  }: {
     home.username = "root";
     home.homeDirectory = "/root";
     home.stateVersion = "24.05";
 
     programs.home-manager.enable = true;
 
-#    apps.nvim.enable = true;
+    #    apps.nvim.enable = true;
     apps.zsh.enable = true;
+    apps.zed.enable = true;
     apps.git = {
       enable = true;
 
@@ -41,4 +50,3 @@
     # ];
   };
 }
-

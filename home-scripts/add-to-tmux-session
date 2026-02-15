@@ -79,4 +79,3 @@ if [[ -z "$window_name" ]]; then
 fi
 
 tmux new-window -t "$session_name" -n "$window_name" "$cmd"
-

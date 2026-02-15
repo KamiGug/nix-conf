@@ -2,9 +2,13 @@
   description = "My nix based OS configs";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/?ref=nixos-25.05";
 
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    flake-utils.url = "flake-utils";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -15,51 +19,96 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # niri = {
+    #   url = "github:niri-wm/niri";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    #   inputs.rust-overlay.follows = "";
+    # };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, sops-nix, ... }:
-    let inherit (self) outputs;
-      systems = [
-        "aarch64-linux"
-          "i686-linux"
-          "x86_64-linux"
-          "aarch64-darwin"
-          "x86_64-darwin"
-      ];
-      forAllSystems = nixpkgs.lib.genAttrs systems;
-      myUsers = import ./users/default.nix { inherit inputs; };
-      systemModules = import ./system-modules;
-      homeModules = import ./home-modules;
+  outputs = inputs @ {
+    self,
+    nixpkgs,
+    nixpkgs-stable,
+    nixpkgs-unstable,
+    flake-utils,
+    home-manager,
+    sops-nix,
+    ...
+  }:
+  let
+    myUsers = import ./users/default.nix { inherit inputs; };
+    systemModules = import ./system-modules;
+    homeModules = import ./home-modules;
+    helpers = import ./helpers;
+    myLib = import ./lib;
+  in
+
+  # Merge per-system outputs with global outputs
+  flake-utils.lib.eachDefaultSystem (system:
+    let
+      pkgs = nixpkgs.legacyPackages.${system};
     in {
-    # packages = forAllSystems (system: import ./pkgs nixpkgs.legacyPackages.${system});
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
+      devShells.default = pkgs.mkShell {
+        packages = with pkgs; [
+          sops
+          git
+          vim
+          openssh
+          go-task
+          lefthook
+          alejandra
+          statix
+          deadnix
+        ];
 
-      overlays = [ (import ./overlays { inherit inputs; }) ];
+        shellHook = ''
+          echo "NixOS admin shell for ${system}"
+        '';
+      };
 
+      formatter = pkgs.alejandra;
+    }
+  )
+  //
+  {
+    overlays = [
+      (import ./overlays { inherit inputs; })
+    ];
 
     nixosConfigurations = {
       kkbook = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";  # adjust if needed
+
         specialArgs = {
-          inherit inputs self outputs systemModules homeModules;
+          inherit inputs self systemModules homeModules myLib;
         };
 
-        modules = [
-          ./hosts/kkbook
-          ./system-modules/common.nix
-          ./system-modules/common-linux.nix
-          sops-nix.nixosModules.sops
-          myUsers.peon.system
-	  myUsers.root.system
-          
-	  home-manager.nixosModules.home-manager {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.peon = myUsers.peon.home;
-            home-manager.users.root = myUsers.root.home;
-	    home-manager.sharedModules = homeModules;
-          }
-        ];
+        modules =
+          helpers
+          ++ [
+            ./hosts/kkbook
+            ./system-modules/common.nix
+            ./system-modules/common-linux.nix
+            sops-nix.nixosModules.sops
+            myUsers.peon.system
+            myUsers.root.system
 
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.peon = myUsers.peon.home;
+              home-manager.users.root = myUsers.root.home;
+              home-manager.sharedModules =
+                homeModules
+                ++ [
+                  sops-nix.homeManagerModules.sops
+                ]
+                ++ helpers;
+            }
+          ];
       };
     };
   };

@@ -1,13 +1,13 @@
-{ pkgs, config, inputs, ...  }:
 {
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  pkgs,
+  # config,
+  # inputs,
+  ...
+}: {
+  nix.settings.experimental-features = ["nix-command" "flakes"];
   nixpkgs.config.allowUnfree = true;
 
-  sops = {
-    defaultSopsFile = ../secrets.yml;
-    age.keyFile = "/var/lib/sops-nix/key.txt";
-  };
-
+  home-manager.backupFileExtension = "bak";
   # sops.secrets.repo = {
   #   format = "yaml";
   #   sopsFile = ../secrets.yml;
@@ -18,7 +18,9 @@
   environment.systemPackages = with pkgs; [
     git
     tmux
-  #   curl
+    curl
+    wget
+    zed-editor
     neovim
   ];
 
@@ -46,8 +48,30 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  networking.firewall.allowedTCPPorts = [ 22 ];
+  networking.firewall.allowedTCPPorts = [22];
   networking.networkmanager.enable = true;
+
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        # Shows battery charge of connected devices on supported
+        # Bluetooth adapters. Defaults to 'false'.
+        Experimental = true;
+        # When enabled other devices can connect faster to us, however
+        # the tradeoff is increased power consumption. Defaults to
+        # 'false'.
+        FastConnectable = false;
+      };
+      Policy = {
+        # Enable all controllers when they are found. This includes
+        # adapters present on start as well as adapters that are plugged
+        # in later on. Defaults to 'true'.
+        AutoEnable = true;
+      };
+    };
+  };
 
   time.timeZone = "Europe/Warsaw";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -65,12 +89,10 @@
 
   services.xserver.enable = false;
 
-
-  # Configure keymap in X11
-  # services.xserver.xkb = {
-  #   layout = "pl";
-  #   variant = "";
-  # };
+  services.xserver.xkb = {
+    layout = "pl";
+    variant = "";
+  };
 
   # Configure console keymap
   console.keyMap = "pl";
@@ -78,4 +100,5 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
+  users.groups.config-editor = {};
 }

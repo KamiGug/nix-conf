@@ -1,9 +1,11 @@
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.apps.tmux;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.apps.tmux;
+in {
   options.apps.tmux = {
     enable = lib.mkEnableOption "tmux";
 

@@ -1,9 +1,13 @@
 [
   ./zsh.nix
   ./neovim-fhs.nix
-  # ./zed.nix
+  ./zed.nix
   ./lazygit.nix
   ./tmux.nix
-  ./git.nix 
+  ./git.nix
   ./terminal.nix
+  ./ssh.nix
+  ./de/plasma.nix
+  ./de/niri.nix
+  ./waybar.nix
 ]

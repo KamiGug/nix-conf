@@ -1,9 +1,11 @@
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.apps.lazygit;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.apps.lazygit;
+in {
   options.apps.lazygit = {
     enable = lib.mkEnableOption "lazygit";
 
@@ -26,24 +28,24 @@ in
 
       settings =
         lib.recursiveUpdate
-          (lib.optionalAttrs cfg.nvimRemote {
-            os = {
-              editPreset = "nvim-remote";
+        (lib.optionalAttrs cfg.nvimRemote {
+          os = {
+            editPreset = "nvim-remote";
 
-              edit = ''
-                nvr --remote-send '<CR><CMD>q<CR>:e<CMD>lua vim.cmd("e " .. {{filename}})<CR>'
-              '';
+            edit = ''
+              nvr --remote-send '<CR><CMD>q<CR>:e<CMD>lua vim.cmd("e " .. {{filename}})<CR>'
+            '';
 
-              open = ''
-                nvr --remote-send '<CR><CMD>q<CR><CMD>lua vim.cmd("e " .. {{filename}})<CR>'
-              '';
+            open = ''
+              nvr --remote-send '<CR><CMD>q<CR><CMD>lua vim.cmd("e " .. {{filename}})<CR>'
+            '';
 
-              editAtLine = ''
-                nvr --remote-send '<CR><CMD>q<CR><CMD>lua vim.cmd("e " .. {{filename}})<CR><CMD>{{line}}<CR>'
-              '';
-            };
-          })
-          cfg.extraSettings;
+            editAtLine = ''
+              nvr --remote-send '<CR><CMD>q<CR><CMD>lua vim.cmd("e " .. {{filename}})<CR><CMD>{{line}}<CR>'
+            '';
+          };
+        })
+        cfg.extraSettings;
     };
     programs.zsh.shellAliases = {
       lg = "lazygit";
@@ -54,4 +56,3 @@ in
     };
   };
 }
-
