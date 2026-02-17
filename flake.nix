@@ -36,80 +36,83 @@
     home-manager,
     sops-nix,
     ...
-  }:
-  let
-    myUsers = import ./users/default.nix { inherit inputs; };
+  }: let
+    myUsers = import ./users/default.nix {inherit inputs;};
     systemModules = import ./system-modules;
     homeModules = import ./home-modules;
     helpers = import ./helpers;
-    myLib = import ./lib;
+    myLib = import ./lib { pkgs = nixpkgs; };
   in
+    # Merge per-system outputs with global outputs
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        devShells.default = pkgs.mkShell {
+          packages = with pkgs; [
+            sops
+            git
+            vim
+            openssh
+            go-task
+            lefthook
+            alejandra
+            statix
+            deadnix
+          ];
 
-  # Merge per-system outputs with global outputs
-  flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in {
-      devShells.default = pkgs.mkShell {
-        packages = with pkgs; [
-          sops
-          git
-          vim
-          openssh
-          go-task
-          lefthook
-          alejandra
-          statix
-          deadnix
-        ];
-
-        shellHook = ''
-          echo "NixOS admin shell for ${system}"
-        '';
-      };
-
-      formatter = pkgs.alejandra;
-    }
-  )
-  //
-  {
-    overlays = [
-      (import ./overlays { inherit inputs; })
-    ];
-
-    nixosConfigurations = {
-      kkbook = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";  # adjust if needed
-
-        specialArgs = {
-          inherit inputs self systemModules homeModules myLib;
+          shellHook = ''
+            echo "NixOS admin shell for ${system}"
+          '';
         };
 
-        modules =
-          helpers
-          ++ [
-            ./hosts/kkbook
-            ./system-modules/common.nix
-            ./system-modules/common-linux.nix
-            sops-nix.nixosModules.sops
-            myUsers.peon.system
-            myUsers.root.system
+        formatter = pkgs.alejandra;
+      }
+    )
+    // {
+      overlays = [
+        (import ./overlays {inherit inputs;})
+      ];
 
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.peon = myUsers.peon.home;
-              home-manager.users.root = myUsers.root.home;
-              home-manager.sharedModules =
-                homeModules
-                ++ [
-                  sops-nix.homeManagerModules.sops
-                ]
-                ++ helpers;
-            }
-          ];
+      nixosConfigurations = {
+        kkbook = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+
+          specialArgs = {
+            inherit inputs self systemModules homeModules myLib;
+          };
+
+          modules =
+            helpers
+            ++ [
+              ./hosts/kkbook
+              ./system-modules/common.nix
+              ./system-modules/common-linux.nix
+              sops-nix.nixosModules.sops
+              myUsers.peon.system
+              myUsers.root.system
+
+              home-manager.nixosModules.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.users.peon = myUsers.peon.home;
+                home-manager.users.root = myUsers.root.home;
+                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
+                #   homeModules
+                #   ++ [sops-nix.homeManagerModules.sops]
+                #   ++ helpers
+                # );
+                home-manager.extraSpecialArgs = {inherit myLib;};
+                home-manager.sharedModules =
+                  homeModules
+                  ++ [
+                    sops-nix.homeManagerModules.sops
+                  ]
+                  ++ helpers;
+              }
+            ];
+        };
       };
     };
-  };
 }

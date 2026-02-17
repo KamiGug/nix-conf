@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }:
 with lib; let
@@ -20,26 +21,25 @@ in {
     home.packages = [
       pkgs.fuzzel
       pkgs.swaylock
+      pkgs.xwayland-satellite #for legacy :D
       # pkgs.niri
     ];
 
     apps.waybar = {
       enable = true;
 
-      configText = import ../../configs/waybar/config.json.nix {
-        launcher = "fuzzel";
-      };
-
-      styleText = import ../../configs/waybar/style.css.nix {
-        font = config.apps.using.terminalFont;
-      };
-    };
-
-    xdg.configFile."niri/config.kdl".text = import ../../configs/niri/config.kdl.nix {
-      terminal = config.apps.using.terminal;
-      status-bar = "waybar";
+      font = config.apps.using.terminalFont;
       launcher = "fuzzel";
-      lock = "swaylock";
+    };
+    xdg.configFile = myLib.template {
+      targetPrefix = "niri";
+      templateDir = ../../configs/niri;
+      replacements = {
+        terminal = config.apps.using.terminal;
+        launcher = "fuzzel";
+        status-bar = "waybar";
+        lock = "swaylock";
+      };
     };
   };
 }

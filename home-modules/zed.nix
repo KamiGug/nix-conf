@@ -21,7 +21,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     programs.zed-editor.enable = true;
-    programs.zed-editor.extensions = ["nix" "toml"];
+    programs.zed-editor.extensions = ["nix" "toml" "kdl"];
 
     programs.zed-editor.userSettings = {
       vim_mode = true;
@@ -64,7 +64,7 @@ in {
         "YAML" = {language_servers = ["yaml-language-server" "typos"];};
         "CMake" = {language_servers = ["cmake-language-server" "typos"];};
         "Nix" = {
-          language_servers = ["nixd" "typos"];
+          language_servers = ["nixd" "typos" "kdl"];
           formatter = {
             external = {
               command = lib.getExe lspBinaries.nixFormatter;
