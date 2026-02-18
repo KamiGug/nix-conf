@@ -1,6 +1,7 @@
 ssh module
-make a common-linux-graphical.nix
+sshd module
 make waybar more usable
+use noctalia-shell
 trim system wide plasma
 add plasma hm config
 migrate waybar to templating rather than function

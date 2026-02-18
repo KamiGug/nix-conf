@@ -23,6 +23,10 @@
 
   services.blueman.enable = true;
 
+  services.power-profiles-daemon.enable = true;
+
+  services.upower.enable = true;
+
   systemd.tmpfiles.rules = [
     "d /etc/nixos 2775 root config-editor -"
   ];
