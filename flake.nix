@@ -75,6 +75,7 @@
       ];
 
       nixosConfigurations = {
+
         kkbook = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
 
@@ -88,6 +89,7 @@
               ./hosts/kkbook
               ./system-modules/common.nix
               ./system-modules/common-linux.nix
+              ./system-modules/common-gui-linux.nix
               sops-nix.nixosModules.sops
               myUsers.peon.system
               myUsers.root.system
@@ -97,6 +99,46 @@
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
                 home-manager.users.peon = myUsers.peon.home;
+                home-manager.users.root = myUsers.root.home;
+                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
+                #   homeModules
+                #   ++ [sops-nix.homeManagerModules.sops]
+                #   ++ helpers
+                # );
+                home-manager.extraSpecialArgs = {inherit myLib;};
+                home-manager.sharedModules =
+                  homeModules
+                  ++ [
+                    sops-nix.homeManagerModules.sops
+                  ]
+                  ++ helpers;
+              }
+            ];
+        };
+
+
+        kkserv = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+
+          specialArgs = {
+            inherit inputs self systemModules homeModules myLib;
+          };
+
+          modules =
+            helpers
+            ++ [
+              ./hosts/kkserv
+              ./system-modules/common.nix
+              ./system-modules/common-linux.nix
+              sops-nix.nixosModules.sops
+              myUsers.peonNoGui.system
+              myUsers.root.system
+
+              home-manager.nixosModules.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.users.peon = myUsers.peonNoGui.home;
                 home-manager.users.root = myUsers.root.home;
                 # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
                 #   homeModules

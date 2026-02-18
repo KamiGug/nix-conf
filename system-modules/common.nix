@@ -95,7 +95,7 @@
   };
 
   # Configure console keymap
-  console.keyMap = "pl";
+  console.keyMap = "pl2";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;

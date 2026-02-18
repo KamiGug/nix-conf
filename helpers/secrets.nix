@@ -16,9 +16,9 @@
       # neededForUsers = true;
     };
 
-    github-priv-key = {};
+    # github-priv-key = {};
 
-    ananas-priv-key = {};
+    # ananas-priv-key = {};
   };
 in {
   sops.age.keyFile = lib.mkDefault "/etc/sops/age.key";

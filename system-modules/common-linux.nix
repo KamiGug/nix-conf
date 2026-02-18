@@ -27,9 +27,5 @@
     "d /etc/nixos 2775 root config-editor -"
   ];
 
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-  programs.niri.enable = true;
-
   system.stateVersion = "25.11"; # Did you read the comment?
 }
