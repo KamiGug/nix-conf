@@ -1,4 +1,4 @@
-{ targetPrefix, templateDir, replacements }:
+{ targetPrefix, templateDir, replacements ? {} }:
 
 let
   keys = builtins.attrNames replacements;

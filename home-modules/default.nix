@@ -8,6 +8,6 @@
   ./terminal.nix
   ./ssh.nix
   ./de/plasma.nix
-  ./de/niri.nix
+  ./de/niri-noctalia.nix
   ./waybar.nix
 ]

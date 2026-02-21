@@ -1,12 +1,11 @@
 ssh module
 sshd module
-make waybar more usable
-use noctalia-shell
+in noctalia-shell niri make it so that bar is on the left (also something with configs)
 trim system wide plasma
 add plasma hm config
-migrate waybar to templating rather than function
 migrate tmux to templating rather than inline
 migrate lazygit to templating rather than inline
-something about git and ssh
-add mako (notification daemon)
+templating for git and ssh
+add mako (notification daemon) (niri manual)
+make waybar more usable (niri manual)
 .dev (bashly based project management) / taskfile + lefthook

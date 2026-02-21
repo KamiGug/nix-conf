@@ -33,7 +33,7 @@ in {
     };
     xdg.configFile = myLib.template {
       targetPrefix = "niri";
-      templateDir = ../../configs/niri;
+      templateDir = ../../configs/niri-manual;
       replacements = {
         terminal = config.apps.using.terminal;
         launcher = "fuzzel";

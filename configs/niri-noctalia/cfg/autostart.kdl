@@ -1,0 +1,3 @@
+  // spawn-at-startup "${status-bar}"
+  // spawn-at-startup "qs" "-c" "noctalia-shell" "--no-duplicate"
+  spawn-sh-at-startup "noctalia-shell --no-duplicate"

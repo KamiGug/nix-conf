@@ -20,6 +20,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    noctalia = {
+      url = "github:noctalia-dev/noctalia-shell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # niri = {
     #   url = "github:niri-wm/niri";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -30,6 +35,7 @@
   outputs = inputs @ {
     self,
     nixpkgs,
+    noctalia,
     nixpkgs-stable,
     nixpkgs-unstable,
     flake-utils,
@@ -41,7 +47,7 @@
     systemModules = import ./system-modules;
     homeModules = import ./home-modules;
     helpers = import ./helpers;
-    myLib = import ./lib { pkgs = nixpkgs; };
+    myLib = import ./lib {pkgs = nixpkgs;};
   in
     # Merge per-system outputs with global outputs
     flake-utils.lib.eachDefaultSystem (
@@ -75,7 +81,6 @@
       ];
 
       nixosConfigurations = {
-
         kkbook = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
 
@@ -110,12 +115,12 @@
                   homeModules
                   ++ [
                     sops-nix.homeManagerModules.sops
+                    noctalia.homeModules.default
                   ]
                   ++ helpers;
               }
             ];
         };
-
 
         kkserv = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
@@ -150,6 +155,7 @@
                   homeModules
                   ++ [
                     sops-nix.homeManagerModules.sops
+                    noctalia.homeModules.default
                   ]
                   ++ helpers;
               }

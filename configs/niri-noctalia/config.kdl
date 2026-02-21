@@ -1,0 +1,9 @@
+include "./cfg/autostart.kdl"
+include "./cfg/keybinds.kdl"
+include "./cfg/inputs.kdl"
+include "./cfg/display.kdl"
+include "./cfg/layout.kdl"
+include "./cfg/window-rules.kdl"
+include "./cfg/background.kdl"
+
+include "./cfg/debug.kdl"
