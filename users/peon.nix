@@ -35,11 +35,20 @@
     #    apps.nvim.enable = true;
     apps.zed.enable = true;
     apps.lazygit.enable = true;
-    apps.tmux = {
+    # apps.tmux = {
+    #   enable = true;
+    #   leader = "C-a";
+    # };
+    programs.tmux = {
       enable = true;
-      leader = "C-a";
+      clock24 = true;
+      historyLimit = 100000;
+      keyMode = "vi";
     };
-    apps.zsh.enable = true;
+    apps.zsh = {
+      enable = true;
+      tmuxAutostart = false;
+    };
     apps.git = {
       enable = true;
       hosts = {
