@@ -35,12 +35,27 @@ in {
       };
 
       initContent = ''
-             if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
-               export IS_SSH_HOST=true
-             fi
+        autoload -U add-zsh-hook
+        if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+          export IS_SSH_HOST=true
+        fi
 
-             export FOREGROUND_SESSION_NAME=foreground
-             export BACKGROUND_SESSION_NAME=background
+       export FOREGROUND_SESSION_NAME=foreground
+       export BACKGROUND_SESSION_NAME=background
+
+       _enter_nix_flake() {
+         if [[ -n "$IN_NIX_SHELL" ]]; then
+           return
+         fi
+
+         if [[ -f "flake.nix" && "$PWD" != "$NIX_AUTO_ENTERED" ]]; then
+           export NIX_AUTO_ENTERED="$PWD"
+           echo "Entering nix flake shell..."
+           nix develop
+         fi
+       }
+
+       add-zsh-hook chpwd _enter_nix_flake
 
              if command -v tmux >/dev/null 2>&1; then
                alias etf="enter-tmux-session $FOREGROUND_SESSION_NAME"
