@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, services, ... }:
 
 {
   imports =
@@ -25,32 +25,6 @@
   # Enable networking
   networking.networkmanager.enable = true;
 
-  # Set your time zone.
-  time.timeZone = "Europe/Warsaw";
-
-  # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pl_PL.UTF-8";
-    LC_IDENTIFICATION = "pl_PL.UTF-8";
-    LC_MEASUREMENT = "pl_PL.UTF-8";
-    LC_MONETARY = "pl_PL.UTF-8";
-    LC_NAME = "pl_PL.UTF-8";
-    LC_NUMERIC = "pl_PL.UTF-8";
-    LC_PAPER = "pl_PL.UTF-8";
-    LC_TELEPHONE = "pl_PL.UTF-8";
-    LC_TIME = "pl_PL.UTF-8";
-  };
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "pl";
-    variant = "";
-  };
-
-  # Configure console keymap
-  console.keyMap = "pl2";
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   # users.users.peon = {
@@ -82,6 +56,20 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+
+  services.ai = {
+    enable = true;
+
+    modelUrl =
+    "https://huggingface.co/Lamapi/next-4b-Q4_0-GGUF/resolve/main/next-4b-q4_0.gguf";
+
+    modelSha256 = "0g29ky6rh5ag4qw41zxbil49q53md1gddzkwyqwwbwdmh2bs6nvd";
+
+    ctxSize = 2048;
+    threads = 4;
+
+    openClaw.enable = true;
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];

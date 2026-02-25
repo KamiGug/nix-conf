@@ -43,11 +43,13 @@
     sops-nix,
     ...
   }: let
+    pkgs = nixpkgs;
     myUsers = import ./users/default.nix {inherit inputs;};
     systemModules = import ./system-modules;
     homeModules = import ./home-modules;
     helpers = import ./helpers;
-    myLib = import ./lib {pkgs = nixpkgs;};
+    myLib = import ./lib {inherit pkgs;};
+    services = import ./services;
   in
     # Merge per-system outputs with global outputs
     flake-utils.lib.eachDefaultSystem (
@@ -85,12 +87,13 @@
           system = "x86_64-linux";
 
           specialArgs = {
-            inherit inputs self systemModules homeModules myLib;
+            inherit inputs self systemModules homeModules myLib services;
           };
 
           modules =
-            helpers
-            ++ [
+          services
+          ++ helpers
+          ++ [
               ./hosts/kkbook
               ./system-modules/common.nix
               ./system-modules/common-linux.nix
@@ -130,7 +133,8 @@
           };
 
           modules =
-            helpers
+            services
+            ++ helpers
             ++ [
               ./hosts/kkserv
               ./system-modules/common.nix
@@ -138,6 +142,7 @@
               sops-nix.nixosModules.sops
               myUsers.peonNoGui.system
               myUsers.root.system
+              services
 
               home-manager.nixosModules.home-manager
               {
