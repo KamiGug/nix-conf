@@ -106,6 +106,8 @@
 
       spotify
       discord
+
+      keepassxc
     ];
   };
 }
