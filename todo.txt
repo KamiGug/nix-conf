@@ -9,3 +9,6 @@ templating for git and ssh
 add mako (notification daemon) (niri manual)
 make waybar more usable (niri manual)
 .dev (bashly based project management) / taskfile + lefthook
+
+add automatic pkg adding
+add mkHost function
