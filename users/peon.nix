@@ -92,6 +92,8 @@
     apps.niri.enable = true;
     apps.plasma.enable = true;
 
+    apps.blender.enable = true;
+
     home.packages = with pkgs; [
       # neovim
       # neovim-remote
