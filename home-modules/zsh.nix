@@ -21,6 +21,10 @@ in {
       "$HOME/.local/share/scripts"
     ];
 
+    home.packages = with pkgs; [
+      zsh-completions
+    ];
+
     programs.zsh = {
       enable = true;
 
@@ -33,56 +37,67 @@ in {
       shellAliases = {
         nvim-conf = "cd ~/.config/nvim && nvim .";
       };
+      syntaxHighlighting.enable = true;
+      enableCompletion = true;
+      autosuggestion.enable = true;
 
       initContent = ''
-        autoload -U add-zsh-hook
-        if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
-          export IS_SSH_HOST=true
-        fi
+         autoload -U add-zsh-hook
 
-       export FOREGROUND_SESSION_NAME=foreground
-       export BACKGROUND_SESSION_NAME=background
+         autoload -Uz compinit
+         compinit
+         zstyle ':completion:*' menu select
+         zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+         zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
 
-       _enter_nix_flake() {
-         if [[ -n "$IN_NIX_SHELL" ]]; then
-           return
+         if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+           export IS_SSH_HOST=true
          fi
 
-         if [[ -f "flake.nix" && "$PWD" != "$NIX_AUTO_ENTERED" ]]; then
-           export NIX_AUTO_ENTERED="$PWD"
-           echo "Entering nix flake shell..."
-           nix develop
-         fi
-       }
+        export FOREGROUND_SESSION_NAME=foreground
+        export BACKGROUND_SESSION_NAME=background
 
-       add-zsh-hook chpwd _enter_nix_flake
+        _enter_nix_flake() {
+          if [[ -n "$IN_NIX_SHELL" ]]; then
+            return
+          fi
 
-             if command -v tmux >/dev/null 2>&1; then
-               alias etf="enter-tmux-session $FOREGROUND_SESSION_NAME"
-               alias etb="enter-tmux-session $BACKGROUND_SESSION_NAME"
-               alias ets="enter-tmux-session"
-               alias ats="add-to-tmux-session"
-               alias atb="add-to-tmux-session --session $BACKGROUND_SESSION_NAME --cmd "
-             fi
+          if [[ -f "flake.nix" && "$PWD" != "$NIX_AUTO_ENTERED" ]]; then
+            export NIX_AUTO_ENTERED="$PWD"
+            echo "Entering nix flake shell..."
+            nix develop
+          fi
+        }
 
-             ${lib.optionalString cfg.tmuxAutostart ''
+        add-zsh-hook chpwd _enter_nix_flake
+
+              if command -v tmux >/dev/null 2>&1; then
+                alias etf="enter-tmux-session $FOREGROUND_SESSION_NAME"
+                alias etb="enter-tmux-session $BACKGROUND_SESSION_NAME"
+                alias ets="enter-tmux-session"
+                alias ats="add-to-tmux-session"
+                alias atb="add-to-tmux-session --session $BACKGROUND_SESSION_NAME --cmd "
+              fi
+
+              ${lib.optionalString cfg.tmuxAutostart ''
           if [[ -z "$IS_SSH_HOST" && -z "$TMUX" ]]; then
-            enter-tmux-session "$FOREGROUND_SESSION_NAME"
+            # enter-tmux-session "$FOREGROUND_SESSION_NAME"
+            tmux
           fi
         ''}
 
-             nvim() {
-               local repo_name
-               if git config --get remote.origin.url >/dev/null 2>&1; then
-                 repo_name=$(basename -s .git "$(git config --get remote.origin.url)")
-               else
-                 repo_name=$(basename "$(pwd)")
-               fi
-        if [ -z "$TMUX" ]; then
-               	tmux rename-window "$repo_name"
-        fi
-               command nvim "$@"
-             }
+              nvim() {
+                local repo_name
+                if git config --get remote.origin.url >/dev/null 2>&1; then
+                  repo_name=$(basename -s .git "$(git config --get remote.origin.url)")
+                else
+                  repo_name=$(basename "$(pwd)")
+                fi
+         if [ -z "$TMUX" ]; then
+                	tmux rename-window "$repo_name"
+         fi
+                command nvim "$@"
+              }
       '';
     };
 
