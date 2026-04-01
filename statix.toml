@@ -1,0 +1,10 @@
+disabled = [
+  "redundant_pattern_bind",
+  "empty_pattern"
+]
+
+ignore = [
+  "hardware.nix",
+  "flake.lock",
+  "result"
+]

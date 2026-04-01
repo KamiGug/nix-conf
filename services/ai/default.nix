@@ -1,19 +1,18 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.services.ai;
 
   modelFile = pkgs.fetchurl {
     url = cfg.modelUrl;
     sha256 = cfg.modelSha256;
   };
-
-in
-{
+in {
   options.services.ai = {
-
     enable = mkEnableOption "Native llama.cpp OpenAI-compatible server";
 
     modelUrl = mkOption {
@@ -47,20 +46,17 @@ in
     };
 
     openClaw.enable = mkEnableOption "OpenClaw agent";
-
   };
 
   config = mkIf cfg.enable {
-
-    networking.firewall.allowedTCPPorts =
-      mkIf cfg.openFirewall (
-        [ cfg.port ] ++ optional cfg.openClaw.enable 3000
-      );
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall (
+      [cfg.port] ++ optional cfg.openClaw.enable 3000
+    );
 
     systemd.services.llama = {
       description = "llama.cpp OpenAI server";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+      after = ["network.target"];
+      wantedBy = ["multi-user.target"];
 
       serviceConfig = {
         ExecStart = ''
@@ -89,8 +85,8 @@ in
 
     systemd.services.openclaw = mkIf cfg.openClaw.enable {
       description = "OpenClaw Agent";
-      after = [ "llama.service" ];
-      wantedBy = [ "multi-user.target" ];
+      after = ["llama.service"];
+      wantedBy = ["multi-user.target"];
 
       serviceConfig = {
         ExecStart = "${pkgs.nodejs}/bin/npx openclaw";

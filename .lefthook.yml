@@ -1,0 +1,16 @@
+skip_lfs: true
+
+pre-push:
+  parallel: false
+  commands:
+    check:
+      run: task check -- --all
+
+commit-msg:
+  commands:
+    commitlint:
+      run: |
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        if [[ "$BRANCH" != dev* ]]; then
+          commitlint-rs --config commitlint.toml --edit {1}
+        fi

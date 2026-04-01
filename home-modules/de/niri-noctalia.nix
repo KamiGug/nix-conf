@@ -30,8 +30,8 @@ in {
       // myLib.template {
         targetPrefix = "noctalia";
         templateDir = ../../configs/noctalia;
-      #   replacements = {
-      #   };
+        #   replacements = {
+        #   };
       };
 
     programs.noctalia-shell = {

@@ -36,8 +36,6 @@
     self,
     nixpkgs,
     noctalia,
-    nixpkgs-stable,
-    nixpkgs-unstable,
     flake-utils,
     home-manager,
     sops-nix,
@@ -67,6 +65,10 @@
             alejandra
             statix
             deadnix
+            lefthook
+            go-task
+            commitlint-rs
+            git
           ];
 
           shellHook = ''
@@ -91,9 +93,9 @@
           };
 
           modules =
-          services
-          ++ helpers
-          ++ [
+            services
+            ++ helpers
+            ++ [
               ./hosts/kkbook
               ./system-modules/common.nix
               ./system-modules/common-linux.nix

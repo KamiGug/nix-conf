@@ -3,9 +3,7 @@
   lib,
   # pkgs,
   ...
-}: let
-  # cfg = config.apps.using;
-in {
+}: {
   options.apps.using = {
     terminal = lib.mkOption {
       type = lib.types.str;

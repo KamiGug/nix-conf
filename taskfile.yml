@@ -1,0 +1,121 @@
+version: "3"
+
+vars:
+  DEFAULT_MSG: "chore: build step"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  _staged_files:
+    silent: true
+    cmds:
+      - |
+        if [ "{{.ALL}}" = "true" ]; then
+          git ls-files
+        else
+          FILES=$(git diff --name-only --cached)
+          if [ -z "$FILES" ]; then
+            git ls-files
+          else
+            echo "$FILES"
+          fi
+        fi
+
+  fmt:
+    desc: Format nix files
+    cmds:
+      - |
+        FILES=$(task _staged_files ALL={{.ALL}})
+        echo "$FILES" | grep '\.nix$' | xargs -r alejandra
+
+  fmt-check:
+    desc: Check formatting
+    cmds:
+      - |
+        FILES=$(task _staged_files ALL={{.ALL}})
+        echo "$FILES" | grep '\.nix$' | xargs -r alejandra --check
+
+  lint-dead:
+    desc: deadnix
+    cmds:
+      - |
+        FILES=$(task _staged_files ALL={{.ALL}})
+        if [ "{{.FIX}}" = "true" ]; then
+          echo "$FILES" | grep '\.nix$' | xargs -r deadnix --edit
+        else
+          echo "$FILES" | grep '\.nix$' | xargs -r deadnix --fail
+        fi
+
+  lint-statix:
+    desc: statix
+    cmds:
+      - |
+        files=$(task _staged_files all={{.all}})
+        if [ "{{.fix}}" = "true" ]; then
+          echo "$files" | grep '\.nix$' | xargs -r -n1 statix fix --
+        else
+          echo "$files" | grep '\.nix$' | xargs -r -n1 statix check --
+        fi
+
+  lint:
+    desc: Run all linters (parallel)
+    deps:
+      - task: lint-dead
+        vars: { ALL: "{{.ALL}}", FIX: "{{.FIX}}" }
+      - task: lint-statix
+        vars: { ALL: "{{.ALL}}", FIX: "{{.FIX}}" }
+
+  check:
+    desc: Full check (fmt + lint)
+    cmds:
+      - |
+        FAIL=0
+
+        task fmt-check ALL={{.ALL}} || FAIL=1 &
+        task lint ALL={{.ALL}} FIX=false || FAIL=1 &
+
+        wait
+
+        exit $FAIL
+
+  fix:
+    desc: Fix everything possible
+    cmds:
+      - task fmt ALL={{.ALL}}
+      - task lint ALL={{.ALL}} FIX=true
+
+  switch:
+    desc: Smart system switch
+    cmds:
+      - ./.dev/switch.sh "{{.MSG}}" "{{.TARGET}}"
+    vars:
+      MSG: '{{.MSG | default .DEFAULT_MSG}}'
+      TARGET: '{{.TARGET | default ""}}'
+
+  perm-fix:
+    desc: Fix repo permissions (tracked files only)
+    cmds:
+      - |
+        set -euo pipefail
+
+        GROUP="config-editor"
+
+        getent group "$GROUP" >/dev/null || { echo "Missing group"; exit 1; }
+
+        echo "→ Fixing dirs"
+        find . -path ./.git -prune -o -type d -exec chgrp "$GROUP" {} + -exec chmod 770 {} +
+
+        echo "→ Fixing files"
+        git ls-files | while read -r f; do
+          chgrp "$GROUP" "$f"
+          if [ -x "$f" ]; then
+            chmod ug=rwx,o= "$f"
+          else
+            chmod ug=rw,o= "$f"
+          fi
+        done
+
+        echo "→ Done"

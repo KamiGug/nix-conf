@@ -21,17 +21,18 @@ with lib; let
     # my-addon
   ];
 
-  addonFiles = map (
-    addon: let
-      name =
-        addon.pname or
+  addonFiles =
+    map (
+      addon: let
+        name =
+          addon.pname or
           (builtins.parseDrvName addon.name).name;
-    in
-      nameValuePair
-      ".config/blender/${version}/scripts/addons/${name}"
-      {source = addon;}
-  )
-  addons;
+      in
+        nameValuePair
+        ".config/blender/${version}/scripts/addons/${name}"
+        {source = addon;}
+    )
+    addons;
 in {
   options.apps.blender = {
     enable = mkEnableOption "Blender";

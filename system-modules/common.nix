@@ -102,7 +102,6 @@
 
   services.avahi = {
     enable = true;
-
   };
 
   users.groups.config-editor = {};

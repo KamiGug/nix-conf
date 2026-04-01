@@ -1,8 +1,4 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
+{...}: {
   # users.mutableUsers = false;
 
   # Enable sound with pipewire.

@@ -1,0 +1,8 @@
+[general]
+ignore_merge_commits = true
+
+[header]
+max_length = 100
+
+[type]
+allowed = ["feat", "fix", "chore", "nix", "infra", "refactor"]

@@ -1,3 +1,4 @@
 keys/
 result/*
 *.qcow*
+.direnv

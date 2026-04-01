@@ -23,6 +23,7 @@ in {
 
     home.packages = with pkgs; [
       zsh-completions
+      direnv
     ];
 
     programs.zsh = {
@@ -31,12 +32,12 @@ in {
       oh-my-zsh = {
         enable = true;
         theme = "aussiegeek";
-        plugins = ["git" "git-lfs" "tmux"];
+        plugins = ["git" "git-lfs" "tmux" "direnv"];
       };
 
-      shellAliases = {
-        nvim-conf = "cd ~/.config/nvim && nvim .";
-      };
+      # shellAliases = {
+      #   nvim-conf = "cd ~/.config/nvim && nvim .";
+      # };
       syntaxHighlighting.enable = true;
       enableCompletion = true;
       autosuggestion.enable = true;
@@ -56,20 +57,6 @@ in {
 
         export FOREGROUND_SESSION_NAME=foreground
         export BACKGROUND_SESSION_NAME=background
-
-        _enter_nix_flake() {
-          if [[ -n "$IN_NIX_SHELL" ]]; then
-            return
-          fi
-
-          if [[ -f "flake.nix" && "$PWD" != "$NIX_AUTO_ENTERED" ]]; then
-            export NIX_AUTO_ENTERED="$PWD"
-            echo "Entering nix flake shell..."
-            nix develop
-          fi
-        }
-
-        add-zsh-hook chpwd _enter_nix_flake
 
               if command -v tmux >/dev/null 2>&1; then
                 alias etf="enter-tmux-session $FOREGROUND_SESSION_NAME"
