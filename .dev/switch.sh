@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MSG="${1:-chore: switch}"
+MSG="${1:-chore: build step}"
 TARGET_INPUT="${2:-""}"
 
 HOSTNAME=$(hostname)
@@ -24,19 +24,11 @@ echo "→ Target: $TARGET"
 echo "→ Host: $HOSTNAME"
 echo "→ User: $USER_NAME"
 
-# --- branch enforcement ---
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [[ "$CURRENT_BRANCH" != dev* ]]; then
-  NEW_BRANCH="dev-$HOSTNAME"
-  echo "→ Switching to $NEW_BRANCH"
-  git checkout -B "$NEW_BRANCH"
+HAS_CHANGES=false
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  HAS_CHANGES=true
 fi
 
-# --- commit ---
-git add -A
-git commit -m "$MSG" || echo "→ nothing to commit"
-
-# --- resolve attr path ---
 case "$TARGET" in
   nixos)
     ATTR_PATH="nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"
@@ -60,6 +52,29 @@ case "$TARGET" in
     exit 1
     ;;
 esac
+
+if [[ "$HAS_CHANGES" == true ]]; then
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  TARGET_BRANCH="dev-${HOSTNAME}"
+
+  if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
+    echo "→ Changes detected on non-dev branch: $CURRENT_BRANCH"
+
+    # check if host exists in flake
+    if nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
+      echo "→ Switching to $TARGET_BRANCH"
+      git checkout -B "$TARGET_BRANCH"
+    else
+      echo "→ Host not defined in flake, staying on $CURRENT_BRANCH"
+    fi
+  fi
+
+  echo "→ Committing changes"
+  git add -A
+  git commit -m "$MSG"
+else
+  echo "→ No changes to commit"
+fi
 
 echo "→ Checking flake attr: $ATTR_PATH"
 
