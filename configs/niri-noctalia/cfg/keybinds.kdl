@@ -12,19 +12,19 @@ hotkey-overlay {
       XF86AudioRaiseVolume { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
       XF86AudioLowerVolume { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
       XF86AudioMicMute     allow-when-locked=true { spawn "noctalia-shell" "ipc" "call" "volume" "muteInput"; }
-      Mod+Alt+Up { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
-      Mod+Alt+W { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
-      Mod+Alt+Down { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
-      Mod+Alt+S { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
-      Mod+Alt+M     allow-when-locked=true { spawn "noctalia-shell" "ipc" "call" "volume" "muteInput"; }
+      Mod+Alt+Right  { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
+      Mod+Alt+D hotkey-overlay-title="Increase Volume" { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
+      Mod+Alt+Left { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
+      Mod+Alt+A hotkey-overlay-title="Decrease Volume" { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
+      Mod+Alt+M  hotkey-overlay-title="Mute" allow-when-locked=true { spawn "noctalia-shell" "ipc" "call" "volume" "muteInput"; }
       XF86AudioMute { spawn "noctalia-shell" "ipc" "call" "volume" "muteOutput"; }
 
       XF86MonBrightnessUp { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
       XF86MonBrightnessDown { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
-      Mod+Alt+Right { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
-      Mod+Alt+D { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
-      Mod+Alt+Left { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
-      Mod+Alt+A { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
+      Mod+Alt+Up { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
+      Mod+Alt+W hotkey-overlay-title="Increase Brightness"{ spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
+      Mod+Alt+Down { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
+      Mod+Alt+S hotkey-overlay-title="Decrease Brightness"{ spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
 
       XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
       XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
@@ -176,13 +176,10 @@ hotkey-overlay {
       Mod+Shift+Equal { set-window-height "+10%"; }
 
       // Move the focused window between the floating and the tiling layout.
-      Mod+V       { toggle-window-floating; }
-      Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+      Mod+V hotkey-overlay-title="Toggle floating"     { toggle-window-floating; }
+      Mod+Shift+V hotkey-overlay-title="Toggle floating focus" { switch-focus-between-floating-and-tiling; }
 
-      // Toggle tabbed column display mode.
-      // Windows in this column will appear as vertical tabs,
-      // rather than stacked on top of each other.
-      Mod+G { toggle-column-tabbed-display; }
+      Mod+G hotkey-overlay-title="Toggle tabbed column display mode" { toggle-column-tabbed-display; }
 
       // Actions to switch layouts.
       // Note: if you uncomment these, make sure you do NOT have
@@ -210,6 +207,6 @@ hotkey-overlay {
       Mod+Shift+E { quit; }
       Ctrl+Alt+Delete { quit; }
 
-      Mod+Shift+P { power-off-monitors; }
+      Mod+Shift+P hotkey-overlay-title="Power off monitors" { power-off-monitors; }
       Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia-shell ipc call sessionMenu toggle"; }
   }
