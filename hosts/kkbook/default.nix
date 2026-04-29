@@ -1,5 +1,5 @@
 {
-  # pkgs,
+  pkgs,
   # config,
   # inputs,
   ...
@@ -29,12 +29,19 @@
   # };
 
   virtualisation = {
-    docker = {
+    podman = {
       enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
     };
   };
 
-  programs.zsh.enable = true;
+  environment.systemPackages = with pkgs; [
+     dive
+     podman-tui
+     # docker-compose
+     podman-compose
+   ];
 
   networking.hostName = "kkbook";
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

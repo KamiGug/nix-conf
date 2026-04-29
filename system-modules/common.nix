@@ -22,6 +22,7 @@
     wget
     zed-editor
     neovim
+    sl
   ];
 
   programs.nix-ld.enable = true;
