@@ -1,5 +1,4 @@
 [
-  ./terminal.nix
   ./de/plasma.nix
   ./de/niri-noctalia.nix
   ./waybar.nix
