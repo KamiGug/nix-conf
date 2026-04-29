@@ -1,4 +1,5 @@
 [
+  ./fish.nix
   ./zsh.nix
   ./neovim-fhs.nix
   ./lazygit.nix

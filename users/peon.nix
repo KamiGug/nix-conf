@@ -7,11 +7,13 @@
     pkgs,
     ...
   }: {
+    programs.fish.enable = true;
+
     users.users.peon = {
       isNormalUser = true;
       description = "peon";
       home = "/home/peon";
-      shell = pkgs.zsh;
+      shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
     };
@@ -45,10 +47,14 @@
       historyLimit = 100000;
       keyMode = "vi";
     };
+    apps.fish = {
+      enable = true;
+    };
+
     apps.zsh = {
       enable = true;
-      tmuxAutostart = false;
     };
+
     apps.git = {
       enable = true;
       hosts = {
