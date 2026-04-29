@@ -7,4 +7,5 @@
   ./git.nix
   ./terminal.nix
   ./ssh.nix
+  ./starship.nix
 ]
