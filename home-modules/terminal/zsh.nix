@@ -11,7 +11,7 @@ in {
 
     tmuxAutostart = lib.mkOption {
       type = lib.types.bool;
-      default = true;
+      default = false;
       description = "Automatically enter tmux on shell startup.";
     };
   };
@@ -89,7 +89,7 @@ in {
     };
 
     home.file.".local/share/scripts" = {
-      source = ../home-scripts;
+      source = ../../home-scripts;
       recursive = true;
     };
   };

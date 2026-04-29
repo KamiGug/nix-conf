@@ -1,14 +1,9 @@
 [
-  ./zsh.nix
-  ./neovim-fhs.nix
-  ./zed.nix
-  ./lazygit.nix
-  ./tmux.nix
-  ./git.nix
   ./terminal.nix
-  ./ssh.nix
   ./de/plasma.nix
   ./de/niri-noctalia.nix
   ./waybar.nix
+  ./zed.nix
 ]
 ++ import ./creative
+++ import ./terminal
