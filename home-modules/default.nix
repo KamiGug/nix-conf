@@ -1,8 +1,25 @@
-[
+{
+  common = [
+    ./zed.nix
+
+  ./terminal/fish.nix
+  ./terminal/zsh.nix
+  ./terminal/neovim-fhs.nix
+  ./terminal/lazygit.nix
+  ./terminal/tmux.nix
+  ./terminal/git.nix
+  ./terminal/terminal.nix
+  ./terminal/ssh.nix
+  ./terminal/starship.nix
+  ./creative/blender.nix
+  ];
+linux = [
   ./de/plasma.nix
   ./de/niri-noctalia.nix
   ./waybar.nix
-  ./zed.nix
-]
-++ import ./creative
-++ import ./terminal
+];
+darwin = [
+  # ./de/paneru.nix
+  ./karabiner-elements.nix
+];
+}

@@ -8,7 +8,7 @@
 
   lspBinaries = {
     clangd = pkgs.clang-tools;
-    csharp = pkgs.csharp-ls;
+    # csharp = pkgs.csharp-ls;
     rust = pkgs.rust-analyzer;
     cmake = pkgs.cmake-language-server;
     yaml = pkgs.yaml-language-server;
@@ -36,7 +36,7 @@ in {
 
       lsp = {
         clangd = {binary = {path = "${lspBinaries.clangd}/bin/clangd";};};
-        csharp-ls = {binary = {path = lib.getExe lspBinaries.csharp;};};
+      #  csharp-ls = {binary = {path = lib.getExe lspBinaries.csharp;};};
         rust-analyzer = {binary = {path = lib.getExe lspBinaries.rust;};};
         cmake-language-server = {binary = {path = lib.getExe lspBinaries.cmake;};};
         yaml-language-server = {
@@ -60,7 +60,7 @@ in {
         "Rust" = {language_servers = ["rust-analyzer" "typos"];};
         "C" = {language_servers = ["clangd" "typos"];};
         "C++" = {language_servers = ["clangd" "typos"];};
-        "C#" = {language_servers = ["csharp-ls" "typos"];};
+       # "C#" = {language_servers = ["csharp-ls" "typos"];};
         "YAML" = {language_servers = ["yaml-language-server" "typos"];};
         "CMake" = {language_servers = ["cmake-language-server" "typos"];};
         "Nix" = {

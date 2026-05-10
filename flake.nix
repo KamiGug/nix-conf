@@ -15,6 +15,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,6 +43,7 @@
     noctalia,
     flake-utils,
     home-manager,
+    nix-darwin,
     sops-nix,
     ...
   }: let
@@ -117,7 +123,8 @@
                 # );
                 home-manager.extraSpecialArgs = {inherit myLib;};
                 home-manager.sharedModules =
-                  homeModules
+                  homeModules.common
+                  ++ homeModules.linux
                   ++ [
                     sops-nix.homeManagerModules.sops
                     noctalia.homeModules.default
@@ -159,7 +166,8 @@
                 # );
                 home-manager.extraSpecialArgs = {inherit myLib;};
                 home-manager.sharedModules =
-                  homeModules
+                  homeModules.common
+                  ++ homeModules.linux
                   ++ [
                     sops-nix.homeManagerModules.sops
                     noctalia.homeModules.default
@@ -200,10 +208,52 @@
                 # );
                 home-manager.extraSpecialArgs = {inherit myLib;};
                 home-manager.sharedModules =
-                  homeModules
+                  homeModules.common
+                  ++ homeModules.linux
                   ++ [
                     sops-nix.homeManagerModules.sops
                     noctalia.homeModules.default
+                  ]
+                  ++ helpers;
+              }
+            ];
+        };
+      };
+
+      darwinConfigurations = {
+        kg-continabook = nix-darwin.lib.darwinSystem {
+          system = "aarch64-darwin";
+
+          specialArgs = {
+            inherit inputs self systemModules homeModules myLib services;
+          };
+
+          modules =
+            helpers
+            ++ [
+              ./hosts/kg-continabook
+
+              ./system-modules/common.nix
+              ./system-modules/common-darwin.nix
+              sops-nix.darwinModules.sops
+
+              home-manager.darwinModules.home-manager
+              myUsers.kg.system
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+
+                home-manager.users.kg = myUsers.kg.home;
+
+                home-manager.extraSpecialArgs = {
+                  inherit myLib;
+                };
+
+                home-manager.sharedModules =
+                  homeModules.common
+                  ++ homeModules.darwin
+                  ++ [
+                    sops-nix.homeManagerModules.sops
                   ]
                   ++ helpers;
               }
