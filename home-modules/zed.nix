@@ -32,6 +32,7 @@ in {
       ui_font_size = 16;
       buffer_font_size = 13.5;
       format_on_save = "off";
+      load_direnv = "shell_hook";
 
       terminal = {
         shell = "system";
