@@ -21,6 +21,8 @@
     wget
     # zed-editor
     neovim
+    ripgrep
+    tree
     sl
   ];
 

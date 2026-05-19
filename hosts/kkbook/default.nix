@@ -37,13 +37,15 @@
   };
 
   environment.systemPackages = with pkgs; [
-     dive
-     podman-tui
-     # docker-compose
-     podman-compose
-   ];
+    dive
+    podman-tui
+    # docker-compose
+    podman-compose
+  ];
 
   networking.hostName = "kkbook";
+
+  programs.niri.enable = true;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Enable touchpad support (enabled default in most desktopManager).
