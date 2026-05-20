@@ -21,5 +21,6 @@ linux = [
 darwin = [
   # ./de/paneru.nix
   ./mac/karabiner-elements.nix
+  ./mac/hammerspoon.nix
 ];
 }

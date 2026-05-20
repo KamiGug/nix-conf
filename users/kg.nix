@@ -38,7 +38,7 @@
       ];
     };
     # homebrew.brews = [ "docker" ];
-    homebrew.casks = [ "tunnelblick" ];
+    homebrew.casks = ["tunnelblick"];
   };
   home = {
     pkgs,
@@ -89,6 +89,8 @@
     apps.terminal.enable = true;
 
     apps.karabiner.enable = true;
+
+    apps.hammerspoon = {enable = true;};
     apps.ssh = {
       enable = true;
       privateKeys = [
@@ -138,6 +140,9 @@
 
       docker
       colima
+
+      bruno
+      bruno-cli
     ];
     targets.darwin.copyApps.enable = true;
     targets.darwin.linkApps.enable = false;

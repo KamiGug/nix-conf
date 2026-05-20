@@ -1,0 +1,1 @@
+require("paper-wm.config")

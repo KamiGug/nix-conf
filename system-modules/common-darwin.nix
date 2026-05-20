@@ -15,10 +15,11 @@
 
     casks = [
       "karabiner-elements"
+      "hammerspoon"
     ];
 
     brews = [
-      "paneru"
+      # "paneru"
     ];
   };
 
