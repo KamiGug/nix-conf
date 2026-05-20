@@ -20,6 +20,6 @@ linux = [
 ];
 darwin = [
   # ./de/paneru.nix
-  ./karabiner-elements.nix
+  ./mac/karabiner-elements.nix
 ];
 }
