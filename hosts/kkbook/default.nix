@@ -45,6 +45,7 @@
 
   networking.hostName = "kkbook";
 
+  services.displayManager.sddm.wayland.enable = true;
   programs.niri.enable = true;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
