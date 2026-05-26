@@ -109,6 +109,7 @@
       lazydocker
       brave
       thunderbird
+      cloc
 
       spotify
       discord
