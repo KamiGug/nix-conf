@@ -106,6 +106,7 @@
               ./system-modules/common.nix
               ./system-modules/common-linux.nix
               ./system-modules/common-gui-linux.nix
+              ./system-modules/gaming.nix
               sops-nix.nixosModules.sops
               myUsers.peon.system
               myUsers.root.system

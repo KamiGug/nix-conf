@@ -23,6 +23,24 @@
     options = ["nofail" "x-systemd.automount"];
   };
 
+  my.gaming = {
+    enable = true;
+
+    steam.enable = true;
+
+    nvidia = {
+      enable = true;
+      open = false;
+
+      prime = {
+        enable = true;
+
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+    };
+  };
+
   # programs.neovim = {
   #   enable = true;
   #   defaultEditor = true;
@@ -37,11 +55,11 @@
   };
 
   environment.systemPackages = with pkgs; [
-     dive
-     podman-tui
-     # docker-compose
-     podman-compose
-   ];
+    dive
+    podman-tui
+    # docker-compose
+    podman-compose
+  ];
 
   networking.hostName = "kkbook";
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

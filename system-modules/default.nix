@@ -4,4 +4,5 @@
   # de.plasma = import ./de/plasma inputs;
   # de.niri = import ./de/niri inputs;
   secrets = import .secrets inputs;
+  gaming = import ./gaming inputs;
 }
