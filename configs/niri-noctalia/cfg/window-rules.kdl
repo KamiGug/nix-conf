@@ -1,3 +1,4 @@
+  prefer-no-csd
   // Work around WezTerm's initial configure bug
   // by setting an empty default-column-width.
   window-rule {
