@@ -8,6 +8,8 @@
 
   lspBinaries =
     {
+      # phpantom = pkgs.phpantom-lsp;
+      phpactor = pkgs.phpactor;
       clangd = pkgs.clang-tools;
       rust = pkgs.rust-analyzer;
       cmake = pkgs.cmake-language-server;
@@ -41,6 +43,18 @@ in {
 
       lsp =
         {
+          # phpantom = {
+          #   binary = {
+          #     path = lib.getExe lspBinaries.phpantom;
+          #   };
+          # };
+
+          phpactor = {
+            binary = {
+              path = lib.getExe lspBinaries.phpactor;
+            };
+          };
+
           clangd = {
             binary = {
               path = "${lspBinaries.clangd}/bin/clangd";
@@ -103,6 +117,10 @@ in {
 
           "C++" = {
             language_servers = ["clangd" "typos"];
+          };
+
+          "PHP" = {
+              language_servers = ["phpactor" "typos"];
           };
 
           "YAML" = {
