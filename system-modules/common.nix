@@ -21,6 +21,7 @@
     wget
     # zed-editor
     neovim
+    neovim-remote
     ripgrep
     sl
     btop
