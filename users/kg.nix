@@ -30,7 +30,7 @@
         "/Users/kg/Applications/Home Manager Apps/Thunderbird.app"
         "/Users/kg/Applications/Home Manager Apps/kitty.app"
         "/System/Applications/App Store.app"
-        "/Users/kg/Applications/Home Manager Apps/Discord.app"
+        "/Applications/Discord.app"
         "/Users/kg/Applications/Home Manager Apps/Spotify.app"
         "/Users/kg/Applications/Home Manager Apps/KeePassXC.app"
         "/Users/kg/Applications/Home Manager Apps/Zed.app"
@@ -38,7 +38,7 @@
       ];
     };
     # homebrew.brews = [ "docker" ];
-    homebrew.casks = ["tunnelblick"];
+    homebrew.casks = ["tunnelblick" "discord"];
   };
   home = {
     pkgs,
@@ -133,7 +133,7 @@
       cloc
 
       spotify
-      discord
+      # discord
       openvpn
 
       keepassxc
