@@ -144,6 +144,7 @@
 
       bruno
       bruno-cli
+      dbgate
     ];
     targets.darwin.copyApps.enable = true;
     targets.darwin.linkApps.enable = false;
