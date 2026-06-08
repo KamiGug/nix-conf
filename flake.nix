@@ -194,7 +194,6 @@
               sops-nix.nixosModules.sops
               myUsers.peonNoGui.system
               myUsers.root.system
-              services
 
               home-manager.nixosModules.home-manager
               {
