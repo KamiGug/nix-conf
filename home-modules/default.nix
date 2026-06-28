@@ -12,6 +12,7 @@
   ./terminal/ssh.nix
   ./terminal/starship.nix
   ./creative/blender.nix
+  ./gaming/steam-alias.nix
   ];
 linux = [
   ./de/plasma.nix

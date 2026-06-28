@@ -95,6 +95,8 @@
       sshfs.enable = true;
     };
 
+    apps.steam.gamescope.enable = true;
+
     apps.niri.enable = true;
     apps.plasma.enable = true;
 
