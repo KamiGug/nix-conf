@@ -67,13 +67,14 @@ in
 
       home.packages = with pkgs; [
         nerd-fonts.geist-mono
+        mcat
       ];
     }
 
     # ---- Linux-Specific Configuration ----
     (lib.mkIf pkgs.stdenv.isLinux {
-      home.packages = [
-        pkgs.wl-clipboard
+      home.packages = with pkgs; [
+        wl-clipboard
       ];
 
       xdg.mimeApps = {
