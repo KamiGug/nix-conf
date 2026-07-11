@@ -13,6 +13,7 @@
   ./terminal/starship.nix
   ./creative/blender.nix
   ./gaming/steam-alias.nix
+  ./gaming/lutris-alias.nix
   ];
 linux = [
   ./de/plasma.nix

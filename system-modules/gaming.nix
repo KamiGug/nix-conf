@@ -5,6 +5,23 @@
   ...
 }: let
   cfg = config.my.gaming;
+  gameify = pkgs.writeShellScriptBin "gameify" ''
+    if [ "$#" -eq 0 ]; then
+      echo "Usage: gameify <command> [args...]"
+      exit 1
+    fi
+
+    exec ${lib.getExe pkgs.gamemode} \
+      ${lib.getExe pkgs.gamescope} \
+        -b \
+        --xwayland-count 3 \
+        -W 1920 \
+        -H 1080 \
+        --mangoapp \
+        --force-grab-cursor \
+        -- \
+        "$@"
+  '';
 
   inherit
     (lib)
@@ -137,6 +154,7 @@ in {
         vulkan-tools
         mesa-demos
         protonup-ng
+        gameify
       ]
       ++ optional cfg.gamescope.enable gamescope
       ++ optional cfg.mangohud.enable mangohud

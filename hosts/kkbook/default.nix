@@ -6,7 +6,6 @@
 }: {
   imports = [
     ./hardware-configuration.nix
-    # ../../system-modules/de/plasma
   ];
 
   # Bootloader.
@@ -27,6 +26,7 @@
     enable = true;
 
     steam.enable = true;
+    lutris.enable = true;
 
     nvidia = {
       enable = true;

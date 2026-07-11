@@ -96,6 +96,7 @@
     };
 
     apps.steam.gamescope.enable = true;
+    apps.lutris.gamescope.enable = true;
 
     apps.niri.enable = true;
     apps.plasma.enable = true;
