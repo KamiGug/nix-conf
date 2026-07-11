@@ -1,6 +1,17 @@
+autologin to chosen DE
+arbitrary DE choice
+add file browser/manager/explorer to niri (pkg and a shortcut)
+
+add 2 hosts: kknas, kkworker
+change peon-no-gui to wisp
+add nfs server + client
+add avahi-daemon
+update .dev/switch.sh to allow passing HOSTNAME
+
 ssh module
 sshd module
 in noctalia-shell niri make it so that bar is on the left (also something with configs)
+EmulationStation DE
 trim system wide plasma
 add plasma hm config
 migrate tmux to templating rather than inline
