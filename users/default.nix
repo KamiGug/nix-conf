@@ -1,6 +1,6 @@
 {...} @ inputs: {
   root = import ./root.nix inputs;
   peon = import ./peon.nix inputs;
-  peonNoGui = import ./peon-no-gui.nix inputs;
+  wisp = import ./wisp.nix inputs;
   kg = import ./kg.nix inputs;
 }

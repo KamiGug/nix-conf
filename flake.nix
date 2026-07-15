@@ -194,14 +194,14 @@
               ./system-modules/common.nix
               ./system-modules/common-linux.nix
               sops-nix.nixosModules.sops
-              myUsers.peonNoGui.system
+              myUsers.wisp.system
               myUsers.root.system
 
               home-manager.nixosModules.home-manager
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
-                home-manager.users.peon = myUsers.peonNoGui.home;
+                home-manager.users.wisp = myUsers.wisp.home;
                 home-manager.users.root = myUsers.root.home;
                 # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
                 #   homeModules
