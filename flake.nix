@@ -99,14 +99,14 @@
           };
 
           modules =
-            services
+            systemModules
+            ++ services
             ++ helpers
             ++ [
               ./hosts/kkbook
               ./system-modules/common.nix
               ./system-modules/common-linux.nix
               ./system-modules/common-gui-linux.nix
-              ./system-modules/gaming.nix
               sops-nix.nixosModules.sops
               myUsers.peon.system
               myUsers.root.system
@@ -143,7 +143,8 @@
           };
 
           modules =
-            services
+            systemModules
+            ++ services
             ++ helpers
             ++ [
               ./hosts/kktab
@@ -185,7 +186,8 @@
           };
 
           modules =
-            services
+            systemModules
+            ++ services
             ++ helpers
             ++ [
               ./hosts/kkserv
@@ -229,10 +231,10 @@
           };
 
           modules =
-            helpers
+            systemModules
+            ++ helpers
             ++ [
               ./hosts/kg-continabook
-
               ./system-modules/common.nix
               ./system-modules/common-darwin.nix
               sops-nix.darwinModules.sops
