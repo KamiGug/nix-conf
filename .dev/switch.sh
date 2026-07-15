@@ -4,7 +4,7 @@ set -euo pipefail
 MSG="${1:-chore: build step}"
 TARGET_INPUT="${2:-""}"
 
-HOSTNAME=$(hostname)
+HOSTNAME=${HOSTNAME:-$(hostname)}
 USER_NAME=$(whoami)
 
 # --- detect target ---
@@ -57,7 +57,8 @@ if [[ "$HAS_CHANGES" == true ]]; then
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
   TARGET_BRANCH="dev-${HOSTNAME}"
 
-  if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
+  # if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
+  if [[ "$CURRENT_BRANCH" != dev-* ]]; then
     echo "→ Changes detected on non-dev branch: $CURRENT_BRANCH"
 
     # check if host exists in flake
