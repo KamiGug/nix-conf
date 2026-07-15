@@ -7,11 +7,13 @@
     pkgs,
     ...
   }: {
+    
+    programs.fish.enable = true;
     users.users.peon = {
       isNormalUser = true;
       description = "peon";
       home = "/home/peon";
-      shell = pkgs.zsh;
+      shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
     };
@@ -40,6 +42,7 @@
       leader = "C-a";
     };
     apps.zsh.enable = true;
+    apps.fish.enable = true;
     apps.git = {
       enable = true;
       hosts = {
