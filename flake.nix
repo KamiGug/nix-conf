@@ -178,6 +178,7 @@
               }
             ];
         };
+
         kkserv = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
 
@@ -220,6 +221,92 @@
               }
             ];
         };
+
+        kknas = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+
+          specialArgs = {
+            inherit inputs self systemModules homeModules myLib;
+          };
+
+          modules =
+            systemModules
+            ++ services
+            ++ helpers
+            ++ [
+              ./hosts/kknas
+              ./system-modules/common.nix
+              ./system-modules/common-linux.nix
+              sops-nix.nixosModules.sops
+              myUsers.wisp.system
+              myUsers.root.system
+
+              home-manager.nixosModules.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.users.wisp = myUsers.wisp.home;
+                home-manager.users.root = myUsers.root.home;
+                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
+                #   homeModules
+                #   ++ [sops-nix.homeManagerModules.sops]
+                #   ++ helpers
+                # );
+                home-manager.extraSpecialArgs = {inherit myLib;};
+                home-manager.sharedModules =
+                  homeModules.common
+                  ++ homeModules.linux
+                  ++ [
+                    sops-nix.homeManagerModules.sops
+                    noctalia.homeModules.default
+                  ]
+                  ++ helpers;
+              }
+            ];
+        };
+      };
+
+      kkworker = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+
+        specialArgs = {
+          inherit inputs self systemModules homeModules myLib;
+        };
+
+        modules =
+          systemModules
+          ++ services
+          ++ helpers
+          ++ [
+            ./hosts/kkworker
+            ./system-modules/common.nix
+            ./system-modules/common-linux.nix
+            sops-nix.nixosModules.sops
+            myUsers.wisp.system
+            myUsers.root.system
+
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.wisp = myUsers.wisp.home;
+              home-manager.users.root = myUsers.root.home;
+              # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
+              #   homeModules
+              #   ++ [sops-nix.homeManagerModules.sops]
+              #   ++ helpers
+              # );
+              home-manager.extraSpecialArgs = {inherit myLib;};
+              home-manager.sharedModules =
+                homeModules.common
+                ++ homeModules.linux
+                ++ [
+                  sops-nix.homeManagerModules.sops
+                  noctalia.homeModules.default
+                ]
+                ++ helpers;
+            }
+          ];
       };
 
       darwinConfigurations = {
