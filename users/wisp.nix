@@ -12,7 +12,7 @@
     users.users.wisp = {
       isNormalUser = true;
       description = "peon";
-      home = "/home/peon";
+      home = "/home/wisp";
       shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
