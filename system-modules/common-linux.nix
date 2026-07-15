@@ -87,7 +87,7 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  my.avahi.enable = true;
+  # my.avahi.enable = true;
 
   systemd.tmpfiles.rules = [
     "d /etc/nixos 2775 root config-editor -"
