@@ -1,6 +1,9 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.apps.lutris.gamescope;
 
   lutrisGamescope = pkgs.writeShellScriptBin "lutris-gamescope" ''
@@ -13,7 +16,6 @@ let
       --force-grab-cursor \
       ${lib.getExe pkgs.lutris} "$@"
   '';
-
   # desktopFile = pkgs.makeDesktopItem {
   #   name = "lutris";
   #   desktopName = "Lutris";
@@ -25,8 +27,7 @@ let
   #   startupNotify = true;
   #   mimeTypes = [ "x-scheme-handler/lutris" ];
   # };
-in
-{
+in {
   options.apps.lutris.gamescope = {
     enable = lib.mkEnableOption "Launch Lutris through Gamescope";
 
@@ -56,9 +57,9 @@ in
       exec = "${lib.getExe lutrisGamescope} %U";
       icon = "lutris";
       terminal = false;
-      categories = [ "Game" ];
+      categories = ["Game"];
       startupNotify = true;
-      mimeType = [ "x-scheme-handler/lutris" ];
+      mimeType = ["x-scheme-handler/lutris"];
     };
   };
 }

@@ -17,17 +17,16 @@
     #media-session.enable = true;
   };
 
+  programs.nix-ld.enable = true;
 
-    programs.nix-ld.enable = true;
-
-    programs.nix-ld.libraries = with pkgs; [
-      libgcc
-      stdenv.cc.cc
-      zlib
-      openssl
-      libxml2
-      libclang
-    ];
+  programs.nix-ld.libraries = with pkgs; [
+    libgcc
+    stdenv.cc.cc
+    zlib
+    openssl
+    libxml2
+    libclang
+  ];
 
   services.blueman.enable = true;
 

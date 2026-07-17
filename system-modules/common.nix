@@ -25,7 +25,6 @@
     ripgrep
     sl
     btop
-
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -39,7 +38,6 @@
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-
 
   users.groups.config-editor = {};
 }

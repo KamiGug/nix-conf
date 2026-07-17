@@ -120,7 +120,7 @@ in {
           };
 
           "PHP" = {
-              language_servers = ["phpactor" "typos"];
+            language_servers = ["phpactor" "typos"];
           };
 
           "YAML" = {

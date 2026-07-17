@@ -7,7 +7,6 @@
     pkgs,
     ...
   }: {
-
     programs.fish.enable = true;
     users.users.wisp = {
       isNormalUser = true;

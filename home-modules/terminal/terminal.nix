@@ -3,12 +3,9 @@
   lib,
   pkgs,
   ...
-}:
-
-let
+}: let
   cfg = config.apps.terminal;
-in
-{
+in {
   options.apps.terminal = {
     enable = lib.mkEnableOption "Kitty config";
 
