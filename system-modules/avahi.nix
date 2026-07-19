@@ -17,9 +17,10 @@ in {
       publish = {
         enable = true;
         domain = true;
+        addresses = true;
       };
       nssmdns4 = true;
-      nssmdns6 = true;
+      # nssmdns6 = true;
     };
   };
 }

@@ -1,6 +1,6 @@
 {
   pkgs,
-  # config,
+  config,
   # inputs,
   ...
 }: {
@@ -25,12 +25,13 @@
   my.gaming = {
     enable = true;
 
-    steam.enable = true;
-    lutris.enable = true;
+    steam.enable = false;
+    lutris.enable = false;
 
     nvidia = {
       enable = true;
       open = false;
+      package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
 
       prime = {
         enable = true;
@@ -41,6 +42,7 @@
     };
   };
 
+  nixpkgs.config.nvidia.acceptLicense = true;
   # programs.neovim = {
   #   enable = true;
   #   defaultEditor = true;
