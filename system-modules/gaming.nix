@@ -11,7 +11,8 @@
       exit 1
     fi
 
-    exec ${lib.getExe pkgs.gamemode} \
+    # ${lib.getExe pkgs.gamemode} \
+    exec \
       ${lib.getExe pkgs.gamescope} \
         -b \
         --xwayland-count 3 \
