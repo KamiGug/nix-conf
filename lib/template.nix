@@ -1,4 +1,5 @@
 {
+  lib,
   targetPrefix,
   templateDir,
   replacements ? {},
