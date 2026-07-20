@@ -95,8 +95,8 @@
       sshfs.enable = true;
     };
 
-    apps.steam.gamescope.enable = true;
-    apps.lutris.gamescope.enable = true;
+    apps.steam.gamescope.enable = false;
+    apps.lutris.gamescope.enable = false;
 
     apps.niri.enable = true;
     apps.plasma.enable = true;
