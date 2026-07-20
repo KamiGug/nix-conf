@@ -1,6 +1,6 @@
-{lib, pkgs, ...}:
+{pkgs, ...}:
 {
-  mkContainerService = import ./mkContainerService.nix { inherit lib pkgs; };
+  mkContainerService = import ./mkContainerService.nix { inherit pkgs; };
   mkVolume = import ./mkVolume.nix;
   mkSecret = import ./mkSecret.nix;
   mkPort = import ./mkPort.nix;

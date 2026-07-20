@@ -1,4 +1,4 @@
-{lib, pkgs}: let
+{pkgs}: let
   lib = pkgs.lib;
   scan = rootPath: currentPath: let
     entries = builtins.readDir currentPath;

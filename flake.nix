@@ -52,7 +52,8 @@
     systemModules = import ./system-modules;
     homeModules = import ./home-modules;
     helpers = import ./helpers;
-    myLib = import ./lib {inherit pkgs;};
+    lib = lib;
+    myLib = import ./lib {inherit lib pkgs; };
     services = import ./services;
   in
     # Merge per-system outputs with global outputs

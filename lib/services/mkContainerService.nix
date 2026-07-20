@@ -1,5 +1,4 @@
 {
-  lib,
   pkgs,
 }:
 
@@ -27,7 +26,7 @@
 }:
 
 let
-
+  lib = pkgs.lib;
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
     + lib.optionalString v.readOnly ":ro";
