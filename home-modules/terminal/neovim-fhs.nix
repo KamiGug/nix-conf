@@ -55,7 +55,6 @@
         export npm_config_prefix="$HOME/.npm-global"
         export PATH="$HOME/.npm-global/bin:$PATH"
 
-        # --- DYNAMIC HEADER FIX ---
         # Ask the GCC inside the FHS where its C++ headers are located.
         # gcc -E -v outputs the search paths to stderr, so we redirect and grep.
 

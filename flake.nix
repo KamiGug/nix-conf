@@ -79,6 +79,7 @@
           ];
 
           shellHook = ''
+            lefthook install
             echo "NixOS admin shell for ${system}"
           '';
         };
