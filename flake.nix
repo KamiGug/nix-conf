@@ -61,6 +61,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
+          SOPS_AGE_KEY_FILE = "/etc/sops/age.key";
           packages = with pkgs; [
             sops
             git
