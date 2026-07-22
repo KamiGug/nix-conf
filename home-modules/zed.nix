@@ -27,7 +27,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     programs.zed-editor.enable = true;
-    programs.zed-editor.extensions = ["nix" "toml" "kdl"];
+    programs.zed-editor.extensions = ["nix" "toml" "kdl" "sops"];
 
     programs.zed-editor.userSettings = {
       vim_mode = true;

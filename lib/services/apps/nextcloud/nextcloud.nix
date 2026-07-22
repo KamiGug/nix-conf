@@ -44,6 +44,6 @@ containerLib.mkContainerService {
   ];
   # TODO: remove the ports! will need correct network + reverse proxy
   ports = [
-    "127.0.0.1:8080:80"
+    "8080:80"
   ];
 }
