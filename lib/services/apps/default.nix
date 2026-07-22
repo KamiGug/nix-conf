@@ -1,5 +1,5 @@
-{lib, pkgs, ...}:
+{...}@args:
 {
   # authentik = import ./authentik;
-  # nextcloud = import ./nextcloud;
+  nextcloud = import ./nextcloud args;
 }

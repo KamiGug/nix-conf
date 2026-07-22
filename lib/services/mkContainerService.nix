@@ -1,5 +1,6 @@
 {
   pkgs,
+  ...
 }:
 
 {
@@ -57,7 +58,6 @@ let
     map (s:
       "--secret=${s.path}"
     ) secrets;
-
 
 in
 {

@@ -1,31 +1,27 @@
-{ myLib }:
+{pkgs, lib, ...}:
 {
-  volumePrefix,
+  volumePrefix ? "/mnt/nas/",
   configArgs ? {},
-  image ? "nextcloud:31",
+  images ? { nextcloud =  "nextcloud:31"; onlyoffice = ""; },
 }:
+
 let
-  domain =
-    configArgs.domain;
+  validators = import ../../validators;
+  # containerLib = import ../..;
+  nextcloud = import ./nextcloud.nix;
+
+  configArgs = lib.recursiveUpdate {
+    protocol = "http";
+  } configArgs;
 in
-assert configArgs ? domain;
-assert myLib.validators.domain domain;
 
-myLib.containers.mkContainerService {
-  name = "nextcloud";
-  inherit image;
-  environment = {
-    NEXTCLOUD_TRUSTED_DOMAINS =
-      domain;
-  };
-  volumes = [
-    (myLib.containers.mkVolume {
-      hostPath =
-        "${volumePrefix}/nextcloud/data";
+assert configArgs ? rootDomain;
+assert images ? nextcloud;
+assert images ? onlyoffice;
+assert validators.domain configArgs.rootDomain;
+assert builtins.elem configArgs.protocol [ "http" "https" ];
 
-      containerPath =
-        "/var/www/html";
-    })
-  ];
-
+nextcloud {
+  inherit pkgs volumePrefix configArgs;
+  image = images.nextcloud;
 }
