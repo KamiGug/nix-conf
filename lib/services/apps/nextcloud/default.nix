@@ -2,7 +2,7 @@
 {
   volumePrefix ? "/mnt/nas/",
   configArgs ? {},
-  images ? { nextcloud =  "nextcloud:31"; onlyoffice = ""; },
+  images ? { nextcloud =  "docker.io/library/nextcloud:31"; onlyoffice = ""; },
 }:
 
 let
