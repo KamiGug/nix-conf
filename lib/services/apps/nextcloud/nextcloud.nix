@@ -1,6 +1,6 @@
 {
   pkgs,
-  image ? "nexcloud:31",
+  image ? "nextcloud:31",
   configArgs,
   volumePrefix ? "/mnt/nas/",
   selfPrefix ? "nextcloud"
