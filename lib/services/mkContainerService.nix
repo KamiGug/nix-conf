@@ -45,11 +45,6 @@ let
     "${v.hostMount}:${v.containerMount}"
     + lib.optionalString v.readOnly ":ro";
 
-
-  portToString = p:
-    "${toString p.host}:${toString p.container}/${p.protocol}";
-
-
   networkNames =
     map
       (n:
@@ -122,27 +117,21 @@ assert builtins.elem restart [
 ];
 
 {
-
   virtualisation.oci-containers.backend =
     backend;
 
-
   virtualisation.oci-containers.containers.${name} =
-    {
+  {
       inherit
         image
         autoStart
         environment
         labels
+        ports
         ;
 
       volumes =
         map volumeToString volumes;
-
-
-      ports =
-        map portToString ports;
-
 
       extraOptions =
         gpuOptions
@@ -156,16 +145,16 @@ assert builtins.elem restart [
         ++ map
           (n: "--network=${n}")
           networkNames;
-
-
-    }
-    // commandOptions
-    // entrypointOptions
-    //
-    {
-      systemd.services.${name} = {
-        after = lib.mkAfter (map (d: "${d}.service") dependencies);
-        requires = lib.mkAfter (map (d: "${d}.service") dependencies);
-        Restart = restart;
-    }
+      dependsOn = dependencies;
+  }
+  // commandOptions
+  // entrypointOptions;
+  # //
+  # {
+    # systemd.services."${backend}-${name}" = {
+    #   after = lib.mkAfter (map (d: "${d}.service") dependencies);
+    #   requires = lib.mkAfter (map (d: "${d}.service") dependencies);
+    #   Restart = restart;
+    # };
+  # };
 }

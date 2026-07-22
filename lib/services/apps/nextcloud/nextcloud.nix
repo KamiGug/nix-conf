@@ -1,6 +1,6 @@
 {
   pkgs,
-  image ? "nextcloud:31",
+  image ? "docker.io/library/nextcloud:31",
   configArgs,
   volumePrefix ? "/mnt/nas/",
   selfPrefix ? "nextcloud"
@@ -42,10 +42,8 @@ containerLib.mkContainerService {
     #   }
     # )
   ];
+  # TODO: remove the ports! will need correct network + reverse proxy
   ports = [
-    (containerLib.mkPort {
-      host = 8080;
-      container = 80;
-    })
+    "127.0.0.1:8080:80"
   ];
 }
