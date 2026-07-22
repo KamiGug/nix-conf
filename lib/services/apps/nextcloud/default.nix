@@ -13,6 +13,8 @@ let
 
   parsedConfigArgs = lib.recursiveUpdate {
     protocol = "http";
+    namePrefix = "";
+    nameSuffix = "";
   } configArgs;
 in
 

@@ -8,7 +8,7 @@
   image ? throw "Container ${name}: image is required",
   backend ? "podman",
   autoStart ? true,
-  restart ? "unless-stopped",
+  restart ? "on-failure",
   gpu ? false,
   privileged ? false,
   hostname ? null,
@@ -22,6 +22,7 @@
   command ? null,
   entrypoint ? null,
   dependencies ? [],
+  # TODO: handle healthcheck as systemd service healthcheck
   healthcheck ? null,
   extraOptions ? [],
 }:
@@ -53,6 +54,15 @@ let
       then [ "--gpus=all" ]
       else [ "--device=nvidia.com/gpu=all" ];
 
+   # healthOptions =
+   #    if healthcheck == null
+   #    then []
+   #    else [
+   #      "--health-cmd=${healthcheck.cmd}"
+   #      "--health-interval=${healthcheck.interval}"
+   #      "--health-timeout=${healthcheck.timeout}"
+   #      "--health-retries=${toString healthcheck.retries}"
+   #    ];
 
   secretOptions =
     map (s:
@@ -60,6 +70,9 @@ let
     ) secrets;
 
 in
+
+assert builtins.elem restart [ "no" "on-success" "on-failure" "on-abnormal" "on-abort" "on-watchdog" "always" ];
+
 {
 
   virtualisation.oci-containers.backend =
@@ -84,6 +97,7 @@ in
     extraOptions =
       gpuOptions
       ++ secretOptions
+      # ++ healthOptions
       ++ extraOptions
       ++ lib.optional privileged "--privileged"
       ++ lib.optional (hostname != null)
@@ -94,9 +108,9 @@ in
         (n: "--network=${n}")
         networkNames;
 
-
-    cmd =
-      command;
+    # TODO: handle empty command
+    # cmd =
+    #   command;
 
     entrypoint =
       entrypoint;

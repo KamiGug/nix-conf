@@ -11,17 +11,18 @@ let
   domain = if configArgs ? domain
     then configArgs.domain
     else "file.${configArgs.rootDomain}";
-  testText = pkgs.writeText "someTest";
-  testScript = pkgs.writeScript "echo hello!";
+  # testScript = pkgs.writeScriptBin "test-script" "echo hello!";
 in
 
 assert configArgs ? rootDomain || configArgs ? domain;
 assert configArgs ? protocol;
 # assert validators.domain domain;
-
+# {
+#   environment.systemPackages = [ testScript ];
+# } //
 containerLib.mkContainerService {
   inherit image;
-  name = "nextcloud";
+  name = "${configArgs.namePrefix}nextcloud${configArgs.nameSuffix}";
   environment = {
     NEXTCLOUD_TRUSTED_DOMAINS =
       domain;
@@ -34,23 +35,17 @@ containerLib.mkContainerService {
       containerPath =
         "/var/www/html";
     })
-    (
-      containerLib.mkVolume {
-        hostPath = testText;
-        containerPath = "/test.txt";
-      }
-    )
-    (
-      containerLib.mkVolume {
-        hostPath = testScript;
-        containerPath = "/test.exe";
-      }
-    )
+    # (
+    #   containerLib.mkVolume {
+    #     hostPath = testScript;
+    #     containerPath = "/test.exe";
+    #   }
+    # )
   ];
   ports = [
-    containerLib.mkPort {
+    (containerLib.mkPort {
       host = 8080;
       container = 80;
-    }
+    })
   ];
 }

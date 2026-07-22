@@ -23,6 +23,8 @@
     options = ["nofail" "x-systemd.automount"];
   };
 
+
+  nixpkgs.config.allowUnfree = true;
   my.gaming = {
     enable = true;
 
