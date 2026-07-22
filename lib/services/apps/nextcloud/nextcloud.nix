@@ -24,8 +24,8 @@ containerLib.mkContainerService {
   inherit image;
   name = "${configArgs.namePrefix}nextcloud${configArgs.nameSuffix}";
   environment = {
-    NEXTCLOUD_TRUSTED_DOMAINS =
-      domain;
+    NEXTCLOUD_TRUSTED_DOMAINS = domain;
+    serverName = "${configArgs.protocol}://${domain}";
   };
   volumes = [
     (containerLib.mkVolume {
