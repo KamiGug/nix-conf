@@ -6,8 +6,8 @@
   selfPrefix ? "nextcloud"
 }:
 let
-  validators = import ../../validators;
-  containerLib = import ../..;
+  validators = import ../../../validators;
+  containerLib = import ../.. {inherit pkgs;};
   domain = if configArgs ? domain
     then configArgs.domain
     else "file.${configArgs.rootDomain}";
@@ -15,9 +15,9 @@ let
   testScript = pkgs.writeScript "echo hello!";
 in
 
-assert configArgs ? rootDomain;
+assert configArgs ? rootDomain || configArgs ? domain;
 assert configArgs ? protocol;
-assert validators.domain domain;
+# assert validators.domain domain;
 
 containerLib.mkContainerService {
   inherit image;

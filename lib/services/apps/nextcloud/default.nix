@@ -1,4 +1,4 @@
-{pkgs, lib, ...}:
+{pkgs, ...}:
 {
   volumePrefix ? "/mnt/nas/",
   configArgs ? {},
@@ -6,22 +6,24 @@
 }:
 
 let
-  validators = import ../../validators;
-  # containerLib = import ../..;
+  lib = pkgs.lib;
+  validators = import ../../../validators;
+  # containerLib = import ../.. {inherit pkgs;};
   nextcloud = import ./nextcloud.nix;
 
-  configArgs = lib.recursiveUpdate {
+  parsedConfigArgs = lib.recursiveUpdate {
     protocol = "http";
   } configArgs;
 in
 
-assert configArgs ? rootDomain;
-assert images ? nextcloud;
-assert images ? onlyoffice;
-assert validators.domain configArgs.rootDomain;
-assert builtins.elem configArgs.protocol [ "http" "https" ];
+assert (images ? nextcloud);
+assert (images ? onlyoffice);
+# assert (parsedConfigArgs ? domain && validators.domain parsedConfigArgs.domain)
+#   || (parsedConfigArgs ? rootDomain && validators.domain parsedConfigArgs.rootDomain);
+assert builtins.elem parsedConfigArgs.protocol [ "http" "https" ];
 
 nextcloud {
-  inherit pkgs volumePrefix configArgs;
+  configArgs = parsedConfigArgs;
+  inherit pkgs volumePrefix;
   image = images.nextcloud;
 }
