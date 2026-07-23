@@ -28,7 +28,7 @@
   my.gaming = {
     enable = true;
 
-    steam.enable = true;
+    steam.enable = false;
     lutris.enable = false;
 
     nvidia = {
