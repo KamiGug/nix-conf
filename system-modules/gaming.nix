@@ -189,7 +189,7 @@ in {
 
     services.sunshine = mkIf cfg.sunshine.enable {
       enable = true;
-      autostart = true;
+      autoStart = true;
       capSysAdmin = true;
       openFirewall = true;
     };
