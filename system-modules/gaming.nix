@@ -6,23 +6,30 @@
 }: let
   cfg = config.my.gaming;
   gameify = pkgs.writeShellScriptBin "gameify" ''
+    #!/usr/bin/env bash
     if [ "$#" -eq 0 ]; then
       echo "Usage: gameify <command> [args...]"
       exit 1
     fi
+    TO_RUN="$@"
 
-    # ${lib.getExe pkgs.gamemode} \
-    exec \
-      ${lib.getExe.pkgs.nividia-offload} \
-      ${lib.getExe pkgs.gamescope} \
-        -b \
-        --xwayland-count 3 \
-        -W 1920 \
-        -H 1080 \
-        --mangoapp \
-        --force-grab-cursor \
-        -- \
-        "$@"
+    if [ -n "$(gamescope)" ]; then
+        TO_RUN="
+        ${lib.getExe pkgs.gamescope} \
+          -b \
+          --xwayland-count 3 \
+          -W 1920 \
+          -H 1080 \
+          --mangoapp \
+          --force-grab-cursor \
+          -- $TO_RUN"
+    fi
+
+    if [ -n "$(nvidia-offload)" ]; then
+        TO_RUN="nvidia-offload $TO_RUN"
+    fi
+
+    exec TO_RUN
   '';
 
   inherit
