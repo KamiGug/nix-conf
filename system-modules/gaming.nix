@@ -194,12 +194,12 @@ in {
       openFirewall = true;
     };
 
-    security.wrappers.sunshine = mkIf cfg.sunshine.enable && cfg.sunshine.waylandSupport {
-       owner = "root";
-       group = "root";
-       capabilities = "cap_sys_admin+p";
-       source = "${pkgs.sunshine}/bin/sunshine";
-    };
+    # security.wrappers.sunshine = mkIf cfg.sunshine.enable && cfg.sunshine.waylandSupport {
+    #    owner = "root";
+    #    group = "root";
+    #    capabilities = "cap_sys_admin+p";
+    #    source = "${pkgs.sunshine}/bin/sunshine";
+    # };
 
     # -----------------------------
     # NVIDIA (basic)
