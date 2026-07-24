@@ -88,6 +88,19 @@ in {
       description = "Install Gamescope.";
     };
 
+    sunshine = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Install and autostart Sunshine";
+      };
+      waylandSupport = mkOptiona {
+        type = types.bool;
+        default = true;
+        description = "Enable on a linux install with wayland";
+      }
+    }
+
     nvidia = {
       enable = mkEnableOption "NVIDIA configuration";
 
@@ -172,6 +185,20 @@ in {
 
     environment.sessionVariables = {
       STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
+    };
+
+    services.sunshine = mkIf cfg.sunshine.enable {
+      enable = true;
+      autostart = true;
+      capSysAdmin = true;
+      openFirewall = true;
+    };
+
+    security.wrappers.sunshine = mkIf cfg.sunshine.enable && cfg.sunshine.waylandSupport {
+       owner = "root";
+       group = "root";
+       capabilities = "cap_sys_admin+p";
+       source = "${pkgs.sunshine}/bin/sunshine";
     };
 
     # -----------------------------

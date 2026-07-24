@@ -64,11 +64,7 @@
           SOPS_AGE_KEY_FILE = "/etc/sops/age.key";
           packages = with pkgs; [
             sops
-            git
-            vim
             openssh
-            go-task
-            lefthook
             alejandra
             statix
             deadnix
