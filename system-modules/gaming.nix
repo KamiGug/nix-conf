@@ -13,6 +13,7 @@
 
     # ${lib.getExe pkgs.gamemode} \
     exec \
+      ${lib.getExe.pkgs.nividia-offload} \
       ${lib.getExe pkgs.gamescope} \
         -b \
         --xwayland-count 3 \
