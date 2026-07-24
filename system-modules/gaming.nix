@@ -94,12 +94,12 @@ in {
         default = false;
         description = "Install and autostart Sunshine";
       };
-      waylandSupport = mkOptiona {
+      waylandSupport = mkOption {
         type = types.bool;
         default = true;
         description = "Enable on a linux install with wayland";
-      }
-    }
+      };
+    };
 
     nvidia = {
       enable = mkEnableOption "NVIDIA configuration";
