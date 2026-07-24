@@ -71,18 +71,20 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
-  networking.hosts."127.0.0.1" = let
-    domain = "arpa";
-    services = [
-      "file"
-      "auth"
-    ];
-  in map (name : "${name}.${domain}") services;
+
+  # Tests
+  # networking.hosts."127.0.0.1" = let
+  #   domain = "arpa";
+  #   services = [
+  #     "file"
+  #     "auth"
+  #   ];
+  # in map (name : "${name}.${domain}") services;
 }
-// myLib.apps.nextcloud {
-  configArgs = {
-    protocol = "http";
-    rootDomain = "arpa";
-    # domain = "127.0.0.1";
-  };
+# // myLib.apps.nextcloud {
+#   configArgs = {
+#     protocol = "http";
+#     rootDomain = "arpa";
+#     # domain = "127.0.0.1";
+#   };
 }
