@@ -29,7 +29,7 @@
         TO_RUN="nvidia-offload $TO_RUN"
     fi
 
-    echo TO_RUN
+    echo $TO_RUN
   '';
 
   inherit
