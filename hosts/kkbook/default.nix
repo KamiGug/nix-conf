@@ -30,7 +30,7 @@
 
     steam.enable = true;
     lutris.enable = true;
-    sunshine.enable = true;
+    sunshine.enable = false;
 
     nvidia = {
       enable = true;
