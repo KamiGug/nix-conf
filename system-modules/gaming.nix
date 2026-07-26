@@ -6,34 +6,83 @@
 }: let
   cfg = config.my.gaming;
   gameify = pkgs.writeShellScriptBin "gameify" ''
-    #!/usr/bin/env bash
-    if [ "$#" -eq 0 ]; then
-      echo "Usage: gameify <command> [args...]"
-      exit 1
-    fi
-    TO_RUN="$@"
+      #!/usr/bin/env bash
+      set -euo pipefail
 
-    if [ -z "$(command -v gamescope > /dev/null)" ]; then
-        TO_RUN="
-        ${lib.getExe pkgs.gamescope} \
-          -b \
-          --xwayland-count 3 \
-          -W 1920 \
-          -H 1080 \
-          --mangoapp \
-          --force-grab-cursor \
-          -- $TO_RUN"
-    fi
+      usage() {
+          cat <<EOF
+      Usage:
+        gameify [OPTIONS] <command> [args...]
 
-    if [ -z "$(command -v nvidia-offload > /dev/null)" ]; then
-        export __NV_PRIME_RENDER_OFFLOAD=1
-        export __GLX_VENDOR_LIBRARY_NAME=nvidia
-        export __VK_LAYER_NV_optimus=NVIDIA_only
-        TO_RUN="nvidia-offload \
-          $TO_RUN"
-    fi
+      Options:
+        --no-gamescope    Don't run under gamescope
+        --no-gpu          Don't force the discrete GPU
+        -h, --help        Show this help
+      EOF
+      }
 
-    $TO_RUN
+      use_gamescope=true
+      use_gpu=true
+
+      while [[ $# -gt 0 ]]; do
+          case "$1" in
+              --no-gamescope)
+                  use_gamescope=false
+                  shift
+                  ;;
+              --no-gpu)
+                  use_gpu=false
+                  shift
+                  ;;
+              -h|--help)
+                  usage
+                  exit 0
+                  ;;
+              --)
+                  shift
+                  break
+                  ;;
+              -*)
+                  echo "Unknown option: $1" >&2
+                  usage
+                  exit 1
+                  ;;
+              *)
+                  break
+                  ;;
+          esac
+      done
+
+      if (($# == 0)); then
+          usage
+          exit 1
+      fi
+
+      cmd=("$@")
+
+      if $use_gpu && command -v nvidia-offload >/dev/null 2>&1; then
+          export __NV_PRIME_RENDER_OFFLOAD=1
+          export __GLX_VENDOR_LIBRARY_NAME=nvidia
+          export __VK_LAYER_NV_optimus=NVIDIA_only
+
+          cmd=(nvidia-offload "${cmd[@]}")
+      fi
+
+      if $use_gamescope && command -v gamescope >/dev/null 2>&1; then
+          cmd=(
+              gamescope
+              -b
+              --xwayland-count 3
+              -W 1920
+              -H 1080
+              --mangoapp
+              --force-grab-cursor
+              --
+              "${cmd[@]}"
+          )
+      fi
+
+      exec "${cmd[@]}"
   '';
 
   inherit
