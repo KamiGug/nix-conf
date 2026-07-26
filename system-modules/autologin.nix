@@ -9,12 +9,12 @@ in {
   options.my.autologin = {
     enable = lib.mkEnableOption "enable autologin";
     user = lib.mkOption {
-      type = lib.types.string;
+      type = lib.types.str;
       default = "peon";
       description = "Select user to autologin as";
     };
     de = lib.mkOption {
-      type = lib.types.string;
+      type = lib.types.str;
       default = "niri";
       description = "Select DE to log in to";
     };
