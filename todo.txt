@@ -6,6 +6,7 @@ add nfs server + client
 update .dev/switch.sh to allow passing HOSTNAME
 add remote desktop (connect to current) as a systemd unit
 
+move gameify to an hm module
 ssh module
 sshd module
 EmulationStation DE
