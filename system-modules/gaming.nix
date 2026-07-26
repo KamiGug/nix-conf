@@ -13,7 +13,7 @@
     fi
     TO_RUN="$@"
 
-    if [ -n "$(command -v gamescope > /dev/null)" ]; then
+    if [ -z "$(command -v gamescope > /dev/null)" ]; then
         TO_RUN="
         ${lib.getExe pkgs.gamescope} \
           -b \
@@ -25,7 +25,7 @@
           -- $TO_RUN"
     fi
 
-    if [ -n "$(command -v nvidia-offload > /dev/null)" ]; then
+    if [ -z "$(command -v nvidia-offload > /dev/null)" ]; then
         export __NV_PRIME_RENDER_OFFLOAD=1
         export __GLX_VENDOR_LIBRARY_NAME=nvidia
         export __VK_LAYER_NV_optimus=NVIDIA_only
