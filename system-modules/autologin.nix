@@ -34,7 +34,7 @@ in {
           enable = true;
         };
       };
-
+      # TODO: assert de legal option
       services.displayManager.defaultSession = "${cfg.de}";
   };
 }
