@@ -12,28 +12,30 @@
       exit 1
     fi
     TO_RUN="$@"
+    ENVS=""
 
-    # if [ -n "$(gamescope)" ]; then
-    #     TO_RUN="
-    #     ${lib.getExe pkgs.gamescope} \
-    #       -b \
-    #       --xwayland-count 3 \
-    #       -W 1920 \
-    #       -H 1080 \
-    #       --mangoapp \
-    #       --force-grab-cursor \
-    #       -- $TO_RUN"
-    # fi
+    if [ -n "$(gamescope)" ]; then
+        TO_RUN="
+        ${lib.getExe pkgs.gamescope} \
+          -b \
+          --xwayland-count 3 \
+          -W 1920 \
+          -H 1080 \
+          --mangoapp \
+          --force-grab-cursor \
+          -- $TO_RUN"
+    fi
 
     if [ -n "$(nvidia-offload)" ]; then
-        TO_RUN="__NV_PRIME_RENDER_OFFLOAD=1 \
+        ENVS="__NV_PRIME_RENDER_OFFLOAD=1 \
           __GLX_VENDOR_LIBRARY_NAME=nvidia \
           __VK_LAYER_NV_optimus=NVIDIA_only \
-          nvidia-offload \
+          $ENVS"
+        TO_RUN="nvidia-offload \
           $TO_RUN"
     fi
 
-    echo $TO_RUN
+    "$ENVS $TO_RUN"
   '';
 
   inherit
