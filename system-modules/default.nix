@@ -5,4 +5,5 @@
   # ./common-darwin.nix
   ./gaming.nix
   ./avahi.nix
+  ./autologin.nix
 ]
