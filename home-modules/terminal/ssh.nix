@@ -54,7 +54,7 @@ in {
             type = types.nullOr types.port;
             default = null;
           };
-          identityFile = mkOption {type = types.path;};
+          identityFile = mkOption {type = types.str;};
         };
       }));
       default = {};
