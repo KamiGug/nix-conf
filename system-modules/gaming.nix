@@ -65,7 +65,7 @@
           export __GLX_VENDOR_LIBRARY_NAME=nvidia
           export __VK_LAYER_NV_optimus=NVIDIA_only
 
-          cmd=(nvidia-offload "$${cmd[@]}")
+          cmd=(nvidia-offload "''${cmd[@]}")
       fi
 
       if $use_gamescope && command -v gamescope >/dev/null 2>&1; then
@@ -78,11 +78,11 @@
               --mangoapp
               --force-grab-cursor
               --
-              "$${cmd[@]}"
+              "''${cmd[@]}"
           )
       fi
 
-      exec "$${cmd[@]}"
+      exec "''${cmd[@]}"
   '';
 
   inherit
