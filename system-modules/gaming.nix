@@ -12,9 +12,8 @@
       exit 1
     fi
     TO_RUN="$@"
-    ENVS=""
 
-    if [ -n "$(command -v gamescope)" ]; then
+    if [ -n "$(command -v gamescope > /dev/null)" ]; then
         TO_RUN="
         ${lib.getExe pkgs.gamescope} \
           -b \
@@ -26,16 +25,15 @@
           -- $TO_RUN"
     fi
 
-    if [ -n "$(command -v nvidia-offload)" ]; then
-        ENVS="__NV_PRIME_RENDER_OFFLOAD=1 \
-          __GLX_VENDOR_LIBRARY_NAME=nvidia \
-          __VK_LAYER_NV_optimus=NVIDIA_only \
-          $ENVS"
+    if [ -n "$(command -v nvidia-offload > /dev/null)" ]; then
+        export __NV_PRIME_RENDER_OFFLOAD=1
+        export __GLX_VENDOR_LIBRARY_NAME=nvidia
+        export __VK_LAYER_NV_optimus=NVIDIA_only
         TO_RUN="nvidia-offload \
           $TO_RUN"
     fi
 
-    "$ENVS $TO_RUN"
+    $TO_RUN
   '';
 
   inherit
