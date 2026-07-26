@@ -14,7 +14,7 @@
     TO_RUN="$@"
     ENVS=""
 
-    if [ -n "$(gamescope)" ]; then
+    if [ -n "$(command -v gamescope)" ]; then
         TO_RUN="
         ${lib.getExe pkgs.gamescope} \
           -b \
@@ -26,7 +26,7 @@
           -- $TO_RUN"
     fi
 
-    if [ -n "$(nvidia-offload)" ]; then
+    if [ -n "$(command -v nvidia-offload)" ]; then
         ENVS="__NV_PRIME_RENDER_OFFLOAD=1 \
           __GLX_VENDOR_LIBRARY_NAME=nvidia \
           __VK_LAYER_NV_optimus=NVIDIA_only \
