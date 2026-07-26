@@ -13,17 +13,17 @@
     fi
     TO_RUN="$@"
 
-    if [ -n "$(gamescope)" ]; then
-        TO_RUN="
-        ${lib.getExe pkgs.gamescope} \
-          -b \
-          --xwayland-count 3 \
-          -W 1920 \
-          -H 1080 \
-          --mangoapp \
-          --force-grab-cursor \
-          -- $TO_RUN"
-    fi
+    # if [ -n "$(gamescope)" ]; then
+    #     TO_RUN="
+    #     ${lib.getExe pkgs.gamescope} \
+    #       -b \
+    #       --xwayland-count 3 \
+    #       -W 1920 \
+    #       -H 1080 \
+    #       --mangoapp \
+    #       --force-grab-cursor \
+    #       -- $TO_RUN"
+    # fi
 
     if [ -n "$(nvidia-offload)" ]; then
         TO_RUN="__NV_PRIME_RENDER_OFFLOAD=1 \
