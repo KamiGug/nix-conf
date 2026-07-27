@@ -4,14 +4,14 @@
   lib,
   ...
 }: let
-  cfg = config.my.autologin;
+  cfg = config.my.autoLogin;
 in {
-  options.my.autologin = {
-    enable = lib.mkEnableOption "enable autologin";
+  options.my.autoLogin = {
+    enable = lib.mkEnableOption "enable autoLogin";
     user = lib.mkOption {
       type = lib.types.str;
       default = "peon";
-      description = "Select user to autologin as";
+      description = "Select user to autoLogin as";
     };
     de = lib.mkOption {
       type = lib.types.str;

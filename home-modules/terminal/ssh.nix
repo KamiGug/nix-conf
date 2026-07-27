@@ -28,7 +28,6 @@ with lib; let
     ForwardAgent no
     AddKeysToAgent no
 
-
     ${renderedHosts}
   '';
 in {

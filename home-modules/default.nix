@@ -14,6 +14,7 @@
     ./creative/blender.nix
     ./gaming/steam-alias.nix
     ./gaming/lutris-alias.nix
+    ./terminal/ssh.nix
   ];
   linux = [
     ./de/plasma.nix

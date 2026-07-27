@@ -23,7 +23,7 @@
     options = ["nofail" "x-systemd.automount"];
   };
 
-  my.autologin.enable = true;
+  my.autoLogin.enable = true;
 
 
   nixpkgs.config.allowUnfree = true;
@@ -76,13 +76,14 @@
   # services.xserver.libinput.enable = true;
 
 #   Tests
-#   networking.hosts."127.0.0.1" = let
-#     domain = "arpa";
-#     services = [
-#       "file"
-#       "auth"
-#     ];
-#   in map (name : "${name}.${domain}") services;
+  networking.hosts."127.0.0.1" = let
+    domain = "arpa";
+    services = [
+      "file"
+      "auth"
+    ];
+  in map (name : "${name}.${domain}") services;
+  services.nextcloud.enable = true;
 # }
 # // myLib.apps.nextcloud {
 #   configArgs = {
