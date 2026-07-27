@@ -24,6 +24,7 @@
     neovim
     neovim-remote
     ripgrep
+    fd
     sl
     btop
   ];

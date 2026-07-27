@@ -8,7 +8,7 @@
 }:
 let
   cfg = config.services.my.nextcloud;
-  testScript = lib.trace pkgs.writeShellScriptBin "test1" "echo 'some config';";
+  testScript = lib.trace (pkgs.writeShellScriptBin "test1" "echo 'some config';");
 in
 {
   options.services.my.nextcloud = {
