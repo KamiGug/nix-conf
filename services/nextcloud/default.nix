@@ -68,8 +68,7 @@ in
       environment = {
         NEXTCLOUD_TRUSTED_DOMAINS = domain;
 
-        serverName =
-          "${cfg.configArgs.protocol}://${domain}";
+        serverName = "${cfg.configArgs.protocol}://${domain}";
       };
 
 
