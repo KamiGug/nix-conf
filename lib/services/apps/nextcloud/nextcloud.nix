@@ -11,15 +11,15 @@ let
   domain = if configArgs ? domain
     then configArgs.domain
     else "file.${configArgs.rootDomain}";
-  # testScript = pkgs.writeScriptBin "test-script" "echo hello!";
+  testScript = pkgs.writeScriptBin "test-script" "echo hello!";
 in
 
 assert configArgs ? rootDomain || configArgs ? domain;
 assert configArgs ? protocol;
 # assert validators.domain domain;
-# {
-#   environment.systemPackages = [ testScript ];
-# } //
+{
+  environment.systemPackages = [ testScript ];
+} //
 containerLib.mkContainerService {
   inherit image;
   name = "${configArgs.namePrefix}nextcloud${configArgs.nameSuffix}";
