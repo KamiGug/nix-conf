@@ -71,7 +71,6 @@ in
         serverName = "${cfg.configArgs.protocol}://${domain}";
       };
 
-
       volumes = [
         (myLib.serv.mkVolume {
           hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/data";

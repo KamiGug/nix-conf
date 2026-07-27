@@ -13,7 +13,8 @@
 
   mode ? null,
 }:
-
+# TODO: in let in mkdir -p (builtins.dirOf hostPath)
+# TODO: return only a string (docker like volume string definition)
 {
   inherit
     type
