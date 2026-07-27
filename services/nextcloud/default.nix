@@ -74,11 +74,20 @@ in
 
       volumes = [
         (myLib.serv.mkVolume {
-          hostPath =
-            "${cfg.volumePrefix}/${cfg.selfPrefix}/data";
-
-          containerPath =
-            "/var/www/html/";
+          hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/data";
+          containerPath = "/var/www/html/data";
+        })
+        (myLib.serv.mkVolume {
+          hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/config";
+          containerPath = "/var/www/html/config";
+        })
+        (myLib.serv.mkVolume {
+          hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/apps";
+          containerPath = "/var/www/html/apps";
+        })
+        (myLib.serv.mkVolume {
+          hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/custom_apps";
+          containerPath = "/var/www/html/custom_apps";
         })
       ];
 
