@@ -12,11 +12,11 @@ in {
     description = "Generate ${path}";
 
     before = [
-      "${name}.service"
+      "${serviceName}.service"
     ];
 
     wantedBy = [
-      "${name}.service"
+      "${serviceName}.service"
     ];
 
     serviceConfig = {
@@ -40,7 +40,7 @@ EOF
         chmod ${mode} ${path}
 
       else
-        rm "$tmp
+        rm "$tmp"
       fi
 
     '';

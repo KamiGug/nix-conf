@@ -1,5 +1,5 @@
-lib/services/apps/nextcloud/nextcloud.nix
-  45:  # TODO: remove the ports! will need correct network + reverse proxy
+services/nextcloud/default.nix
+  86:      # TODO:
 
 system-modules/autologin.nix
   23:  # TODO: make this get DM from using helper
