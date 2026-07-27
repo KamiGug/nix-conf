@@ -55,11 +55,9 @@ in
   };
 
 
-  config = lib.mkIf cfg.enable (
-    {
+  config = lib.mkIf cfg.enable ({
 
     } //
-
     myLib.serv.mkContainerService {
 
       inherit (cfg) image;
@@ -100,7 +98,5 @@ in
       ports = [
         "8080:80"
       ];
-    }
-
-  );
+    });
 }
