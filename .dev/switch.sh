@@ -89,4 +89,4 @@ if ! nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
 fi
 
 echo "→ Running switch"
-exec "${SWITCH_CMD[@]}"
+"${SWITCH_CMD[@]}"
