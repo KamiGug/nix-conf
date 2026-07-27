@@ -83,7 +83,7 @@
       "auth"
     ];
   in map (name : "${name}.${domain}") services;
-  services.nextcloud.enable = true;
+  services.my.nextcloud.enable = true;
 # }
 # // myLib.apps.nextcloud {
 #   configArgs = {

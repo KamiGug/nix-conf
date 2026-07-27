@@ -15,15 +15,13 @@
   networking.hostName = "kkserv";
   networking.networkmanager.enable = true;
 
-  nixpkgs.config.allowUnfree = true;
-
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #  wget
   ];
 
-  services.ai = {
-    enable = true;
+  services.my.ai = {
+    enable = false;
 
     modelUrl = "https://huggingface.co/Lamapi/next-4b-Q4_0-GGUF/resolve/main/next-4b-q4_0.gguf";
 

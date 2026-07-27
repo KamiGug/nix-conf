@@ -5,14 +5,14 @@
   ...
 }:
 with lib; let
-  cfg = config.services.ai;
+  cfg = config.services.my.ai;
 
   modelFile = pkgs.fetchurl {
     url = cfg.modelUrl;
     sha256 = cfg.modelSha256;
   };
 in {
-  options.services.ai = {
+  options.services.my.ai = {
     enable = mkEnableOption "Native llama.cpp OpenAI-compatible server";
 
     modelUrl = mkOption {
