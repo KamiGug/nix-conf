@@ -47,6 +47,8 @@
 
   services.libinput.enable = true;
 
+  my.autologin.enable = true;
+
   # environment.plasma6.excludePackages = with pkgs.kdePackages; [
   #   konsole
   # ];
