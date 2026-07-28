@@ -38,7 +38,8 @@
       ];
     };
     # homebrew.brews = [ "docker" ];
-    homebrew.casks = ["tunnelblick" "discord" "x2goclient" "xquartz"];
+    # "x2goclient"  "xquartz"
+    homebrew.casks = ["tunnelblick" "discord" "utm"];
   };
   home = {
     pkgs,
