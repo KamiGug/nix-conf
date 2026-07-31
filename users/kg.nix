@@ -39,7 +39,12 @@
     };
     # homebrew.brews = [ "docker" ];
     # "x2goclient"  "xquartz"
-    homebrew.casks = ["tunnelblick" "discord" "virtualbox" "caffeine"];
+    homebrew.casks = [
+      "tunnelblick"
+      "discord"
+      "virtualbox" 
+      "caffeine"
+    ];
   };
   home = {
     pkgs,
