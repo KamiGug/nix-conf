@@ -1,8 +1,11 @@
-lib/services/mkVolume.nix
-  16:# TODO: in let in mkdir -p (builtins.dirOf hostPath)
-  17:# TODO: return only a string (docker like volume string definition)
+home-modules/terminal/elvish.nix
+  1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
 services/nextcloud/default.nix
+  121:      # TODO:
+
+services/postgres/default.nix
+  58:      # TODO: ensure each dir exists
   94:      # TODO:
 
 system-modules/autologin.nix

@@ -83,8 +83,10 @@
       "auth"
     ];
   in map (name : "${name}.${domain}") services;
-  services.my.nextcloud.enable = true;
-# }
+  services.my.nextcloud = {
+    enable = false;
+    user = "peon";
+  };
 # // myLib.apps.nextcloud {
 #   configArgs = {
 #     protocol = "http";

@@ -2,6 +2,7 @@
   lib,
   path,
   contents,
+  parentService ? null,
   owner ? null,
   group ? null,
   mode ? "0644",
@@ -11,12 +12,12 @@ in {
   systemd.services."generate-${serviceName}" = {
     description = "Generate ${path}";
 
-    before = [
-      "${serviceName}.service"
+    before = lib.mkIf (parentService != null) [
+      "${parentService}.service"
     ];
 
-    wantedBy = [
-      "${serviceName}.service"
+    wantedBy = lib.mkIf (parentService != null) [
+      "${parentService}.service"
     ];
 
     serviceConfig = {

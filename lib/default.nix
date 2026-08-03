@@ -5,6 +5,7 @@
   template = import ./template.nix;
   scanPkgs = import ./scan-pkgs.nix args;
   mkMutableFile = import ./mkMutableFile.nix;
+  ensureDirExists = import ./ensureDirExists.nix;
   serv = import ./services args;
   validate = import ./validators;
 }
