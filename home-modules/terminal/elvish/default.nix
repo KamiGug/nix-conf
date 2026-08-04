@@ -37,6 +37,8 @@ in {
         # atuin # make a module
       ];
 
+      apps.my.scripts.enable = true;
+
       home.file = {
         ".config/elvish/rc.elv" = {
           text = ''
@@ -67,10 +69,6 @@ in {
               mkdir -p $out
               ${pkgs.direnv}/bin/direnv hook elvish > $out/direnv.elv
             '';
-        ".local/share/scripts" = {
-          source = ../../home-scripts;
-          recursive = true;
-        };
       };
     }
     (lib.mkIf cfg.starshipEnabled {

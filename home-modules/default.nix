@@ -2,6 +2,7 @@
   common = [
     ./zed.nix
 
+    ./terminal/scripts.nix
     ./terminal/fish.nix
     ./terminal/elvish
     ./terminal/zsh.nix
