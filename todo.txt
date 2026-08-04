@@ -1,4 +1,6 @@
-arbitrary DE choice
+add scritps HM module, rather than having it in each shell
+
+arbitrary DE choice with autologin (?)
 add file browser/manager/explorer to niri (pkg and a shortcut)
 
 add nfs server + client

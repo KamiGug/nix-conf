@@ -24,6 +24,9 @@
     neovim
     neovim-remote
     ripgrep
+    fzf
+    yazi
+    bat
     fd
     sl
     btop

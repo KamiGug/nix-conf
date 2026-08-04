@@ -48,13 +48,10 @@
       historyLimit = 100000;
       keyMode = "vi";
     };
-    apps.fish = {
-      enable = true;
-    };
 
-    apps.zsh = {
-      enable = true;
-    };
+    apps.fish.enable = true;
+    # apps.zsh.enable = true;
+    apps.elvish.enable = true;
 
     apps.git = {
       enable = true;
