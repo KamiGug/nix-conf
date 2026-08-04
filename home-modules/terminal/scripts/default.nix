@@ -16,10 +16,6 @@ in {
         "$HOME/.local/share/scripts"
       ];
 
-      # home.packages = with pkgs; [
-      #   bash
-      # ];
-
       home.file = {
         ".local/share/scripts" = {
           source = ./bash;

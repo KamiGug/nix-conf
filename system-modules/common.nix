@@ -23,6 +23,7 @@
     # zed-editor
     neovim
     neovim-remote
+    tree
     ripgrep
     fzf
     yazi
