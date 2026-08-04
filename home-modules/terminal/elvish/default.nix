@@ -64,11 +64,14 @@ in {
           '';
           executable = true;
         };
-        ".config/elvish/lib/direnv".source =
-            lib.getExe (pkgs.runCommand "direnv-elvish-hook" {} ''
-              mkdir -p $out
-              ${pkgs.direnv}/bin/direnv hook elvish > $out/direnv.elv
-            '') "direnv.elv";
+        ".config/elvish/lib/direnv.elv".source =
+            pkgs.writeText "direnv.elv" ''
+              ${builtins.readFile (
+                  pkgs.runCommand "direnv-hook" {} ''
+                    ${pkgs.direnv}/bin/direnv hook elvish > $out
+                  ''
+                )}
+            '';
       };
     }
     (lib.mkIf cfg.starshipEnabled {
