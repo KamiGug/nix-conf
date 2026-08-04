@@ -6,7 +6,7 @@
 }: let
   cfg = config.apps.my.scripts;
 in {
-  options.apps.elvish = {
+  options.apps.my.scripts = {
     enable = lib.mkEnableOption "Enable home scripts";
   };
 
