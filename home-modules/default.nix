@@ -3,6 +3,7 @@
     ./zed.nix
 
     ./terminal/fish.nix
+    ./terminal/elvish
     ./terminal/zsh.nix
     ./terminal/neovim-fhs.nix
     ./terminal/lazygit.nix
