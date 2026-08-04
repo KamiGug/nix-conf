@@ -3,9 +3,10 @@
     ./zed.nix
 
     ./terminal/scripts
-    ./terminal/fish.nix
-    ./terminal/elvish
-    ./terminal/zsh.nix
+    ./terminal/shell/fish
+    ./terminal/shell/elvish
+    ./terminal/shell/zsh
+
     ./terminal/neovim-fhs.nix
     ./terminal/lazygit.nix
     ./terminal/tmux.nix

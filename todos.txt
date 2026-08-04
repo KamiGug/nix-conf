@@ -1,4 +1,4 @@
-home-modules/terminal/elvish/default.nix
+home-modules/terminal/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
 services/nextcloud/default.nix
