@@ -65,9 +65,9 @@ in {
           executable = true;
         };
         ".config/elvish/lib/direnv".source =
-            pkgs.runCommand "direnv-elvish-hook" {} ''
+            lib.getExe pkgs.runCommand "direnv-elvish-hook" {} ''
               mkdir -p $out
-              ${pkgs.direnv}/bin/direnv hook elvish > $out/pkg.elb
+              ${pkgs.direnv}/bin/direnv hook elvish > $out/direnv.elv
             '';
       };
     }
