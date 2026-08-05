@@ -29,7 +29,6 @@
   boot.kernelModules = ["pinctrl_sunrisepoint"];
   #   services.xserver.wacom.enable = true;
 
-  hardware.
   hardware.microsoft-surface.kernelVersion = "longterm";
   hardware.enableRedistributableFirmware = true;
   #   hardware.cpu.intel.updateMicrocode = true;

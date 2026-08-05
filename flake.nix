@@ -30,6 +30,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # niri = {
     #   url = "github:niri-wm/niri";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +50,7 @@
     home-manager,
     nix-darwin,
     sops-nix,
+    nixos-hardware,
     ...
   }: let
     pkgs = nixpkgs;
@@ -152,6 +158,7 @@
               sops-nix.nixosModules.sops
               myUsers.peon.system
               myUsers.root.system
+              nixos-hardware.nixosModules.microsoft-surface-pro-3
 
               home-manager.nixosModules.home-manager
               {
