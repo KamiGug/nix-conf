@@ -9,7 +9,6 @@
   ];
 
   # NixOs conf
-  nix.settings.experimental-features = ["nix-command" "flakes"];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   # Enable sound.
@@ -30,6 +29,8 @@
   boot.kernelModules = ["pinctrl_sunrisepoint"];
   #   services.xserver.wacom.enable = true;
 
+  hardware.
+  hardware.microsoft-surface.kernelVersion = "longterm";
   hardware.enableRedistributableFirmware = true;
   #   hardware.cpu.intel.updateMicrocode = true;
   # boot.kernelPatches = [
@@ -47,7 +48,7 @@
 
   services.libinput.enable = true;
 
-  my.autologin.enable = true;
+  my.autoLogin.enable = true;
 
   # environment.plasma6.excludePackages = with pkgs.kdePackages; [
   #   konsole
