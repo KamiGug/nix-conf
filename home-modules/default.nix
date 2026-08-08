@@ -7,17 +7,16 @@
     ./terminal/shell/elvish
     ./terminal/shell/zsh
 
-    ./terminal/neovim-fhs.nix
-    ./terminal/lazygit.nix
-    ./terminal/tmux.nix
+    ./terminal/shell-tools/neovim-fhs.nix
+    ./terminal/shell-tools/lazygit.nix
+    ./terminal/shell-tools/tmux.nix
     ./terminal/git.nix
     ./terminal/terminal.nix
-    ./terminal/ssh.nix
-    ./terminal/starship.nix
+    ./terminal/shell-tools/ssh.nix
+    ./terminal/shell-tools/starship.nix
     ./creative/blender.nix
     ./gaming/steam-alias.nix
     ./gaming/lutris-alias.nix
-    ./terminal/ssh.nix
   ];
   linux = [
     ./de/plasma.nix
