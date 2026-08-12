@@ -22,7 +22,7 @@ in {
 
   # TODO: make this get DM from using helper
   config = lib.mkIf cfg.enable {
-    services.displayManager.sddm = {
+    services.displayManager = {
         enable = true;
 
         autoLogin = {
