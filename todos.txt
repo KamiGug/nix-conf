@@ -10,3 +10,7 @@ services/postgres/default.nix
 
 system-modules/autologin.nix
   26:        # TODO: assert de legal option
+
+system-modules/printing.nix
+  1:# TODO: make it actually work
+  2:# TODO: add pkg for scaning

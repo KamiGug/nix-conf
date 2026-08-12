@@ -1,3 +1,5 @@
+# TODO: make it actually work
+# TODO: add pkg for scaning
 { config, lib, pkgs, ... }:
 
 let
