@@ -20,21 +20,19 @@ in {
     };
   };
 
-  # TODO: make this get DM from using helper
   config = lib.mkIf cfg.enable {
     services.displayManager = {
         enable = true;
-
+        # TODO: assert de legal option
+        defaultSession = "${cfg.de}";
         autoLogin = {
           enable = true;
           user = "${cfg.user}";
         };
 
-        wayland = {
-          enable = true;
-        };
+        # wayland = {
+        #   enable = true;
+        # };
       };
-      # TODO: assert de legal option
-      services.displayManager.defaultSession = "${cfg.de}";
   };
 }
