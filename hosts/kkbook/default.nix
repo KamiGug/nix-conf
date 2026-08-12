@@ -25,7 +25,7 @@
 
   my.autoLogin.enable = true;
 
-  my.printer = {
+  my.printing = {
     enable = true;
     users = [ "peon" ];
   };
