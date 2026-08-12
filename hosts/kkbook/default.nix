@@ -25,6 +25,10 @@
 
   my.autoLogin.enable = true;
 
+  my.printer = {
+    enable = true;
+    users = [ "peon" ];
+  };
 
   nixpkgs.config.allowUnfree = true;
   my.gaming = {

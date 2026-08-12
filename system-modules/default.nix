@@ -6,4 +6,5 @@
   ./gaming.nix
   ./avahi.nix
   ./autologin.nix
+  ./printer.nix
 ]
