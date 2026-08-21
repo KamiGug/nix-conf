@@ -5,7 +5,8 @@
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
-  nixpkgs.config.allowUnfree = true;
+  # nixpkgs.config.allowUnfree = true;
+  nix.package = pkgs.lixPackageSets.stable.lix;
 
   home-manager.backupFileExtension = "bak";
   # sops.secrets.repo = {
@@ -22,10 +23,16 @@
     # zed-editor
     neovim
     neovim-remote
+    tree
     ripgrep
+    fzf
+    yazi
+    bat
+    fd
     sl
     btop
-
+    kalker
+    tree
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -39,7 +46,6 @@
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-
 
   users.groups.config-editor = {};
 }

@@ -1,6 +1,9 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.apps.steam.gamescope;
 
   steamGamescope = pkgs.writeShellScriptBin "steam-gamescope" ''
@@ -21,12 +24,11 @@ let
     exec = "${lib.getExe steamGamescope} %U";
     icon = "steam";
     terminal = false;
-    categories = [ "Game" ];
+    categories = ["Game"];
     startupNotify = true;
-    mimeTypes = [ "x-scheme-handler/steam" ];
+    mimeTypes = ["x-scheme-handler/steam"];
   };
-in
-{
+in {
   options.apps.steam.gamescope = {
     enable = lib.mkEnableOption "Launch Steam through Gamescope";
 
@@ -56,9 +58,9 @@ in
       exec = "${lib.getExe steamGamescope} %U";
       icon = "steam";
       terminal = false;
-      categories = [ "Game" ];
+      categories = ["Game"];
       startupNotify = true;
-      mimeType = [ "x-scheme-handler/steam" ];
+      mimeType = ["x-scheme-handler/steam"];
     };
   };
 }

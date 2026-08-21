@@ -17,17 +17,16 @@
     #media-session.enable = true;
   };
 
+  programs.nix-ld.enable = true;
 
-    programs.nix-ld.enable = true;
-
-    programs.nix-ld.libraries = with pkgs; [
-      libgcc
-      stdenv.cc.cc
-      zlib
-      openssl
-      libxml2
-      libclang
-    ];
+  programs.nix-ld.libraries = with pkgs; [
+    libgcc
+    stdenv.cc.cc
+    zlib
+    openssl
+    libxml2
+    libclang
+  ];
 
   services.blueman.enable = true;
 
@@ -87,7 +86,7 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  my.avahi.enable = true;
+  # my.avahi.enable = true;
 
   systemd.tmpfiles.rules = [
     "d /etc/nixos 2775 root config-editor -"

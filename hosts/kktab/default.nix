@@ -1,15 +1,17 @@
-{ config, lib, pkgs, ... }:
-
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
   imports = [
     ./hardware-configuration.nix
   ];
 
   # NixOs conf
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-    # Enable sound.
+  # Enable sound.
 
   # Surface conf
   # touch
@@ -25,8 +27,9 @@
   };
   # volume buttons
   boot.kernelModules = ["pinctrl_sunrisepoint"];
-#   services.xserver.wacom.enable = true;
+  #   services.xserver.wacom.enable = true;
 
+  hardware.microsoft-surface.kernelVersion = "longterm";
   hardware.enableRedistributableFirmware = true;
   #   hardware.cpu.intel.updateMicrocode = true;
   # boot.kernelPatches = [
@@ -43,6 +46,11 @@
   networking.hostName = "kktab";
 
   services.libinput.enable = true;
+
+  my.autoLogin = {
+    enable = true;
+    de = "plasma";
+  };
 
   # environment.plasma6.excludePackages = with pkgs.kdePackages; [
   #   konsole

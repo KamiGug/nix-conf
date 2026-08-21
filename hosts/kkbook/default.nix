@@ -1,6 +1,7 @@
 {
   pkgs,
   config,
+  myLib,
   # inputs,
   ...
 }: {
@@ -22,11 +23,20 @@
     options = ["nofail" "x-systemd.automount"];
   };
 
+  my.autoLogin.enable = true;
+
+  my.hardware.printing = {
+    enable = true;
+    users = [ "peon" ];
+  };
+
+  nixpkgs.config.allowUnfree = true;
   my.gaming = {
     enable = true;
 
-    steam.enable = false;
-    lutris.enable = false;
+    steam.enable = true;
+    lutris.enable = true;
+    sunshine.enable = false;
 
     nvidia = {
       enable = true;
@@ -64,8 +74,41 @@
   ];
 
   networking.hostName = "kkbook";
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  # networking.wireless.enable = tr:hardware;  # Enables wireless support via wpa_supplicant.
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
+
+#   Tests
+  networking.hosts."127.0.0.1" = let
+    domain = "arpa";
+    services = [
+      "file"
+      "auth"
+    ];
+  in map (name : "${name}.${domain}") services;
+  # services.my.nextcloud = {
+  #   enable = false;
+  #   user = "peon";
+
+  }
+  // myLib.apps.dbs.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      # serviceUser = "peon";
+      networks = [{name="nextcloud"; }];
+    };
+  }
+  // myLib.apps.nextcloud {
+  configArgs = {
+    protocol = "http";
+    nameSuffix = "-test";
+    rootDomain = "arpa";
+    # domain = "127.0.0.1";
+    # serviceUser = "peon";
+    networks = {
+      nextcloud = [{name="nextcloud"; }];
+    };
+  }
+  ;
 }

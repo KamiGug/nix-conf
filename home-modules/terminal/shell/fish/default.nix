@@ -24,10 +24,6 @@ in {
 
   config = lib.mkIf cfg.enable (lib.mkMerge [
     {
-      home.sessionPath = [
-        "$HOME/.local/share/scripts"
-      ];
-
       home.packages = with pkgs; [
         direnv
       ];
@@ -79,11 +75,7 @@ in {
 
         shellAbbrs = {};
       };
-
-      home.file.".local/share/scripts" = {
-        source = ../../home-scripts;
-        recursive = true;
-      };
+      apps.my.scripts.enable = true;
     }
     (lib.mkIf cfg.starshipEnabled {
       apps.starship.enable = true;

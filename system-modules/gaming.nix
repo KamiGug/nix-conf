@@ -6,22 +6,83 @@
 }: let
   cfg = config.my.gaming;
   gameify = pkgs.writeShellScriptBin "gameify" ''
-    if [ "$#" -eq 0 ]; then
-      echo "Usage: gameify <command> [args...]"
-      exit 1
-    fi
+      #!/usr/bin/env bash
+      set -euo pipefail
 
-    # ${lib.getExe pkgs.gamemode} \
-    exec \
-      ${lib.getExe pkgs.gamescope} \
-        -b \
-        --xwayland-count 3 \
-        -W 1920 \
-        -H 1080 \
-        --mangoapp \
-        --force-grab-cursor \
-        -- \
-        "$@"
+      usage() {
+          cat <<EOF
+      Usage:
+        gameify [OPTIONS] <command> [args...]
+
+      Options:
+        --no-gamescope    Don't run under gamescope
+        --no-gpu          Don't force the discrete GPU
+        -h, --help        Show this help
+      EOF
+      }
+
+      use_gamescope=true
+      use_gpu=true
+
+      while [[ $# -gt 0 ]]; do
+          case "$1" in
+              --no-gamescope)
+                  use_gamescope=false
+                  shift
+                  ;;
+              --no-gpu)
+                  use_gpu=false
+                  shift
+                  ;;
+              -h|--help)
+                  usage
+                  exit 0
+                  ;;
+              --)
+                  shift
+                  break
+                  ;;
+              -*)
+                  echo "Unknown option: $1" >&2
+                  usage
+                  exit 1
+                  ;;
+              *)
+                  break
+                  ;;
+          esac
+      done
+
+      if (($# == 0)); then
+          usage
+          exit 1
+      fi
+
+      cmd=("$@")
+
+      if $use_gpu && command -v nvidia-offload >/dev/null 2>&1; then
+          export __NV_PRIME_RENDER_OFFLOAD=1
+          export __GLX_VENDOR_LIBRARY_NAME=nvidia
+          export __VK_LAYER_NV_optimus=NVIDIA_only
+
+          cmd=(nvidia-offload "''${cmd[@]}")
+      fi
+
+      if $use_gamescope && command -v gamescope >/dev/null 2>&1; then
+          cmd=(
+              gamescope
+              -b
+              --xwayland-count 3
+              -W 1920
+              -H 1080
+              --mangoapp
+              --force-grab-cursor
+              --
+              "''${cmd[@]}"
+          )
+      fi
+
+      exec "''${cmd[@]}"
   '';
 
   inherit
@@ -78,6 +139,19 @@ in {
       type = types.bool;
       default = true;
       description = "Install Gamescope.";
+    };
+
+    sunshine = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Install and autostart Sunshine";
+      };
+      waylandSupport = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable on a linux install with wayland";
+      };
     };
 
     nvidia = {
@@ -164,6 +238,20 @@ in {
 
     environment.sessionVariables = {
       STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
+    };
+
+    services.sunshine = mkIf cfg.sunshine.enable {
+      enable = true;
+      autoStart = true;
+      capSysAdmin = true;
+      openFirewall = true;
+    };
+
+    security.wrappers.sunshine = mkIf (cfg.sunshine.enable && cfg.sunshine.waylandSupport) {
+       owner = "root";
+       group = "root";
+       capabilities = "cap_sys_admin+p";
+       source = "${pkgs.sunshine}/bin/sunshine";
     };
 
     # -----------------------------

@@ -3,12 +3,9 @@
   lib,
   pkgs,
   ...
-}:
-
-let
+}: let
   cfg = config.apps.terminal;
-in
-{
+in {
   options.apps.terminal = {
     enable = lib.mkEnableOption "Kitty config";
 
@@ -72,7 +69,7 @@ in
     }
 
     # ---- Linux-Specific Configuration ----
-    (lib.mkIf pkgs.stdenv.isLinux {
+    (lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
       home.packages = with pkgs; [
         wl-clipboard
       ];

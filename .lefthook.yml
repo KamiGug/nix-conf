@@ -1,5 +1,12 @@
 skip_lfs: true
 
+pre-commit:
+  commands:
+    todos:
+      run: |
+        task -s todos
+        git add todos.txt
+
 pre-push:
   parallel: false
   commands:
@@ -10,7 +17,11 @@ commit-msg:
   commands:
     commitlint:
       run: |
-        BRANCH=$(git rev-parse --abbrev-ref HEAD)
-        if [[ "$BRANCH" != dev* ]]; then
-          commitlint-rs --config commitlint.toml --edit {1}
+        if grep -qE "^(Merge|Revert|Fixup) " {1}; then
+          exit 0
         fi
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        if [[ "$BRANCH" == dev* ]]; then
+          exit 0
+        fi
+        commitlint-rs --config commitlint.toml --edit {1}

@@ -7,12 +7,11 @@
     pkgs,
     ...
   }: {
-    
     programs.fish.enable = true;
-    users.users.peon = {
+    users.users.wisp = {
       isNormalUser = true;
       description = "peon";
-      home = "/home/peon";
+      home = "/home/wisp";
       shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
@@ -24,18 +23,12 @@
     # homeModules,
     ...
   }: {
-    home.username = "peon";
-    home.homeDirectory = "/home/peon";
+    home.username = "wisp";
+    home.homeDirectory = "/home/wisp";
     home.stateVersion = "24.05";
 
     programs.home-manager.enable = true;
 
-    # systemd.user.services.home-manager-peon.Unit.After = [ "sops-nix.service" ];
-
-    # desktop.niri.enable = true;
-    #   desktop.plasma.enable = true;
-    #    apps.nvim.enable = true;
-    # apps.zed.enable = true;
     apps.lazygit.enable = true;
     apps.tmux = {
       enable = true;
@@ -83,21 +76,10 @@
       sshfs.enable = true;
     };
 
-    # apps.niri.enable = true;
-    # apps.plasma.enable = true;
-
     home.packages = with pkgs; [
-      # neovim
-      # neovim-remote
       git
       git-lfs
       lazygit
-      lazydocker
-      # brave
-      # thunderbird
-      #
-      # spotify
-      # discord
     ];
   };
 }

@@ -119,3 +119,44 @@ tasks:
         done
 
         echo "→ Done"
+
+  todos:
+    desc: Generate TODO list grouped by file
+    cmds:
+      - |
+        tmpfile=$(mktemp)
+
+        # Choose search tool
+        if command -v rg >/dev/null 2>&1; then
+          SEARCH_CMD='rg --line-number --no-heading -e "\b(TODO|FIXME|FIX)\b"'
+        else
+          SEARCH_CMD='grep -nE "\b(TODO|FIXME|FIX)\b"'
+        fi
+
+        git ls-files | \
+        grep -vE '^([tT]askfile.yml|todos.txt)$' | \
+        while read -r file; do
+          eval $SEARCH_CMD "$file" 2>/dev/null | \
+          sed "s|^|$file:|"
+        done > "$tmpfile"
+
+        # Sort + group by file
+        sort "$tmpfile" | \
+        awk -F: '
+          {
+            file=$1
+            line=$2
+            text=$0
+
+            if (file != current_file) {
+              if (NR > 1) print ""
+              print file
+              current_file = file
+            }
+
+            sub(/^[^:]+:/, "", text)
+            print "  " text
+          }
+        ' > todos.txt
+
+        rm "$tmpfile"

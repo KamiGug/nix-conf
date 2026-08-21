@@ -17,9 +17,6 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    home.sessionPath = [
-      "$HOME/.local/share/scripts"
-    ];
 
     home.packages = with pkgs; [
       zsh-completions
@@ -88,9 +85,6 @@ in {
       '';
     };
 
-    home.file.".local/share/scripts" = {
-      source = ../../home-scripts;
-      recursive = true;
-    };
+    apps.my.scripts.enable = true;
   };
 }

@@ -1,0 +1,37 @@
+flake.nix
+  70:  # TODO: split shells to seperate file
+
+home-modules/terminal/shell/elvish/default.nix
+  1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
+
+lib/flake/_resolveHostSet.nix
+  77:  # TODO: handle enableHm == false
+
+lib/services/apps/nextcloud/default.nix
+  47:# TODO: add more asserts (at least one each)
+
+lib/services/apps/nextcloud/nextcloud.nix
+  63:  # TODO: remove the ports! will need correct network + reverse proxy
+
+lib/services/ensureNetwork.nix
+  4:  # TODO: make this rootless
+
+lib/services/mkContainerService.nix
+  5:# TODO: make this a user service
+
+services/nextcloud/default.nix
+  121:      # TODO:
+
+services/postgres/default.nix
+  58:      # TODO: ensure each dir exists
+  94:      # TODO:
+
+system-modules/autologin.nix
+  26:        # TODO: assert de legal option
+
+system-modules/default.nix
+  2:  # TODO: make the common files actual nixos modules
+
+system-modules/printing.nix
+  1:# TODO: make it actually work
+  2:# TODO: add pkg for scaning

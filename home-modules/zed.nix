@@ -17,8 +17,9 @@
       typos = pkgs.typos;
       nix = pkgs.nixd;
       nixFormatter = pkgs.alejandra;
+      tix = pkgs.tix;
     }
-    // lib.optionalAttrs pkgs.stdenv.isLinux {
+    // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
       csharp = pkgs.csharp-ls;
     };
 in {
@@ -27,7 +28,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     programs.zed-editor.enable = true;
-    programs.zed-editor.extensions = ["nix" "toml" "kdl"];
+    programs.zed-editor.extensions = ["nix" "toml" "kdl" "sops" "vue"];
 
     programs.zed-editor.userSettings = {
       vim_mode = true;
@@ -86,6 +87,13 @@ in {
             };
           };
 
+          tix = {
+            binary = {
+              path = lib.getExe lspBinaries.tix;
+              arguments = ["lsp"];
+            };
+          };
+
           typos = {
             binary = {
               path = lib.getExe lspBinaries.typos;
@@ -97,7 +105,7 @@ in {
             };
           };
         }
-        // lib.optionalAttrs pkgs.stdenv.isLinux {
+        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           csharp-ls = {
             binary = {
               path = lib.getExe lspBinaries.csharp;
@@ -120,7 +128,7 @@ in {
           };
 
           "PHP" = {
-              language_servers = ["phpactor" "typos"];
+            language_servers = ["phpactor" "typos"];
           };
 
           "YAML" = {
@@ -132,7 +140,7 @@ in {
           };
 
           "Nix" = {
-            language_servers = ["nixd" "typos" "kdl"];
+            language_servers = ["nixd" "tix" "typos"];
 
             formatter = {
               external = {
@@ -142,7 +150,7 @@ in {
             };
           };
         }
-        // lib.optionalAttrs pkgs.stdenv.isLinux {
+        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           "C#" = {
             language_servers = ["csharp-ls" "typos"];
           };
