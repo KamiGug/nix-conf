@@ -13,7 +13,6 @@ let
 
   parsedConfigArgs = lib.recursiveUpdate {
     protocol = "http";
-    namePrefix = "";
     nameSuffix = "";
     volumePrefix = "/mnt/nas";
     volumeSelfPrefix = {
@@ -22,6 +21,14 @@ let
     };
     user = "wisp";
   } configArgs;
+
+  nextcloudArgs = parsedConfigArgs // {
+    volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.nextcloud;
+  };
+
+  # onlyofficeArgs = parsedConfigArgs // {
+  #   volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.onlyoffice;
+  # };
 
 in
 
@@ -34,11 +41,11 @@ assert builtins.elem parsedConfigArgs.protocol [ "http" "https" ];
 
 nextcloud {
   inherit pkgs;
-  configArgs = parsedConfigArgs;
+  configArgs = nextcloudArgs;
   image = images.nextcloud;
 }
 # // onlyoffice {
 #   inherit pkgs;
-#   configArgs = parsedConfigArgs;
+#   configArgs = onlyofficeArgs;
 #   image = images.onlyoffice;
 # }
