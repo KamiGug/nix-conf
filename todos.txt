@@ -2,13 +2,13 @@ home-modules/terminal/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
 lib/services/apps/nextcloud/default.nix
-  32:# TODO: add more asserts (at least one each)
+  33:# TODO: add more asserts (at least one each)
 
 lib/services/apps/nextcloud/nextcloud.nix
-  72:  # TODO: remove the ports! will need correct network + reverse proxy
+  76:  # TODO: remove the ports! will need correct network + reverse proxy
 
 services/nextcloud/default.nix
-  121:      # TODO:
+  121:  #     # TODO:
 
 services/postgres/default.nix
   58:      # TODO: ensure each dir exists

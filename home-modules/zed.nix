@@ -17,6 +17,7 @@
       typos = pkgs.typos;
       nix = pkgs.nixd;
       nixFormatter = pkgs.alejandra;
+      tix = pkgs.tix;
     }
     // lib.optionalAttrs pkgs.stdenv.isLinux {
       csharp = pkgs.csharp-ls;
@@ -86,6 +87,13 @@ in {
             };
           };
 
+          tix = {
+            binary = {
+              path = lib.getExe lspBinaries.tix;
+              arguments = ["lsp"];
+            };
+          };
+
           typos = {
             binary = {
               path = lib.getExe lspBinaries.typos;
@@ -132,7 +140,7 @@ in {
           };
 
           "Nix" = {
-            language_servers = ["nixd" "typos" "kdl"];
+            language_servers = ["nixd" "tix" "typos"];
 
             formatter = {
               external = {
