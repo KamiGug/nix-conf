@@ -1,6 +1,9 @@
 home-modules/terminal/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
+lib/services/apps/nextcloud/nextcloud.nix
+  45:  # TODO: remove the ports! will need correct network + reverse proxy
+
 services/nextcloud/default.nix
   121:      # TODO:
 

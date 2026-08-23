@@ -6,6 +6,16 @@ add file browser/manager/explorer to niri (pkg and a shortcut)
 add nfs server + client
 add remote desktop (connect to current) as a systemd unit
 
+write scripts: 
+  save-niri-workspaces:
+    - takes in workspace ids (--workspaces/-w <comma_separated_ids>) - saves to niri.json at current cwd (+ --out/-o <dir>)
+
+  open niri workspaces: 
+    - takes in a path to niri.json (positional; defaults to cwd/niri.json)
+    - needs to ask each kitty os window/tab/window for cwd
+    - if a zed was open - need to open the same number of windows (or maybe just one for each git root in the saved dirs)
+
+
 move gameify to an hm module
 ssh module
 sshd module
