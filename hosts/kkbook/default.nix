@@ -97,6 +97,6 @@
     protocol = "http";
     rootDomain = "arpa";
     # domain = "127.0.0.1";
-    user = "peon";
+    serviceUser = "peon";
   };
 }
