@@ -5,7 +5,7 @@
 
 {
   name,
-  image ? throw "Container ${name}: image is required",
+  image,
 
   backend ? "podman",
 
@@ -37,7 +37,7 @@
 
   extraOptions ? [],
 }:
-
+assert builtins.isString image || throw "Image name must be a string";
 let
   lib = pkgs.lib;
 
@@ -156,5 +156,5 @@ assert builtins.elem restart [
   #     requires = lib.mkAfter (map (d: "${d}.service") dependencies);
   #     Restart = restart;
   #   };
-  };
+  # };
 }

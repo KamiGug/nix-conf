@@ -1,5 +1,5 @@
 {pkgs, ...}@args:
 {
   # authentik = import ./authentik;
-  nextcloud = import ./nextcloud args;
+  nextcloud = import ./nextcloud { inherit pkgs; };
 }

@@ -90,12 +90,13 @@
   # services.my.nextcloud = {
   #   enable = false;
   #   user = "peon";
+
   }
-  # ;
 // myLib.apps.nextcloud {
   configArgs = {
     protocol = "http";
     rootDomain = "arpa";
     # domain = "127.0.0.1";
+    user = "peon";
   };
 }

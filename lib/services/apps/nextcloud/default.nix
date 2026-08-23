@@ -22,6 +22,7 @@ let
     };
     user = "wisp";
   } configArgs;
+
 in
 
 assert (images ? nextcloud);
@@ -36,3 +37,8 @@ nextcloud {
   configArgs = parsedConfigArgs;
   image = images.nextcloud;
 }
+# // onlyoffice {
+#   inherit pkgs;
+#   configArgs = parsedConfigArgs;
+#   image = images.onlyoffice;
+# }

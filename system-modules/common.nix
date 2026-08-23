@@ -31,6 +31,8 @@
     fd
     sl
     btop
+    kalker
+    tree
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
