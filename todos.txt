@@ -11,7 +11,7 @@ lib/services/apps/nextcloud/default.nix
   40:# TODO: add more asserts (at least one each)
 
 lib/services/apps/nextcloud/nextcloud.nix
-  76:  # TODO: remove the ports! will need correct network + reverse proxy
+  71:  # TODO: remove the ports! will need correct network + reverse proxy
 
 services/nextcloud/default.nix
   121:      # TODO:

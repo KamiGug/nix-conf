@@ -18,10 +18,6 @@ let
     custom_apps = "/var/www/html/custom_apps";
   };
 
-  hostPaths = lib.mapAttrsToList (name: _:
-    "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}"
-  ) volumes;
-
   volumeMounts = lib.mapAttrsToList (name: containerPath:
     containerLib.mkVolume {
       hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
@@ -39,7 +35,6 @@ assert configArgs ? protocol;
     "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}"
       "750 ${configArgs.user} root -"
   ]
-  # ;
   ++ lib.mapAttrsToList (name: _:
         "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.user} root -"
       ) volumes;
@@ -65,7 +60,7 @@ assert configArgs ? protocol;
     # })
     (
       containerLib.mkVolume {
-        hostPath = testScript;
+        hostPath = lib.getExe testScript;
         containerPath = "/test.exe";
       }
     )

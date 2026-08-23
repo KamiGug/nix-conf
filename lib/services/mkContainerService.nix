@@ -16,7 +16,8 @@
   privileged ? false,
 
   hostname ? null,
-  user ? null,
+  serviceUser ? null,
+  containerUser ? null,
 
   volumes ? [],
   ports ? [],
@@ -115,8 +116,7 @@ assert builtins.elem restart [
   "on-watchdog"
   "always"
 ];
-
-{
+lib.recursiveUpdate {
   virtualisation.oci-containers.backend =
     backend;
 
@@ -140,8 +140,8 @@ assert builtins.elem restart [
         ++ lib.optional privileged "--privileged"
         ++ lib.optional (hostname != null)
           "--hostname=${hostname}"
-        ++ lib.optional (user != null)
-          "--user=${user}"
+        ++ lib.optional (containerUser != null)
+          "--user=${containerUser}"
         ++ map
           (n: "--network=${n}")
           networkNames;
@@ -149,12 +149,16 @@ assert builtins.elem restart [
   }
   // commandOptions
   // entrypointOptions;
-  # //
-  # {
-  #   systemd.services."${backend}-${name}" = {
-  #     after = lib.mkAfter (map (d: "${d}.service") dependencies);
-  #     requires = lib.mkAfter (map (d: "${d}.service") dependencies);
-  #     Restart = restart;
-  #   };
-  # };
+}
+{
+  systemd.services."${backend}-${name}" = {
+    after = lib.mkAfter (map (d: "${d}.service") dependencies);
+    requires = lib.mkAfter (map (d: "${d}.service") dependencies);
+    Restart = restart;
+  }
+  // lib.mkIf (serviceUser != null) {
+    serviceConfig = {
+      User = serviceUser;
+    };
+  };
 }
