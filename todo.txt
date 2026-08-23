@@ -1,5 +1,10 @@
 migrate to tnix
-add scritps HM module, rather than having it in each shell
+
+SOPS for:
+    - ssh (hm)
+    - sshd (nixos)
+    - app services (nixos)
+    - nfs pass(?) (nixos)
 
 arbitrary DE choice with autologin (?)
 add file browser/manager/explorer to niri (pkg and a shortcut)
@@ -28,7 +33,6 @@ migrate lazygit to templating rather than inline
 templating for git and ssh
 add mako (notification daemon) (niri manual)
 make waybar more usable (niri manual)
-.dev (bashly based project management) / taskfile + lefthook
 
 add automatic pkg adding
 add mkHost function
