@@ -1,4 +1,4 @@
 [
-  # ./secrets.nix
+  ./secrets.nix
   ./using.nix
 ]

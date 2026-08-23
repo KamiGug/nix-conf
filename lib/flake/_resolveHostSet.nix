@@ -93,7 +93,7 @@ let
       inputs.noctalia.homeModules.default
     ++ helpers
     ++ [
-      sopsModule
+      inputs.sops-nix.homeManagerModules.sops
     ];
   };
 
