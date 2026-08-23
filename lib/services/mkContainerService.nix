@@ -151,10 +151,10 @@ assert builtins.elem restart [
   // entrypointOptions;
   # //
   # {
-    # systemd.services."${backend}-${name}" = {
-    #   after = lib.mkAfter (map (d: "${d}.service") dependencies);
-    #   requires = lib.mkAfter (map (d: "${d}.service") dependencies);
-    #   Restart = restart;
-    # };
-  # };
+  #   systemd.services."${backend}-${name}" = {
+  #     after = lib.mkAfter (map (d: "${d}.service") dependencies);
+  #     requires = lib.mkAfter (map (d: "${d}.service") dependencies);
+  #     Restart = restart;
+  #   };
+  };
 }

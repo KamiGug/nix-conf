@@ -1,6 +1,6 @@
-{pkgs, ...}:
+{pkgs, ...} :
 {
-  volumePrefix ? "/mnt/nas/",
+  # pkgs,
   configArgs ? {},
   images ? { nextcloud =  "docker.io/library/nextcloud:31"; onlyoffice = ""; },
 }:
@@ -15,6 +15,12 @@ let
     protocol = "http";
     namePrefix = "";
     nameSuffix = "";
+    volumePrefix = "/mnt/nas";
+    volumeSelfPrefix = {
+      nextcloud = "nextcloud";
+      onlyoffice = "onlyoffice";
+    };
+    user = "wisp";
   } configArgs;
 in
 
@@ -23,9 +29,10 @@ assert (images ? onlyoffice);
 # assert (parsedConfigArgs ? domain && validators.domain parsedConfigArgs.domain)
 #   || (parsedConfigArgs ? rootDomain && validators.domain parsedConfigArgs.rootDomain);
 assert builtins.elem parsedConfigArgs.protocol [ "http" "https" ];
+# TODO: add more asserts (at least one each)
 
 nextcloud {
+  inherit pkgs;
   configArgs = parsedConfigArgs;
-  inherit pkgs volumePrefix;
   image = images.nextcloud;
 }

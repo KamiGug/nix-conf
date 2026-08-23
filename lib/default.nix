@@ -7,5 +7,6 @@
   mkMutableFile = import ./mkMutableFile.nix;
   ensureDirExists = import ./ensureDirExists.nix;
   serv = import ./services args;
+  apps = import ./services/apps args;
   validate = import ./validators;
 }

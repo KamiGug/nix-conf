@@ -1,4 +1,5 @@
 [
+  # TODO: make the common files actual nixos modules
   # ./common.nix
   # ./common-linux.nix
   # ./common-gui-linux.nix

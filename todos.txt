@@ -1,8 +1,11 @@
 home-modules/terminal/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
+lib/services/apps/nextcloud/default.nix
+  32:# TODO: add more asserts (at least one each)
+
 lib/services/apps/nextcloud/nextcloud.nix
-  45:  # TODO: remove the ports! will need correct network + reverse proxy
+  72:  # TODO: remove the ports! will need correct network + reverse proxy
 
 services/nextcloud/default.nix
   121:      # TODO:
@@ -13,6 +16,9 @@ services/postgres/default.nix
 
 system-modules/autologin.nix
   26:        # TODO: assert de legal option
+
+system-modules/default.nix
+  2:  # TODO: make the common files actual nixos modules
 
 system-modules/printing.nix
   1:# TODO: make it actually work
