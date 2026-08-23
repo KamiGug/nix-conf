@@ -13,6 +13,9 @@ lib/services/apps/nextcloud/default.nix
 lib/services/apps/nextcloud/nextcloud.nix
   71:  # TODO: remove the ports! will need correct network + reverse proxy
 
+lib/services/mkContainerService.nix
+  5:# TODO: make this a user service
+
 services/nextcloud/default.nix
   121:      # TODO:
 
