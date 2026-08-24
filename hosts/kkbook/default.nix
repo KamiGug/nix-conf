@@ -92,7 +92,14 @@
   #   user = "peon";
 
   }
-// myLib.apps.nextcloud {
+  // myLib.apps.dbs.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      # serviceUser = "peon";
+      networks = [{name="nextcloud"; }];
+    };
+  }
+  // myLib.apps.nextcloud {
   configArgs = {
     protocol = "http";
     nameSuffix = "-test";
@@ -101,13 +108,6 @@
     # serviceUser = "peon";
     networks = {
       nextcloud = [{name="nextcloud"; }];
-    };
-  }
-  // myLib.apps.dbs.postgres {
-    configArgs = {
-      nameSuffix = "-test";
-      # serviceUser = "peon";
-      networks = [{name="nextcloud"; }];
     };
   }
   ;
