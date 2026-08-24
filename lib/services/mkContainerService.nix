@@ -150,6 +150,7 @@ lib.recursiveUpdate {
   // commandOptions
   // entrypointOptions;
 }
+
 {
   systemd.services."${backend}-${name}" = {
     after = lib.mkAfter (map (d: "${d}.service") dependencies);
@@ -158,7 +159,7 @@ lib.recursiveUpdate {
   }
   // lib.mkIf (serviceUser != null) {
     serviceConfig = {
-      User = serviceUser;
+      User = lib.mkForce serviceUser;
     };
   };
 }
