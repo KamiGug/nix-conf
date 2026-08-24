@@ -103,12 +103,12 @@
       nextcloud = [{name="nextcloud"; }];
     };
   }
-  # // myLib.apps.dbs.postgres {
-  #   configArgs = {
-  #     nameSuffix = "-test";
-  #     serviceUser = "peon";
-  #     networks = [{name="nextcloud"; }];
-  #   };
-  # }
+  // myLib.apps.dbs.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      serviceUser = "peon";
+      networks = [{name="nextcloud"; }];
+    };
+  }
   ;
 }

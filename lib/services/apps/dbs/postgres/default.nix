@@ -46,7 +46,6 @@ in
 // containerLib.mkContainerService {
   inherit image networks serviceUser;
   name = "postgres${configArgs.nameSuffix}";
-  # name = "nextcloud";
   environment = {
 
   };
