@@ -98,7 +98,7 @@
     nameSuffix = "-test";
     rootDomain = "arpa";
     # domain = "127.0.0.1";
-    serviceUser = "peon";
+    # serviceUser = "peon";
     networks = {
       nextcloud = [{name="nextcloud"; }];
     };
@@ -106,7 +106,7 @@
   // myLib.apps.dbs.postgres {
     configArgs = {
       nameSuffix = "-test";
-      serviceUser = "peon";
+      # serviceUser = "peon";
       networks = [{name="nextcloud"; }];
     };
   }
