@@ -74,7 +74,7 @@
   ];
 
   networking.hostName = "kkbook";
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  # networking.wireless.enable = tr:hardware;  # Enables wireless support via wpa_supplicant.
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -95,8 +95,19 @@
 // myLib.apps.nextcloud {
   configArgs = {
     protocol = "http";
+    nameSuffix = "-test";
     rootDomain = "arpa";
     # domain = "127.0.0.1";
     serviceUser = "peon";
+    networks = {
+      nextcloud = [{name="nextcloud"; }];
+    };
+  }
+  // myLib.apps.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      serviceUser = "peon";
+      networks = [{name="nextcloud"; }];
+    };
   };
 }

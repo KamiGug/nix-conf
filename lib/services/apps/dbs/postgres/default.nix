@@ -6,18 +6,19 @@
 
 let
   lib = pkgs.lib;
-  containerLib = import ../.. {inherit pkgs;};
-  validators = import ../../../validators;
-  # containerLib = import ../.. {inherit pkgs;};
+  containerLib = import ../../.. {inherit pkgs;};
+  validators = import ../../../../validators;
 
   configArgs = lib.recursiveUpdate {
     # protocol = "http";
     nameSuffix = "";
     volumePrefix = "/mnt/nas";
     volumeSelfPrefix = "postgres";
-    user = "wisp";
+    serviceUser = "wisp";
+    networks = [];
   } args.configArgs;
 
+  inherit (configArgs) networks serviceUser;
   volumes = {
     data = "/var/lib/postgresql";
   };
@@ -31,12 +32,6 @@ let
 
 in
 
-# // onlyoffice {
-#   inherit pkgs;
-#   configArgs = onlyofficeArgs;
-#   image = images.onlyoffice;
-# }
-
 {
   systemd.tmpfiles.rules =
   [
@@ -49,13 +44,13 @@ in
 
 }
 // containerLib.mkContainerService {
-  inherit image;
-  name = "nextcloud${configArgs.nameSuffix}";
+  inherit image networks serviceUser;
+  name = "postgres${configArgs.nameSuffix}";
   # name = "nextcloud";
   environment = {
+
   };
   volumes = volumeMounts;
-
   # ports = [
   #   "8080:80"
   # ];

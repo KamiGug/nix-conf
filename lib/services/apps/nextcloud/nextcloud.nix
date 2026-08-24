@@ -9,7 +9,7 @@ let
   domain = if configArgs ? domain
     then configArgs.domain
     else "file.${configArgs.rootDomain}";
-  testScript = pkgs.writeScriptBin "test-script" "echo hello!";
+  # testScript = pkgs.writeScriptBin "test-script" "echo hello!";
 
   volumes = {
     data = "/var/www/html/data";
@@ -29,7 +29,7 @@ assert configArgs ? rootDomain || configArgs ? domain;
 assert configArgs ? protocol;
 # assert validators.domain domain;
 {
-  environment.systemPackages = [ testScript ];
+  # environment.systemPackages = [ testScript ];
   systemd.tmpfiles.rules =
   [
     "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}"
@@ -42,6 +42,7 @@ assert configArgs ? protocol;
 }
 // containerLib.mkContainerService {
   inherit image;
+  inherit (configArgs) networks serviceUser;
   name = "nextcloud${configArgs.nameSuffix}";
   # name = "nextcloud";
   environment = {
@@ -50,24 +51,15 @@ assert configArgs ? protocol;
   };
   volumes =
   [
-
-    # (containerLib.mkVolume {
-    #   hostPath =
-    #     "${volumePrefix}/${selfPrefix}/data";
-
-    #   containerPath =
-    #     "/var/www/html";
-    # })
-    (
-      containerLib.mkVolume {
-        hostPath = lib.getExe testScript;
-        containerPath = "/test.exe";
-      }
-    )
+    # (
+    #   containerLib.mkVolume {
+    #     hostPath = lib.getExe testScript;
+    #     containerPath = "/test.exe";
+    #   }
+    # )
   ]
-  # ;
-  ++ volumeMounts;
-
+  ++ volumeMounts
+  ;
   # TODO: remove the ports! will need correct network + reverse proxy
   ports = [
     "8080:80"

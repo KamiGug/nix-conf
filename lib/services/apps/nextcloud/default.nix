@@ -10,6 +10,7 @@ let
   validators = import ../../../validators;
   # containerLib = import ../.. {inherit pkgs;};
   nextcloud = import ./nextcloud.nix;
+  # onlyoffice = import ./onlyoffice.nix;
 
   parsedConfigArgs = lib.recursiveUpdate {
     protocol = "http";
@@ -19,15 +20,21 @@ let
       nextcloud = "nextcloud";
       onlyoffice = "onlyoffice";
     };
-    user = "wisp";
+    serviceUser = "wisp";
+    networks = {
+      nextcloud = [];
+      onlyoffice = [];
+    };
   } configArgs;
 
   nextcloudArgs = parsedConfigArgs // {
     volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.nextcloud;
+    networks = parsedConfigArgs.networks.nextcloud;
   };
 
   # onlyofficeArgs = parsedConfigArgs // {
   #   volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.onlyoffice;
+  #   networks = parsedConfigArgs.networks.onlyoffice;
   # };
 
 in

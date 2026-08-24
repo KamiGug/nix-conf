@@ -5,4 +5,5 @@
   mkSecret = import ./mkSecret.nix;
   mkNetwork = import ./mkNetwork.nix;
   mkHealthcheck = import ./mkHealthcheck.nix;
+  ensureNetwork = import ./ensureNetwork.nix args;
 }

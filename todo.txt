@@ -5,6 +5,7 @@ SOPS for:
     - sshd (nixos)
     - app services (nixos)
     - nfs pass(?) (nixos)
+Upgrade from click ops to secret management
 
 arbitrary DE choice with autologin (?)
 add file browser/manager/explorer to niri (pkg and a shortcut)

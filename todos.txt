@@ -8,10 +8,13 @@ lib/flake/_resolveHostSet.nix
   75:  # TODO: handle enableHm == false
 
 lib/services/apps/nextcloud/default.nix
-  40:# TODO: add more asserts (at least one each)
+  47:# TODO: add more asserts (at least one each)
 
 lib/services/apps/nextcloud/nextcloud.nix
-  71:  # TODO: remove the ports! will need correct network + reverse proxy
+  63:  # TODO: remove the ports! will need correct network + reverse proxy
+
+lib/services/ensureNetwork.nix
+  4:  # TODO: make this rootless
 
 lib/services/mkContainerService.nix
   5:# TODO: make this a user service
