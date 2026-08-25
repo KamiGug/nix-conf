@@ -1,6 +1,6 @@
 [bar.default]
 position = "left"
-thickness = 48
+thickness = 52
 start = [
   "launcher",
   "wallpaper",
@@ -35,12 +35,12 @@ show_label = false
 [widget.battery]
 show_label = false
 
-# [widget.network]
+[widget.network]
 show_label = false
 show_vpn_label = false
 
-[widget.taskbar]
-scale = 10
+# [widget.taskbar]
+# scale = 10
 # type = "taskbar"
 # icon_scale = 2
 
