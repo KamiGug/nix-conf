@@ -56,7 +56,7 @@
     flakeLib = import ./lib/flake;
     nixosHosts = {
       kkbook = { gui = true; };
-      kktab = { };
+      kktab = { gui = true; };
       kkserv = { };
       kknas = { };
       kkworker = { };
