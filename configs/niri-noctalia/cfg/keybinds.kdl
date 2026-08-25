@@ -7,7 +7,7 @@ hotkey-overlay {
 
       Mod+T hotkey-overlay-title="Open a Terminal: ${terminal}" { spawn-sh "${terminal}"; }
       Mod+Space hotkey-overlay-title="Run an App launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
-      // Mod+Escape hotkey-overlay-title="Enter the Control Center" { spawn-sh "noctalia msg call panel-toggle control-center"; }
+      Mod+Escape hotkey-overlay-title="Enter the Control Center" { spawn-sh "noctalia msg panel-toggle control-center"; }
       Mod+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia msg session lock"; }
 
       XF86AudioRaiseVolume { spawn-sh "noctalia msg volume-up"; }
