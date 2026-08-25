@@ -60,11 +60,6 @@ scale = 1.2
 [widget.workspaces]
 scale = 1.2
 
-# [widget.taskbar]
-# scale = 10
-# type = "taskbar"
-# icon_scale = 2
-
 [location]
 # auto_locate = true
 auto_locate = false
