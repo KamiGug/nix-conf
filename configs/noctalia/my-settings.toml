@@ -22,6 +22,7 @@ end = [
   "tray",
   "control-center",
 ]
+
 widget_spacing = 12
 margin_ends = 0
 margin_edge = 0
@@ -54,6 +55,9 @@ scale = 1.2
 scale = 1.2
 
 [widget.tray]
+scale = 1.2
+
+[widget.workspaces]
 scale = 1.2
 
 # [widget.taskbar]
