@@ -89,7 +89,7 @@ let
   home-manager.sharedModules =
     homeModules.common
     ++ homeModules.${os}
-    ++ lib.optional gui
+    ++ lib.optional (gui && os == "linux")
       inputs.noctalia.homeModules.default
     ++ helpers
     ++ [

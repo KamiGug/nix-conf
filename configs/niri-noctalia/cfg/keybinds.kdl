@@ -6,25 +6,26 @@ hotkey-overlay {
       Mod+Grave hotkey-overlay-title="Show help" { show-hotkey-overlay; }
 
       Mod+T hotkey-overlay-title="Open a Terminal: ${terminal}" { spawn "${terminal}"; }
-      Mod+Space hotkey-overlay-title="Run an App launcher" { spawn-sh "noctalia-shell ipc call launcher toggle"; }
-      Mod+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia-shell ipc call lockScreen lock"; }
+      Mod+Space hotkey-overlay-title="Run an App launcher" { spawn-sh "noctalia msg call panel-toggle launcher"; }
+      // Mod+Escape hotkey-overlay-title="Enter the Control Center" { spawn-sh "noctalia msg call panel-toggle control-center"; }
+      Mod+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia msg call lockScreen lock"; }
 
-      XF86AudioRaiseVolume { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
-      XF86AudioLowerVolume { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
-      XF86AudioMicMute     allow-when-locked=true { spawn "noctalia-shell" "ipc" "call" "volume" "muteInput"; }
-      Mod+Alt+Right  { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
-      Mod+Alt+D hotkey-overlay-title="Increase Volume" { spawn "noctalia-shell" "ipc" "call" "volume" "increase"; }
-      Mod+Alt+Left { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
-      Mod+Alt+A hotkey-overlay-title="Decrease Volume" { spawn "noctalia-shell" "ipc" "call" "volume" "decrease"; }
-      Mod+Alt+M  hotkey-overlay-title="Mute" allow-when-locked=true { spawn "noctalia-shell" "ipc" "call" "volume" "muteInput"; }
-      XF86AudioMute { spawn "noctalia-shell" "ipc" "call" "volume" "muteOutput"; }
+      XF86AudioRaiseVolume { spawn "noctalia msg volume-up"; }
+      XF86AudioLowerVolume { spawn "noctalia msg volume-down"; }
+      XF86AudioMicMute     allow-when-locked=true { spawn "noctalia msg mic-mute"; }
+      Mod+Alt+Right  { spawn "noctalia msg volume-up"; }
+      Mod+Alt+D hotkey-overlay-title="Increase Volume" { spawn "noctalia msg volume-up"; }
+      Mod+Alt+Left { spawn "noctalia msg volume-down"; }
+      Mod+Alt+A hotkey-overlay-title="Decrease Volume" { spawn "noctalia msg volume-down"; }
+      Mod+Alt+M  hotkey-overlay-title="Mute" allow-when-locked=true { spawn "noctalia msg mic-mute"; }
+      XF86AudioMute { spawn "noctalia msg volume-mute "; }
 
-      XF86MonBrightnessUp { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
-      XF86MonBrightnessDown { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
-      Mod+Alt+Up { spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
-      Mod+Alt+W hotkey-overlay-title="Increase Brightness"{ spawn "noctalia-shell" "ipc" "call" "brightness" "increase"; }
-      Mod+Alt+Down { spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
-      Mod+Alt+S hotkey-overlay-title="Decrease Brightness"{ spawn "noctalia-shell" "ipc" "call" "brightness" "decrease"; }
+      XF86MonBrightnessUp { spawn "noctalia msg call brightness increase"; }
+      XF86MonBrightnessDown { spawn "noctalia msg call brightness decrease"; }
+      Mod+Alt+Up { spawn "noctalia msg call brightness increase"; }
+      Mod+Alt+W hotkey-overlay-title="Increase Brightness"{ spawn "noctalia msg call brightness increase"; }
+      Mod+Alt+Down { spawn "noctalia msg call brightness decrease"; }
+      Mod+Alt+S hotkey-overlay-title="Decrease Brightness"{ spawn "noctalia msg call brightness decrease"; }
 
       XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
       XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
@@ -208,5 +209,5 @@ hotkey-overlay {
       Ctrl+Alt+Delete { quit; }
 
       Mod+Shift+P hotkey-overlay-title="Power off monitors" { power-off-monitors; }
-      Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia-shell ipc call sessionMenu toggle"; }
+      Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg call sessionMenu toggle"; }
   }

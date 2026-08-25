@@ -15,8 +15,9 @@ in {
   config = mkIf cfg.enable {
     home.packages = [
       pkgs.xwayland-satellite #for legacy :D
-      noctalia-shell
+      # pkgs.noctalia-shell
     ];
+    programs.noctalia.enable = true;
     xdg.configFile =
       myLib.template {
         targetPrefix = "niri";

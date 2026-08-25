@@ -69,7 +69,7 @@ in {
     }
 
     # ---- Linux-Specific Configuration ----
-    (lib.mkIf pkgs.stdenv.isLinux {
+    (lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
       home.packages = with pkgs; [
         wl-clipboard
       ];

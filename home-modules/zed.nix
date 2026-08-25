@@ -19,7 +19,7 @@
       nixFormatter = pkgs.alejandra;
       tix = pkgs.tix;
     }
-    // lib.optionalAttrs pkgs.stdenv.isLinux {
+    // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
       csharp = pkgs.csharp-ls;
     };
 in {
@@ -105,7 +105,7 @@ in {
             };
           };
         }
-        // lib.optionalAttrs pkgs.stdenv.isLinux {
+        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           csharp-ls = {
             binary = {
               path = lib.getExe lspBinaries.csharp;
@@ -150,7 +150,7 @@ in {
             };
           };
         }
-        // lib.optionalAttrs pkgs.stdenv.isLinux {
+        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           "C#" = {
             language_servers = ["csharp-ls" "typos"];
           };
