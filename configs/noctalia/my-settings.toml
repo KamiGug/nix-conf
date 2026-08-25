@@ -2,18 +2,25 @@
 position = "left"
 thickness = 48
 start = [
-  "workspaces",
-  "taskbar",
-]
-
-center = [
+  "launcher",
+  "wallpaper",
   "clock",
 ]
 
+center = [
+  "workspaces",
+]
+
+#  control-center, session
 end = [
   "volume",
+  "brightness",
+  "media",
   "network",
+  "bluetooth",
   "battery",
+  "control-center",
+  "notifications",
   "tray",
 ]
 
