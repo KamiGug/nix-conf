@@ -1,6 +1,6 @@
 [bar.default]
 position = "left"
-thickness = 52
+thickness = 44
 scale = 1.3
 start = [
   "launcher",
