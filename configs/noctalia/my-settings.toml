@@ -23,6 +23,9 @@ end = [
   "control-center",
 ]
 widget_spacing = 12
+margin_ends = 0
+margin_edge = 0
+
 
 [widget.taskbar]
 scale = 3
