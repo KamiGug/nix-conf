@@ -26,6 +26,18 @@ widget_spacing = 12
 margin_ends = 0
 margin_edge = 0
 
+[widget.volume]
+show_label = false
+
+[widget.brightness]
+show_label = false
+
+[widget.battery]
+show_label = false
+
+[widget.network]
+show_label = false
+show_vpn_label = false
 
 [widget.taskbar]
 scale = 3
