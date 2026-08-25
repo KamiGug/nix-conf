@@ -1,0 +1,28 @@
+[bar.default]
+position = "left"
+thickness = 48
+start = [
+  "workspaces",
+  "taskbar",
+]
+
+center = [
+  "clock",
+]
+
+end = [
+  "volume",
+  "network",
+  "battery",
+  "tray",
+]
+
+[widget.taskbar]
+scale = 1.3
+# type = "taskbar"
+# icon_scale = 1.3
+
+[location]
+# auto_locate = true
+auto_locate = false
+address = "Piekary Śląskie, Poland"
