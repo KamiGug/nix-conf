@@ -56,7 +56,8 @@
     flakeLib = import ./lib/flake;
     nixosHosts = {
       kkbook = { gui = true; };
-      kktab = { gui = true; };
+      kktab = { gui = true; extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel]; };
+
       kkserv = { };
       kknas = { };
       kkworker = { };

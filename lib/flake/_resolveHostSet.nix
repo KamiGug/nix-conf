@@ -6,6 +6,7 @@
   gui,
   users,
   root,
+  extraModules ? [],
   enableHm ? true
 }:
 assert (builtins.isString name) || throw "name must be a string";
@@ -14,6 +15,7 @@ assert (builtins.elem os ["linux" "darwin"]) || throw "os must be one of the fol
 assert (builtins.isList users && users != []) || throw "users must be a non empty list";
 assert (builtins.isBool gui) || throw "gui must be bool";
 assert (builtins.isPath root && builtins.pathExists (root + "/flake.nix")) || throw "root needs to be a path to the root of the project";
+assert (builtins.isList extraModules) || throw "extraModules must be a list";
 assert (builtins.isBool enableHm) || throw "enableHm must be bool";
 let
   lib = inputs.nixpkgs.lib;
@@ -107,14 +109,15 @@ let
       homeManagerModule
       homeManagerConfig
     ]
-    ++ userSystemModules;
+    ++ userSystemModules
+    ++ extraModules
+    ;
 
 in
 {
   inherit system modules;
   specialArgs = {
-    inherit /*inputs*/ systemModules homeModules myLib services;
+    inherit inputs systemModules homeModules myLib services;
   }
-  // inputs
   ;
 }
