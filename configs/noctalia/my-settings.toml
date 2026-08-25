@@ -1,6 +1,7 @@
 [bar.default]
 position = "left"
 thickness = 52
+scale = 1.3
 start = [
   "launcher",
   "wallpaper",
