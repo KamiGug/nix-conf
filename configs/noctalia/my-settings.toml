@@ -1,7 +1,6 @@
 [bar.default]
 position = "left"
 thickness = 44
-scale = 1.2
 start = [
   "launcher",
   "wallpaper",
@@ -29,16 +28,20 @@ margin_edge = 0
 
 [widget.volume]
 show_label = false
+scale = 1.2
 
 [widget.brightness]
 show_label = false
+scale = 1.2
 
 [widget.battery]
 show_label = false
+scale = 1.2
 
 [widget.network]
 show_label = false
 show_vpn_label = false
+scale = 1.2
 
 # [widget.taskbar]
 # scale = 10
