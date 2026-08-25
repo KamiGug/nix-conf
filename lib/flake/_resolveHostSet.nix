@@ -113,6 +113,8 @@ in
 {
   inherit system modules;
   specialArgs = {
-    inherit inputs systemModules homeModules myLib services;
-  };
+    inherit /*inputs*/ systemModules homeModules myLib services;
+  }
+  // inputs
+  ;
 }
