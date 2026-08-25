@@ -7,7 +7,7 @@ hotkey-overlay {
 
       Mod+T hotkey-overlay-title="Open a Terminal: ${terminal}" { spawn-sh "${terminal}"; }
       Mod+Space hotkey-overlay-title="Run an App launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
-      Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg call sessionMenu toggle"; }
+      Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg panel-toggle session"; }
       Mod+Shift+Grave hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg panel-toggle control-center"; }
       // Mod+Escape hotkey-overlay-title="Enter the Control Center" { spawn-sh "noctalia msg panel-toggle control-center"; }
       Mod+Alt+L hotkey-overlay-title="Lock the Screen" { spawn-sh "noctalia msg session lock"; }
@@ -25,9 +25,9 @@ hotkey-overlay {
       XF86MonBrightnessUp { spawn-sh "noctalia msg brightness-up"; }
       XF86MonBrightnessDown { spawn-sh "noctalia msg brightness-down"; }
       Mod+Alt+Up { spawn-sh "noctalia msg brightness-up"; }
-      Mod+Alt+W hotkey-overlay-title="Increase Brightness"{ spawn-sh "noctalia msg brightness-up"; }
+      Mod+Alt+W hotkey-overlay-title="Increase Brightness" { spawn-sh "noctalia msg brightness-up"; }
       Mod+Alt+Down { spawn-sh "noctalia msg brightness-down"; }
-      Mod+Alt+S hotkey-overlay-title="Decrease Brightness"{ spawn-sh "noctalia msg brightness-down"; }
+      Mod+Alt+S hotkey-overlay-title="Decrease Brightness" { spawn-sh "noctalia msg brightness-down"; }
 
       XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
       XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
