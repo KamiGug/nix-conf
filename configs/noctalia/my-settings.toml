@@ -38,9 +38,22 @@ scale = 1.2
 show_label = false
 scale = 1.2
 
+[widget.bluetooth]
+show_label = false
+scale = 1.2
+
 [widget.network]
 show_label = false
 show_vpn_label = false
+scale = 1.2
+
+[widget.media]
+scale = 1.2
+
+[widget.control-center]
+scale = 1.2
+
+[widget.tray]
 scale = 1.2
 
 # [widget.taskbar]
