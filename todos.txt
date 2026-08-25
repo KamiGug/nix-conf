@@ -1,5 +1,5 @@
 flake.nix
-  69:  # TODO: split shells to seperate file
+  63:  # TODO: split shells to seperate file
 
 home-modules/terminal/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv

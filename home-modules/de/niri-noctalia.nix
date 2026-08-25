@@ -15,6 +15,7 @@ in {
   config = mkIf cfg.enable {
     home.packages = [
       pkgs.xwayland-satellite #for legacy :D
+      noctalia-shell
     ];
     xdg.configFile =
       myLib.template {
@@ -33,9 +34,5 @@ in {
         #   replacements = {
         #   };
       };
-
-    programs.noctalia-shell = {
-      enable = true;
-    };
   };
 }
