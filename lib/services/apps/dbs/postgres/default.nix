@@ -45,7 +45,9 @@ in
 // containerLib.mkContainerService {
   inherit image networks serviceUser name;
   environment = {
-
+    POSTGRES_USER = "postgres";
+    POSTGRES_PASSWORD = "changeMe";
+    POSTGRES_DB = "postgres";
   };
   volumes = volumeMounts;
   # ports = [
