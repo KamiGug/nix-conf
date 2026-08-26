@@ -2,11 +2,11 @@
   description = "My nix based OS configs";
 
   inputs = {
-    nixpkgs-stable.url = "github:nixos/nixpkgs/?ref=nixos-25.05";
-
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+
 
     flake-utils.url = "flake-utils";
 

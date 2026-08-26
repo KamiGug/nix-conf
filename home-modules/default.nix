@@ -15,13 +15,14 @@
     ./terminal/shell-tools/ssh.nix
     ./terminal/shell-tools/starship.nix
     ./creative/blender.nix
-    ./gaming/steam-alias.nix
-    ./gaming/lutris-alias.nix
+    ./kando.nix
   ];
   linux = [
     ./de/plasma.nix
     ./de/niri-noctalia.nix
     ./waybar.nix
+    ./gaming/steam-alias.nix
+    ./gaming/lutris-alias.nix
   ];
   darwin = [
     # ./de/paneru.nix
