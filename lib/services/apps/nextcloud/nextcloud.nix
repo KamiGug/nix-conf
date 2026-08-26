@@ -32,11 +32,10 @@ assert configArgs ? protocol;
   # environment.systemPackages = [ testScript ];
   systemd.tmpfiles.rules =
   [
-    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}"
-      "750 ${configArgs.user} root -"
+    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
   ]
   ++ lib.mapAttrsToList (name: _:
-        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.user} root -"
+        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
       ) volumes;
 
 }

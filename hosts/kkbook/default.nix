@@ -92,11 +92,14 @@
   #   user = "peon";
 
   }
+  // myLib.serv.ensureNetwork {
+    name="nextcloud";
+  }
   // myLib.apps.dbs.postgres {
     configArgs = {
       nameSuffix = "-test";
       # serviceUser = "peon";
-      networks = [{name="nextcloud"; }];
+      networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
     };
   }
   // myLib.apps.nextcloud {
@@ -107,7 +110,7 @@
     # domain = "127.0.0.1";
     # serviceUser = "peon";
     networks = {
-      nextcloud = [{name="nextcloud"; }];
+      nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
     };
   }
   ;

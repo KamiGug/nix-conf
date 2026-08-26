@@ -17,7 +17,7 @@ let
     serviceUser = "wisp";
     networks = [];
   } args.configArgs;
-
+  name = "postgres${configArgs.nameSuffix}";
   inherit (configArgs) networks serviceUser;
   volumes = {
     data = "/var/lib/postgresql";
@@ -35,17 +35,15 @@ in
 {
   systemd.tmpfiles.rules =
   [
-    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}"
-      "750 ${configArgs.user} root -"
+    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
   ]
   ++ lib.mapAttrsToList (name: _:
-        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.user} root -"
+        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
       ) volumes;
 
 }
 // containerLib.mkContainerService {
-  inherit image networks serviceUser;
-  name = "postgres${configArgs.nameSuffix}";
+  inherit image networks serviceUser name;
   environment = {
 
   };

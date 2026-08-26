@@ -155,11 +155,11 @@ lib.recursiveUpdate {
   systemd.services."${backend}-${name}" = {
     after = lib.mkAfter (map (d: "${d}.service") dependencies);
     requires = lib.mkAfter (map (d: "${d}.service") dependencies);
-    Restart = restart;
   }
   // lib.mkIf (serviceUser != null) {
     serviceConfig = {
-      User = lib.mkForce serviceUser;
+      # User = lib.mkForce serviceUser;
+      Restart = restart;
     };
   };
 }
