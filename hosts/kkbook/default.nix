@@ -1,6 +1,7 @@
 {
   pkgs,
   config,
+  lib,
   myLib,
   # inputs,
   ...
@@ -95,23 +96,24 @@
   # // myLib.serv.ensureNetwork {
   #   name="nextcloud";
   # }
-  # // myLib.apps.dbs.postgres {
-  #   configArgs = {
-  #     nameSuffix = "-test";
-  #     serviceUser = "peon";
-  #     networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
-  #   };
-  # }
-  # // myLib.apps.nextcloud {
-  # configArgs = {
-  #   protocol = "http";
-  #   nameSuffix = "-test";
-  #   rootDomain = "arpa";
-  #   # domain = "127.0.0.1";
-  #   serviceUser = "peon";
-  #   networks = {
-  #     nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
-  #   };
-  # }
-  ;
-}
+  // (lib.recursiveUpdate (myLib.apps.dbs.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      serviceUser = "peon";
+      networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
+    };
+  })
+  (myLib.apps.nextcloud {
+    configArgs = {
+      protocol = "http";
+      nameSuffix = "-test";
+      rootDomain = "arpa";
+      # domain = "127.0.0.1";
+      serviceUser = "peon";
+      networks = {
+        nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
+      };
+    };
+  })
+  )
+# }
