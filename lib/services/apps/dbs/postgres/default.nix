@@ -26,6 +26,7 @@ let
   volumeMounts = lib.mapAttrsToList (name: containerPath:
     containerLib.mkVolume {
       hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
+      owner = configArgs.serviceUser;
       inherit containerPath;
     }
   ) volumes;
