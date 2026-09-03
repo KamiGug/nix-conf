@@ -32,17 +32,18 @@ let
 
 in
 
-{
-  systemd.tmpfiles.rules =
-  [
-    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
-  ]
-  ++ lib.mapAttrsToList (name: _:
-        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
-      ) volumes;
+# {
+#   systemd.tmpfiles.rules =
+#   [
+#     "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
+#   ]
+#   ++ lib.mapAttrsToList (name: _:
+#         "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
+#       ) volumes;
 
-}
-// containerLib.mkContainerService {
+# }
+# //
+containerLib.mkContainerService {
   inherit image networks serviceUser name;
   environment = {
     POSTGRES_USER = "postgres";

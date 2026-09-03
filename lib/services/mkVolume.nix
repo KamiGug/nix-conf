@@ -8,8 +8,8 @@
 
   create ? true,
 
-  uid ? null,
-  gid ? null,
+  owner ? null,
+  group ? null,
 
   mode ? null,
 }: {
@@ -17,8 +17,8 @@
     type
     readOnly
     create
-    uid
-    gid
+    owner
+    group
     mode
     ;
 

@@ -2,7 +2,6 @@
   pkgs,
   ...
 }:
-# TODO: make this a user service
 {
   name,
   image,
@@ -35,9 +34,11 @@
 
   extraOptions ? [],
 }:
-assert builtins.isString image || throw "Image name must be a string";
 let
   lib = pkgs.lib;
+  myLib = {
+    ensureDirExists = import ../ensureDirExists;
+  };
 
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
@@ -88,6 +89,39 @@ let
 
 in
 
+assert builtins.isString name || throw "Container name must be a string";
+assert builtins.isString image || throw "Image name must be a string";
+
+assert builtins.isBool autoStart || throw "autoStart must be a boolean";
+assert builtins.isString restart || throw "restart must be a string";
+
+assert builtins.isBool gpu || throw "gpu must be a boolean";
+assert builtins.isBool privileged || throw "privileged must be a boolean";
+
+assert hostname == null || builtins.isString hostname
+  || throw "hostname must be a string or null";
+
+assert builtins.isString serviceUser || throw "serviceUser must be a string";
+assert containerUser == null || builtins.isString containerUser
+  || throw "containerUser must be a string or null";
+
+assert builtins.isList volumes || throw "volumes must be a list";
+assert builtins.isList ports || throw "ports must be a list";
+assert builtins.isList networks || throw "networks must be a list";
+assert builtins.isList secrets || throw "secrets must be a list";
+assert builtins.isList dependencies || throw "dependencies must be a list";
+assert builtins.isList extraOptions || throw "extraOptions must be a list";
+assert builtins.isList command || throw "command must be a list";
+
+assert builtins.isAttrs environment || throw "environment must be an attrset";
+assert builtins.isAttrs labels || throw "labels must be an attrset";
+
+assert entrypoint == null || builtins.isString entrypoint
+  || throw "entrypoint must be a string or null";
+
+assert healthcheck == null || builtins.isAttrs healthcheck
+  || throw "healthcheck must be an attrset";
+
 assert builtins.elem restart [
   "no"
   "on-success"
@@ -96,7 +130,16 @@ assert builtins.elem restart [
   "on-abort"
   "on-watchdog"
   "always"
-];
+] || throw "Invalid restart policy: ${restart}";
+assert lib.all (v:
+  builtins.isAttrs v
+  && v ? hostMount
+  && v ? containerMount
+  && v ? readOnly
+  && v ? create
+) volumes || throw "Each volume must contain hostMount, containerMount, readOnly and create";
+
+(lib.recursiveUpdate
 {
   virtualisation.oci-containers.backend = "podman";
 
@@ -136,3 +179,14 @@ assert builtins.elem restart [
   // commandOptions
   // entrypointOptions;
 }
+lib.mkMerge (
+  map (volume:
+    if volume.create then
+      myLib.ensureDirExists {
+        path = volume.hostPath;
+        inherit (volume) owner group mode;
+        parentServiceName = name;
+      }
+    else {}
+  ) volumes
+))

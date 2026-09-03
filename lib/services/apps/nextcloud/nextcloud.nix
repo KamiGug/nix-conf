@@ -28,18 +28,19 @@ let
 assert configArgs ? rootDomain || configArgs ? domain;
 assert configArgs ? protocol;
 # assert validators.domain domain;
-{
-  # environment.systemPackages = [ testScript ];
-  systemd.tmpfiles.rules =
-  [
-    "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
-  ]
-  ++ lib.mapAttrsToList (name: _:
-        "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
-      ) volumes;
+# {
+#   # environment.systemPackages = [ testScript ];
+#   systemd.tmpfiles.rules =
+#   [
+#     "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
+#   ]
+#   ++ lib.mapAttrsToList (name: _:
+#         "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
+#       ) volumes;
 
-}
-// containerLib.mkContainerService {
+# }
+# //
+containerLib.mkContainerService {
   inherit image;
   inherit (configArgs) networks serviceUser;
   name = "nextcloud${configArgs.nameSuffix}";
