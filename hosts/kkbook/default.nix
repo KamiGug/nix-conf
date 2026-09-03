@@ -81,7 +81,7 @@
 
 #   Tests
   networking.hosts."127.0.0.1" = let
-    domain = "arpa";
+    domain = "lab.hm";
     services = [
       "file"
       "auth"
@@ -98,7 +98,7 @@
   // myLib.apps.dbs.postgres {
     configArgs = {
       nameSuffix = "-test";
-      # serviceUser = "peon";
+      serviceUser = "peon";
       networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
     };
   }
@@ -108,7 +108,7 @@
     nameSuffix = "-test";
     rootDomain = "arpa";
     # domain = "127.0.0.1";
-    # serviceUser = "peon";
+    serviceUser = "peon";
     networks = {
       nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
     };

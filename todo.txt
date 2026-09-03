@@ -11,6 +11,7 @@ arbitrary DE choice with autologin (?)
 add file browser/manager/explorer to niri (pkg and a shortcut)
 
 add nfs server + client
+backups module - takes in a set of sets like {toBackup: ...; BackupDir: ...; Compress: var ? true; CronTime: ...; };
 add remote desktop (connect to current) as a systemd unit
 
 write scripts:

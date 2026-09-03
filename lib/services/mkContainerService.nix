@@ -6,9 +6,6 @@
 {
   name,
   image,
-
-  backend ? "podman",
-
   autoStart ? true,
   restart ? "on-failure",
 
@@ -16,7 +13,7 @@
   privileged ? false,
 
   hostname ? null,
-  serviceUser ? null,
+  serviceUser ? "root",
   containerUser ? null,
 
   volumes ? [],
@@ -59,30 +56,14 @@ let
   gpuOptions =
     if !gpu
     then []
-    else if backend == "docker"
-    then [
-      "--gpus=all"
-    ]
     else [
       "--device=nvidia.com/gpu=all"
     ];
-
 
   secretOptions =
     map
       (s: "--secret=${s.path}")
       secrets;
-
-
-  healthcheckScript =
-    if healthcheck == null
-    then null
-    else pkgs.writeShellScript "${name}-healthcheck" ''
-      set -euo pipefail
-
-      ${healthcheck.cmd}
-    '';
-
 
   commandOptions =
     lib.optionalAttrs (command != []) {
@@ -96,14 +77,14 @@ let
     };
 
 
-  healthOptions =
-    lib.optionalAttrs (healthcheck != null) {
-      serviceConfig = {
-        ExecStartPost =
-          "${healthcheckScript}";
-      };
-    };
-
+  healthOptions = lib.optionals (healthcheck != null)
+  [
+    "--health-cmd=${healthcheck.cmd}"
+    "--health-interval=${healthcheck.interval}"
+    "--health-timeout=${healthcheck.timeout}"
+    "--health-retries=${toString healthcheck.retries}"
+    "--health-start-period=${healthcheck.startPeriod}"
+  ];
 
 in
 
@@ -116,9 +97,8 @@ assert builtins.elem restart [
   "on-watchdog"
   "always"
 ];
-lib.recursiveUpdate {
-  virtualisation.oci-containers.backend =
-    backend;
+{
+  virtualisation.oci-containers.backend = "podman";
 
   virtualisation.oci-containers.containers.${name} =
   {
@@ -133,6 +113,11 @@ lib.recursiveUpdate {
       volumes =
         map volumeToString volumes;
 
+      podman = {
+        user = serviceUser;
+        sdnotify = if healthcheck == null then "conmon" else "healthy" ;
+      };
+
       extraOptions =
         gpuOptions
         ++ secretOptions
@@ -142,6 +127,7 @@ lib.recursiveUpdate {
           "--hostname=${hostname}"
         ++ lib.optional (containerUser != null)
           "--user=${containerUser}"
+        ++ healthOptions
         ++ map
           (n: "--network=${n}")
           networkNames;
@@ -149,17 +135,4 @@ lib.recursiveUpdate {
   }
   // commandOptions
   // entrypointOptions;
-}
-
-{
-  systemd.services."${backend}-${name}" = {
-    after = lib.mkAfter (map (d: "${d}.service") dependencies);
-    requires = lib.mkAfter (map (d: "${d}.service") dependencies);
-  }
-  // lib.mkIf (serviceUser != null) {
-    serviceConfig = {
-      # User = lib.mkForce serviceUser;
-      Restart = restart;
-    };
-  };
 }
