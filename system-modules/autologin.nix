@@ -22,18 +22,18 @@ in {
 
   config = lib.mkIf cfg.enable {
     services.displayManager = {
+      enable = true;
+      # TODO: assert de legal option
+      # defaultSession = lib.mkForce "${cfg.de}";
+      defaultSession = "${cfg.de}";
+      autoLogin = {
         enable = true;
-        # TODO: assert de legal option
-        # defaultSession = lib.mkForce "${cfg.de}";
-        defaultSession = "${cfg.de}";
-        autoLogin = {
-          enable = true;
-          user = "${cfg.user}";
-        };
-
-        # wayland = {
-        #   enable = true;
-        # };
+        user = "${cfg.user}";
       };
+
+      # wayland = {
+      #   enable = true;
+      # };
+    };
   };
 }

@@ -1,17 +1,19 @@
 # TODO: make it actually work
 # TODO: add pkg for scaning
-{ config, lib, pkgs, ... }:
-
-let
-  cfg = config.my.hardware.printing;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  cfg = config.my.hardware.printing;
+in {
   options.my.hardware.printing = {
     enable = lib.mkEnableOption "printing and scanning support";
 
     users = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = ''
         Users that should be added to the printer and scanner groups.
       '';

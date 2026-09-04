@@ -17,11 +17,9 @@
     };
 
     nixos-secret-test = {
-
     };
 
     hm-secret-test = {
-
     };
 
     # github-priv-key = {};

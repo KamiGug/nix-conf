@@ -6,8 +6,6 @@
 
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-
-
     flake-utils.url = "flake-utils";
 
     home-manager = {
@@ -55,20 +53,23 @@
   }: let
     flakeLib = import ./lib/flake;
     nixosHosts = {
-      kkbook = { gui = true; };
-      kktab = { gui = true; extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel]; };
+      kkbook = {gui = true;};
+      kktab = {
+        gui = true;
+        extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel];
+      };
 
-      kkserv = { };
-      kknas = { };
-      kkworker = { };
+      kkserv = {};
+      kknas = {};
+      kkworker = {};
     };
 
     darwinHosts = {
-      kg-continabook = { users = [ "kg" ]; };
+      kg-continabook = {users = ["kg"];};
     };
   in
-  # TODO: split shells to seperate file
-  flake-utils.lib.eachDefaultSystem (
+    # TODO: split shells to seperate file
+    flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
@@ -102,23 +103,29 @@
         (import ./overlays {inherit inputs;})
       ];
 
-      nixosConfigurations = builtins.mapAttrs
-         (name: hostArgs:
-           flakeLib.mkLinuxHost (
-             hostArgs // {
-               inherit inputs name;
-             }
-           )
-         )
-         nixosHosts;
-      darwinConfigurations = builtins.mapAttrs
-          (name: hostArgs:
-            flakeLib.mkDarwinHost (
-              hostArgs // {
+      nixosConfigurations =
+        builtins.mapAttrs
+        (
+          name: hostArgs:
+            flakeLib.mkLinuxHost (
+              hostArgs
+              // {
                 inherit inputs name;
               }
             )
-          )
-          darwinHosts;
+        )
+        nixosHosts;
+      darwinConfigurations =
+        builtins.mapAttrs
+        (
+          name: hostArgs:
+            flakeLib.mkDarwinHost (
+              hostArgs
+              // {
+                inherit inputs name;
+              }
+            )
+        )
+        darwinHosts;
     };
 }

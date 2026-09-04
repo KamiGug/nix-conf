@@ -4,9 +4,7 @@
   lib,
   myLib,
   ...
-}:
-
-let
+}: let
   cfg = config.services.my.nextcloud;
 
   domain =
@@ -14,28 +12,30 @@ let
     then cfg.configArgs.domain
     else "file.${cfg.configArgs.rootDomain}";
 
-    volumes = {
-       data = "/var/www/html/data";
-       config = "/var/www/html/config";
-       apps = "/var/www/html/apps";
-       custom_apps = "/var/www/html/custom_apps";
-     };
+  volumes = {
+    data = "/var/www/html/data";
+    config = "/var/www/html/config";
+    apps = "/var/www/html/apps";
+    custom_apps = "/var/www/html/custom_apps";
+  };
 
-     hostPaths = lib.mapAttrsToList (name: _:
-       "${cfg.volumePrefix}/${cfg.selfPrefix}/${name}"
-     ) volumes;
+  hostPaths =
+    lib.mapAttrsToList (
+      name: _: "${cfg.volumePrefix}/${cfg.selfPrefix}/${name}"
+    )
+    volumes;
 
-     volumeMounts = lib.mapAttrsToList (name: containerPath:
-       myLib.serv.mkVolume {
-         hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/${name}";
-         inherit containerPath;
-       }
-     ) volumes;
-
-in
-{
+  volumeMounts =
+    lib.mapAttrsToList (
+      name: containerPath:
+        myLib.serv.mkVolume {
+          hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/${name}";
+          inherit containerPath;
+        }
+    )
+    volumes;
+in {
   options.services.my.nextcloud = {
-
     enable = lib.mkEnableOption "Run a nextcloud service";
 
     image = lib.mkOption {
@@ -77,20 +77,15 @@ in
     };
   };
 
-
   config = lib.mkIf cfg.enable ({
-    systemd.tmpfiles.rules =
-      [
+      systemd.tmpfiles.rules = [
         "d /tmp 1777 root root 10d"
-
       ];
-  } //
-    myLib.serv.mkContainerService {
-
+    }
+    // myLib.serv.mkContainerService {
       inherit (cfg) image user;
 
-      name =
-        "${cfg.namePrefix}nextcloud${cfg.nameSuffix}";
+      name = "${cfg.namePrefix}nextcloud${cfg.nameSuffix}";
 
       environment = {
         NEXTCLOUD_TRUSTED_DOMAINS = domain;
@@ -116,7 +111,6 @@ in
           containerPath = "/var/www/html/custom_apps";
         })
       ];
-
 
       # TODO:
       # remove when reverse proxy is added

@@ -4,19 +4,14 @@
   lib,
   myLib,
   ...
-}:
-
-let
+}: let
   cfg = config.services.my.postgres;
   # domain =
   #   if cfg.configArgs ? domain
   #   then cfg.configArgs.domain
   #   else "file.${cfg.configArgs.rootDomain}";
-
-in
-{
+in {
   options.services.my.postgres = {
-
     enable = lib.mkEnableOption "Run postgres database";
 
     image = lib.mkOption {
@@ -53,19 +48,15 @@ in
     };
   };
 
-
   config = lib.mkIf cfg.enable ({
       # TODO: ensure each dir exists
-    } //
-    myLib.serv.mkContainerService {
-
+    }
+    // myLib.serv.mkContainerService {
       inherit (cfg) image;
 
-      name =
-        "${cfg.namePrefix}nextcloud${cfg.nameSuffix}";
+      name = "${cfg.namePrefix}nextcloud${cfg.nameSuffix}";
 
       environment = {
-
       };
 
       volumes = [
@@ -74,7 +65,7 @@ in
           containerPath = "/var/www/html/data";
         })
 
-# /docker-entrypoint-initdb.d
+        # /docker-entrypoint-initdb.d
 
         # (myLib.serv.mkVolume {
         #   hostPath = "${cfg.volumePrefix}/${cfg.selfPrefix}/config";
@@ -89,7 +80,6 @@ in
         #   containerPath = "/var/www/html/custom_apps";
         # })
       ];
-
 
       # TODO:
       # remove when reverse proxy is added

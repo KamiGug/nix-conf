@@ -5,7 +5,8 @@
   myLib,
   # inputs,
   ...
-}: {
+}:
+{
   imports = [
     ./hardware-configuration.nix
   ];
@@ -28,7 +29,7 @@
 
   my.hardware.printing = {
     enable = true;
-    users = [ "peon" ];
+    users = ["peon"];
   };
 
   nixpkgs.config.allowUnfree = true;
@@ -80,40 +81,46 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-#   Tests
+  #   Tests
   networking.hosts."127.0.0.1" = let
     domain = "lab.hm";
     services = [
       "file"
       "auth"
     ];
-  in map (name : "${name}.${domain}") services;
+  in
+    map (name: "${name}.${domain}") services;
   # services.my.nextcloud = {
   #   enable = false;
   #   user = "peon";
-
-  }
-  # // myLib.serv.ensureNetwork {
-  #   name="nextcloud";
-  # }
-  // (lib.recursiveUpdate (myLib.apps.dbs.postgres {
-    configArgs = {
-      nameSuffix = "-test";
-      serviceUser = "peon";
-      networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
-    };
-  })
-  (myLib.apps.nextcloud {
-    configArgs = {
-      protocol = "http";
-      nameSuffix = "-test";
-      # put this in some repository (like using) and make it default to that value
-      rootDomain = "lab.hm";
-      # domain = "127.0.0.1";
-      serviceUser = "peon";
-      networks = {
-        nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
+}
+# // myLib.serv.ensureNetwork {
+#   name="nextcloud";
+# }
+// (
+  lib.foldl'
+  lib.recursiveUpdate
+  {}
+  [
+    (myLib.apps.dbs.postgres {
+      configArgs = {
+        nameSuffix = "-test";
+        serviceUser = "peon";
+        networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
       };
-    };
-  })
-  )
+    })
+    (myLib.apps.nextcloud {
+      configArgs = {
+        protocol = "http";
+        nameSuffix = "-test";
+        # put this in some repository (like using) and make it default to that value
+        rootDomain = "lab.hm";
+        # domain = "127.0.0.1";
+        serviceUser = "peon";
+        networks = {
+          nextcloud = [(myLib.serv.mkNetwork {name = "nextcloud";})];
+        };
+      };
+    })
+  ]
+)

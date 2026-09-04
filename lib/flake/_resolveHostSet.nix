@@ -7,7 +7,7 @@
   users,
   root,
   extraModules ? [],
-  enableHm ? true
+  enableHm ? true,
 }:
 assert (builtins.isString name) || throw "name must be a string";
 assert (builtins.elem arch ["x86" "arm"]) || throw "arch must be one of the following 'x86', 'arm'";
@@ -16,66 +16,72 @@ assert (builtins.isList users && users != []) || throw "users must be a non empt
 assert (builtins.isBool gui) || throw "gui must be bool";
 assert (builtins.isPath root && builtins.pathExists (root + "/flake.nix")) || throw "root needs to be a path to the root of the project";
 assert (builtins.isList extraModules) || throw "extraModules must be a list";
-assert (builtins.isBool enableHm) || throw "enableHm must be bool";
-let
+assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   lib = inputs.nixpkgs.lib;
 
   inherit (inputs) nixpkgs;
 
   systemFromArch = {
-     x86 = {
-       linux = "x86_64-linux";
-       darwin = "x86_64-darwin";
-     };
+    x86 = {
+      linux = "x86_64-linux";
+      darwin = "x86_64-darwin";
+    };
 
-     arm = {
-       linux = "aarch64-linux";
-       darwin = "aarch64-darwin";
-     };
-   };
+    arm = {
+      linux = "aarch64-linux";
+      darwin = "aarch64-darwin";
+    };
+  };
   system = systemFromArch.${arch}.${os};
   pkgs = nixpkgs.legacyPackages.${system};
-  myUsers = import (lib.path.append root "users") { inherit inputs; };
+  myUsers = import (lib.path.append root "users") {inherit inputs;};
   systemModules = import (lib.path.append root "system-modules");
   homeModules = import (lib.path.append root "home-modules");
   helpers = import (lib.path.append root "helpers");
   services = import (lib.path.append root "services");
-  myLib = import (lib.path.append root "lib") { inherit pkgs; };
+  myLib = import (lib.path.append root "lib") {inherit pkgs;};
 
   userSystemModules =
     map (name: myUsers.${name}.system) users;
 
-  homeManagerUsers =
-    builtins.listToAttrs (
-      map (name: {
-        name = name;
-        value = myUsers.${name}.home;
-      }) users
-    );
-  commonModules = [
-    (lib.path.append root "system-modules/common.nix")
-  ]
-  ++ (
-    if os == "linux" then
-    [
-      (lib.path.append root "system-modules/common-linux.nix")
-    ]
-    ++ lib.optional gui (lib.path.append root "system-modules/common-gui-linux.nix")
-    else
-    [
-      (lib.path.append root "system-modules/common-darwin.nix")
-    ]
+  homeManagerUsers = builtins.listToAttrs (
+    map (name: {
+      name = name;
+      value = myUsers.${name}.home;
+    })
+    users
   );
+  commonModules =
+    [
+      (lib.path.append root "system-modules/common.nix")
+    ]
+    ++ (
+      if os == "linux"
+      then
+        [
+          (lib.path.append root "system-modules/common-linux.nix")
+        ]
+        ++ lib.optional gui (lib.path.append root "system-modules/common-gui-linux.nix")
+      else [
+        (lib.path.append root "system-modules/common-darwin.nix")
+      ]
+    );
 
   # modulesName = "${system}Modules";
   # sopsModule = inputs.sops-nix.${modulesName}.sops;
   # homeManagerModule = inputs.home-manager.${modulesName}.home-manager;
 
-  platformModules = if os == "linux" then inputs.sops-nix.nixosModules else inputs.sops-nix.darwinModules;
+  platformModules =
+    if os == "linux"
+    then inputs.sops-nix.nixosModules
+    else inputs.sops-nix.darwinModules;
   sopsModule = platformModules.sops;
 
   # TODO: handle enableHm == false
-  hmPlatformModules = if os == "linux" then inputs.home-manager.nixosModules else inputs.home-manager.darwinModules;
+  hmPlatformModules =
+    if os == "linux"
+    then inputs.home-manager.nixosModules
+    else inputs.home-manager.darwinModules;
   homeManagerModule = hmPlatformModules.home-manager;
 
   homeManagerConfig = {
@@ -88,15 +94,15 @@ let
       inherit myLib;
     };
 
-  home-manager.sharedModules =
-    homeModules.common
-    ++ homeModules.${os}
-    ++ lib.optional (gui && os == "linux")
+    home-manager.sharedModules =
+      homeModules.common
+      ++ homeModules.${os}
+      ++ lib.optional (gui && os == "linux")
       inputs.noctalia.homeModules.default
-    ++ helpers
-    ++ [
-      inputs.sops-nix.homeManagerModules.sops
-    ];
+      ++ helpers
+      ++ [
+        inputs.sops-nix.homeManagerModules.sops
+      ];
   };
 
   modules =
@@ -110,14 +116,10 @@ let
       homeManagerConfig
     ]
     ++ userSystemModules
-    ++ extraModules
-    ;
-
-in
-{
+    ++ extraModules;
+in {
   inherit system modules;
   specialArgs = {
     inherit inputs systemModules homeModules myLib services;
-  }
-  ;
+  };
 }

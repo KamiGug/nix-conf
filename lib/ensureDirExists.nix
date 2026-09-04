@@ -8,10 +8,11 @@
 }: let
   serviceName = lib.replaceStrings ["/"] ["@"] path;
   calculatedMode =
-    if mode != null then mode
-    else if group != null then "0770"
+    if mode != null
+    then mode
+    else if group != null
+    then "0770"
     else "0700";
-
 in {
   systemd.services."EnsureDir-${serviceName}" = {
     description = "Ensure directory ${path} exists";
@@ -35,11 +36,11 @@ in {
       if [ ! -d "${path}" ]; then
         mkdir -p "${path}"
         ${lib.optionalString (owner != null) ''
-          chown "${owner}" "${path}"
-        ''}
+        chown "${owner}" "${path}"
+      ''}
         ${lib.optionalString (group != null) ''
-          chgrp "${group}" "${path}"
-        ''}
+        chgrp "${group}" "${path}"
+      ''}
         chmod "${calculatedMode}" "${path}"
       else
         echo "Dir ${path} already exists"

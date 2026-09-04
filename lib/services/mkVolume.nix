@@ -1,16 +1,11 @@
 {
   hostPath,
   containerPath,
-
   type ? "bind",
-
   readOnly ? false,
-
   create ? true,
-
   owner ? null,
   group ? null,
-
   mode ? null,
 }: {
   inherit

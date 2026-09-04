@@ -26,23 +26,23 @@ in {
     };
 
     script = ''
-      mkdir -p "$(dirname ${path})"
-      tmp=$(mktemp)
-      cat > "$tmp" <<'EOF'
-${contents}
-EOF
-      if ! cmp -s "$tmp" "${path}"; then
-        mv "$tmp" "${path}"
+            mkdir -p "$(dirname ${path})"
+            tmp=$(mktemp)
+            cat > "$tmp" <<'EOF'
+      ${contents}
+      EOF
+            if ! cmp -s "$tmp" "${path}"; then
+              mv "$tmp" "${path}"
 
-        ${lib.optionalString (owner != null) ''
-          chown ${owner}${lib.optionalString (group != null) ":${group}"} ${path}
-        ''}
+              ${lib.optionalString (owner != null) ''
+        chown ${owner}${lib.optionalString (group != null) ":${group}"} ${path}
+      ''}
 
-        chmod ${mode} ${path}
+              chmod ${mode} ${path}
 
-      else
-        rm "$tmp"
-      fi
+            else
+              rm "$tmp"
+            fi
 
     '';
   };

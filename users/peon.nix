@@ -15,8 +15,9 @@
       home = "/home/peon";
       shell = pkgs.fish;
       linger = true;
-      extraGroups = ["wheel" "networkmanager" "docker" "config-editor"]
-        ++ [ "video" "input" "render" ]; # for sunshine
+      extraGroups =
+        ["wheel" "networkmanager" "docker" "config-editor"]
+        ++ ["video" "input" "render"]; # for sunshine
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
     };
   };

@@ -14,7 +14,11 @@ in
     ${contents}
     EOF
 
-    ${if executable then ''
-      chmod +x $out/${path}
-    '' else ""}
+    ${
+      if executable
+      then ''
+        chmod +x $out/${path}
+      ''
+      else ""
+    }
   ''

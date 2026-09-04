@@ -7,7 +7,6 @@
 }:
 with lib; let
   cfg = config.apps.kando;
-
   # templateDir = ../configs/waybar;
 in {
   options.apps.kando = {
