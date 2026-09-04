@@ -37,7 +37,7 @@
 let
   lib = pkgs.lib;
   myLib = {
-    ensureDirExists = import ../ensureDirExists;
+    ensureDirExists = import ../ensureDirExists.nix;
   };
 
   volumeToString = v:
@@ -179,14 +179,15 @@ assert lib.all (v:
   // commandOptions
   // entrypointOptions;
 }
-lib.mkMerge (
+(lib.mkMerge (
   map (volume:
     if volume.create then
       myLib.ensureDirExists {
-        path = volume.hostPath;
+        inherit lib;
+        path = volume.hostMount;
         inherit (volume) owner group mode;
         parentServiceName = name;
       }
     else {}
   ) volumes
-))
+)))

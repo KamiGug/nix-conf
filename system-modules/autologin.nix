@@ -1,6 +1,6 @@
 {
   config,
-  pkgs,
+  # pkgs,
   lib,
   ...
 }: let
@@ -24,6 +24,7 @@ in {
     services.displayManager = {
         enable = true;
         # TODO: assert de legal option
+        # defaultSession = lib.mkForce "${cfg.de}";
         defaultSession = "${cfg.de}";
         autoLogin = {
           enable = true;

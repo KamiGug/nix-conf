@@ -107,7 +107,8 @@
     configArgs = {
       protocol = "http";
       nameSuffix = "-test";
-      rootDomain = "arpa";
+      # put this in some repository (like using) and make it default to that value
+      rootDomain = "lab.hm";
       # domain = "127.0.0.1";
       serviceUser = "peon";
       networks = {
@@ -116,4 +117,3 @@
     };
   })
   )
-# }
