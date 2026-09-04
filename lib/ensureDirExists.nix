@@ -34,6 +34,7 @@ in {
       set -euo pipefail
 
       if [ ! -d "${path}" ]; then
+        echo "creating directory ${path}"
         mkdir -p "${path}"
         ${lib.optionalString (owner != null) ''
         chown "${owner}" "${path}"
