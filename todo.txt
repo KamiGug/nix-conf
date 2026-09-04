@@ -1,4 +1,15 @@
 migrate to tnix
+change switch to commit on successful build and name it by host generation
+add install task that takes in hostname, if passed generate hardware config; in either case lefthook install
+rewrite task file:
+    - lint (nix fmt, statix, deadnix)
+    - lint:fix
+    - lint:all
+    - lint:all:fix
+    - switch
+    - install
+    - perm-fix
+    - todos
 
 SOPS for:
     - ssh (hm)
