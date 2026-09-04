@@ -96,24 +96,24 @@
   # // myLib.serv.ensureNetwork {
   #   name="nextcloud";
   # }
-  # // (lib.recursiveUpdate (myLib.apps.dbs.postgres {
-  #   configArgs = {
-  #     nameSuffix = "-test";
-  #     serviceUser = "peon";
-  #     networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
-  #   };
-  # })
-  # (myLib.apps.nextcloud {
-  #   configArgs = {
-  #     protocol = "http";
-  #     nameSuffix = "-test";
-  #     # put this in some repository (like using) and make it default to that value
-  #     rootDomain = "lab.hm";
-  #     # domain = "127.0.0.1";
-  #     serviceUser = "peon";
-  #     networks = {
-  #       nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
-  #     };
-  #   };
-  # })
-  # )
+  // (lib.recursiveUpdate (myLib.apps.dbs.postgres {
+    configArgs = {
+      nameSuffix = "-test";
+      serviceUser = "peon";
+      networks = [(myLib.serv.mkNetwork {name="nextcloud"; })];
+    };
+  })
+  (myLib.apps.nextcloud {
+    configArgs = {
+      protocol = "http";
+      nameSuffix = "-test";
+      # put this in some repository (like using) and make it default to that value
+      rootDomain = "lab.hm";
+      # domain = "127.0.0.1";
+      serviceUser = "peon";
+      networks = {
+        nextcloud = [(myLib.serv.mkNetwork {name="nextcloud"; })];
+      };
+    };
+  })
+  )
