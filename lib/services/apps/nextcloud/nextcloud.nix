@@ -3,12 +3,9 @@
   image ? "docker.io/library/nextcloud:31",
   configArgs,
 }: let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   containerLib = import ../.. {inherit pkgs;};
-  domain =
-    if configArgs ? domain
-    then configArgs.domain
-    else "file.${configArgs.rootDomain}";
+  domain = configArgs.domain or "file.${configArgs.rootDomain}";
   # testScript = pkgs.writeScriptBin "test-script" "echo hello!";
 
   volumes = {
@@ -53,15 +50,7 @@ in
         serverName = "${configArgs.protocol}://${domain}";
       };
       volumes =
-        [
-          # (
-          #   containerLib.mkVolume {
-          #     hostPath = lib.getExe testScript;
-          #     containerPath = "/test.exe";
-          #   }
-          # )
-        ]
-        ++ volumeMounts;
+        volumeMounts;
       # TODO: remove the ports! will need correct network + reverse proxy
       ports = [
         "8080:80"

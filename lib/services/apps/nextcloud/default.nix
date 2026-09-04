@@ -6,8 +6,7 @@
     onlyoffice = "";
   },
 }: let
-  lib = pkgs.lib;
-  validators = import ../../../validators;
+  inherit (pkgs) lib;
   # containerLib = import ../.. {inherit pkgs;};
   nextcloud = import ./nextcloud.nix;
   # onlyoffice = import ./onlyoffice.nix;
@@ -56,4 +55,3 @@ in
 #   configArgs = onlyofficeArgs;
 #   image = images.onlyoffice;
 # }
-

@@ -31,14 +31,14 @@ tasks:
         FILES=$(task _staged_files ALL={{.ALL}})
         echo "$FILES" | grep '\.nix$' | xargs -r alejandra
 
-  fmt-check:
+  fmt:check:
     desc: Check formatting
     cmds:
       - |
         FILES=$(task _staged_files ALL={{.ALL}})
         echo "$FILES" | grep '\.nix$' | xargs -r alejandra --check
 
-  lint-dead:
+  lint:dead:
     desc: deadnix
     cmds:
       - |
@@ -49,7 +49,7 @@ tasks:
           echo "$FILES" | grep '\.nix$' | xargs -r deadnix --fail
         fi
 
-  lint-statix:
+  lint:statix:
     desc: statix
     cmds:
       - |
@@ -63,9 +63,9 @@ tasks:
   lint:
     desc: Run all linters (parallel)
     deps:
-      - task: lint-dead
+      - task: lint:dead
         vars: { ALL: "{{.ALL}}", FIX: "{{.FIX}}" }
-      - task: lint-statix
+      - task: lint:statix
         vars: { ALL: "{{.ALL}}", FIX: "{{.FIX}}" }
 
   check:
@@ -76,6 +76,7 @@ tasks:
 
         task fmt-check ALL={{.ALL}} || FAIL=1 &
         task lint ALL={{.ALL}} FIX=false || FAIL=1 &
+        task
 
         wait
 

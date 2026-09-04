@@ -1,4 +1,4 @@
-{pkgs, ...} @ args: {
+{ ...} @ args: {
   template = import ./template.nix;
   scanPkgs = import ./scan-pkgs.nix args;
   mkMutableFile = import ./mkMutableFile.nix;

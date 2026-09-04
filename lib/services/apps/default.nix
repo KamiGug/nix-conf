@@ -1,4 +1,4 @@
-{pkgs, ...} @ args: {
+{pkgs, ...}: {
   # authentik = import ./authentik;
   nextcloud = import ./nextcloud {inherit pkgs;};
   dbs = {

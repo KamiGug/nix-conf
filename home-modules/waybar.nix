@@ -32,8 +32,7 @@ in {
       targetPrefix = "waybar";
       inherit templateDir;
       replacements = {
-        font = cfg.font;
-        launcher = cfg.launcher;
+        inherit (cfg) font launcher;
       };
     };
 

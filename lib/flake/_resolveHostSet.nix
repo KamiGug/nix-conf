@@ -46,7 +46,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
 
   homeManagerUsers = builtins.listToAttrs (
     map (name: {
-      name = name;
+      inherit name;
       value = myUsers.${name}.home;
     })
     users

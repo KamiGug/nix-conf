@@ -9,15 +9,13 @@
   lspBinaries =
     {
       # phpantom = pkgs.phpantom-lsp;
-      phpactor = pkgs.phpactor;
+      inherit (pkgs) phpactor typos tix;
       clangd = pkgs.clang-tools;
       rust = pkgs.rust-analyzer;
       cmake = pkgs.cmake-language-server;
       yaml = pkgs.yaml-language-server;
-      typos = pkgs.typos;
       nix = pkgs.nixd;
       nixFormatter = pkgs.alejandra;
-      tix = pkgs.tix;
     }
     // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
       csharp = pkgs.csharp-ls;

@@ -20,7 +20,7 @@
   healthcheck ? null,
   extraOptions ? [],
 }: let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   myLib = {
     ensureDirExists = import ../ensureDirExists.nix;
   };

@@ -46,12 +46,5 @@ in {
         })
         cfg.extraSettings;
     };
-    programs.zsh.shellAliases = {
-      lg = "lazygit";
-    };
-
-    programs.bash.shellAliases = {
-      lg = "lazygit";
-    };
   };
 }

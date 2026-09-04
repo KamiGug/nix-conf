@@ -41,14 +41,8 @@
   };
 
   outputs = inputs @ {
-    self,
     nixpkgs,
-    noctalia,
     flake-utils,
-    home-manager,
-    nix-darwin,
-    sops-nix,
-    nixos-hardware,
     ...
   }: let
     flakeLib = import ./lib/flake;

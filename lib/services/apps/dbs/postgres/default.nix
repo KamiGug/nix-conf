@@ -2,9 +2,8 @@
   configArgs ? {},
   image ? "docker.io/library/postgres:18.6",
 } @ args: let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   containerLib = import ../../.. {inherit pkgs;};
-  validators = import ../../../../validators;
 
   configArgs =
     lib.recursiveUpdate {
