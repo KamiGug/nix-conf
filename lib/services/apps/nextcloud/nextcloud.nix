@@ -53,6 +53,6 @@ in
         volumeMounts;
       # TODO: remove the ports! will need correct network + reverse proxy
       ports = [
-        "8080:80"
+        "80:8080"
       ];
     }
