@@ -33,16 +33,6 @@
     )
     volumes;
 in
-  # {
-  #   systemd.tmpfiles.rules =
-  #   [
-  #     "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix} 750 ${configArgs.serviceUser} root -"
-  #   ]
-  #   ++ lib.mapAttrsToList (name: _:
-  #         "d ${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name} 0750 ${configArgs.serviceUser} root -"
-  #       ) volumes;
-  # }
-  # //
   containerLib.mkContainerService {
     inherit image networks serviceUser containerUser name;
     environment = {
