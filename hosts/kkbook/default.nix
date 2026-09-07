@@ -108,7 +108,7 @@
         nameSuffix = "-test";
         # serviceUser = "peon";
         # serviceUser = "root";
-        containerUser = "1000";
+        # containerUser = "1000";
         networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
       };
     })
