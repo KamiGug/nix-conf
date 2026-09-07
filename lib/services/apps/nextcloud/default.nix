@@ -21,7 +21,8 @@
         onlyoffice = "onlyoffice";
       };
       serviceUser = "root";
-      containerUser = "wisp";
+      # containerUser = "wisp";
+      containerUser = null;
       networks = {
         nextcloud = [];
         onlyoffice = [];

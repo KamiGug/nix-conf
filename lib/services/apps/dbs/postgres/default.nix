@@ -12,7 +12,7 @@
       volumePrefix = "/mnt/nas";
       volumeSelfPrefix = "postgres";
       serviceUser = "root";
-      containerUser = "wisp";
+      containerUser = null;
       networks = [];
     }
     args.configArgs;
