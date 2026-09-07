@@ -27,7 +27,8 @@
       name: containerPath:
         containerLib.mkVolume {
           hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
-          owner = configArgs.serviceUser;
+          # owner = configArgs.serviceUser;
+          owner = "999"; # TODO: allow making this arbitrary user
           inherit containerPath;
         }
     )
@@ -41,7 +42,7 @@ in
       POSTGRES_DB = "postgres";
     };
     volumes = volumeMounts;
-    # ports = [
-    #   "8080:80"
-    # ];
+    ports = [
+      "5432:5432"
+    ];
   }
