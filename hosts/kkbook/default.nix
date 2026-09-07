@@ -121,7 +121,7 @@
         # domain = "127.0.0.1";
         # serviceUser = "peon";
         # serviceUser = "root";
-        containerUser = "1000";
+        # containerUser = "1000";
         networks = {
           nextcloud = [(myLib.serv.mkNetwork {name = "nextcloud";})];
         };
