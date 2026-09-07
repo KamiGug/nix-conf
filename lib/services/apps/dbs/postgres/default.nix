@@ -11,7 +11,8 @@
       nameSuffix = "";
       volumePrefix = "/mnt/nas";
       volumeSelfPrefix = "postgres";
-      serviceUser = "wisp";
+      serviceUser = "root";
+      containerUser = "wisp";
       networks = [];
     }
     args.configArgs;
