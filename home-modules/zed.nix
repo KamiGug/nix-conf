@@ -16,6 +16,7 @@
       yaml = pkgs.yaml-language-server;
       nix = pkgs.nixd;
       nixFormatter = pkgs.alejandra;
+      tix = pkgs.tix;
     }
     // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
       csharp = pkgs.csharp-ls;
