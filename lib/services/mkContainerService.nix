@@ -150,10 +150,8 @@ in
             ++ secretOptions
             ++ extraOptions
             ++ lib.optional privileged "--privileged"
-            ++ lib.optional (hostname != null)
-            "--hostname=${hostname}"
-            ++ lib.optional (containerUser != null)
-            "--user=${containerUser}"
+            ++ lib.optional (hostname != null) "--hostname=${hostname}"
+            ++ lib.optional (containerUser != null) "--user=${containerUser}"
             ++ healthOptions
             ++ map
             (n: "--network=${n}")
