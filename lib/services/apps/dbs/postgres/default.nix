@@ -17,7 +17,7 @@
     }
     args.configArgs;
   name = "postgres${configArgs.nameSuffix}";
-  inherit (configArgs) networks serviceUser;
+  inherit (configArgs) networks serviceUser containerUser;
   volumes = {
     data = "/var/lib/postgresql";
   };
@@ -44,7 +44,7 @@ in
   # }
   # //
   containerLib.mkContainerService {
-    inherit image networks serviceUser name;
+    inherit image networks serviceUser containerUser name;
     environment = {
       POSTGRES_USER = "postgres";
       POSTGRES_PASSWORD = "changeMe";

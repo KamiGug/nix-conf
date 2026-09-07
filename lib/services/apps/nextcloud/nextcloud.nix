@@ -42,7 +42,7 @@ in
   # //
     containerLib.mkContainerService {
       inherit image;
-      inherit (configArgs) networks serviceUser;
+      inherit (configArgs) networks serviceUser containerUser;
       name = "nextcloud${configArgs.nameSuffix}";
       # name = "nextcloud";
       environment = {
