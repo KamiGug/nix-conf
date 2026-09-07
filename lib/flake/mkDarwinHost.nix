@@ -19,7 +19,7 @@ assert (builtins.isList extraModules) || throw "extraModules must be a list"; le
 
   hostConfig = import ./_resolveHostSet.nix {
     inherit inputs name arch root extraModules;
-    os = "linux";
+    os = "darwin";
     users = resolvedUsers;
     gui = false;
   };
