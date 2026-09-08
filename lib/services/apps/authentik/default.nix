@@ -6,8 +6,8 @@
   },
 }: let
   inherit (pkgs) lib;
-  authentikServer = import ./server.nix;
-  authentikWorker = import ./worker.nix;
+  authentikServer = import ./server.nix {inherit pkgs;};
+  authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =
     lib.recursiveUpdate {
       nameSuffix = "";
@@ -52,13 +52,17 @@
     };
 in
   assert images ? server;
-  assert images ? worker; [
-    (authentikServer {
-      configArgs = serverArgs;
-      image = images.server;
-    })
-    (authentikWorker {
-      configArgs = workerArgs;
-      image = images.worker;
-    })
-  ]
+  assert images ? worker;
+    lib.foldl'
+    lib.recursiveUpdate
+    {}
+    [
+      (authentikServer {
+        configArgs = serverArgs;
+        image = images.server;
+      })
+      (authentikWorker {
+        configArgs = workerArgs;
+        image = images.worker;
+      })
+    ]

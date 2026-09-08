@@ -3,7 +3,7 @@
   image ? "ghcr.io/goauthentik/server:2026.8.1",
 } @ args: let
   inherit (pkgs) lib;
-  containerLib = import ../../.. {inherit pkgs;};
+  containerLib = import ../.. {inherit pkgs;};
 
   configArgs =
     lib.recursiveUpdate {
