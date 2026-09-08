@@ -12,16 +12,16 @@
       serviceUser = "root";
       containerUser = null;
       networks = [];
-      postgres = {
-        host = "postgres";
-        port = 5432;
-        database = "authentik";
-        user = "authentik";
-      };
-      ports = {
-        http = 9000;
-        https = 9443;
-      };
+      # postgres = {
+      #   host = "postgres";
+      #   port = 5432;
+      #   database = "authentik";
+      #   user = "authentik";
+      # };
+      # ports = {
+      #   http = 9000;
+      #   https = 9443;
+      # };
     }
     args.configArgs;
   name = "authentik-server${configArgs.nameSuffix}";
@@ -49,5 +49,9 @@ in
     # };
     volumes = volumeMounts;
     # ports = ["${toString configArgs.ports.http}:9000" "${toString configArgs.ports.https}:9443"];
+    ports = [
+      "9000:9000"
+      "9443:9443"
+    ];
     shmSize = "512mb";
   }

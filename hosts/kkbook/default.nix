@@ -5,8 +5,7 @@
   myLib,
   # inputs,
   ...
-}:
-{
+}: {
   imports = [
     ./hardware-configuration.nix
   ];
@@ -25,35 +24,37 @@
     options = ["nofail" "x-systemd.automount"];
   };
 
-  my.autoLogin.enable = true;
+  my = {
+    autoLogin.enable = true;
 
-  my.hardware.printing = {
-    enable = true;
-    users = ["peon"];
-  };
-
-  nixpkgs.config.allowUnfree = true;
-  my.gaming = {
-    enable = true;
-
-    steam.enable = true;
-    lutris.enable = true;
-    sunshine.enable = false;
-
-    nvidia = {
+    hardware.printing = {
       enable = true;
-      open = false;
-      package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
+      users = ["peon"];
+    };
 
-      prime = {
+    gaming = {
+      enable = true;
+
+      steam.enable = true;
+      lutris.enable = true;
+      sunshine.enable = false;
+
+      nvidia = {
         enable = true;
+        open = false;
+        package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
 
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
+        prime = {
+          enable = true;
+
+          intelBusId = "PCI:0:2:0";
+          nvidiaBusId = "PCI:1:0:0";
+        };
       };
     };
   };
 
+  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.nvidia.acceptLicense = true;
   # programs.neovim = {
   #   enable = true;
