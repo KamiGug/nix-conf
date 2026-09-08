@@ -47,13 +47,17 @@ in
   #   || (parsedConfigArgs ? rootDomain && validators.domain parsedConfigArgs.rootDomain);
   assert builtins.elem parsedConfigArgs.protocol ["http" "https"];
   # TODO: add more asserts (at least one each)
-    nextcloud {
+    lib.foldl'
+    lib.recursiveUpdate
+    {}
+    (nextcloud {
       inherit pkgs;
       configArgs = nextcloudArgs;
       image = images.nextcloud;
-    }
-# // onlyoffice {
+    })
+# (onlyoffice {
 #   inherit pkgs;
 #   configArgs = onlyofficeArgs;
 #   image = images.onlyoffice;
-# }
+# })
+

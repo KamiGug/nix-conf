@@ -1,2 +1,64 @@
-{}: {
-}
+{pkgs, ...}: {
+  configArgs ? {},
+  images ? {
+    server = "ghcr.io/goauthentik/server:2026.8.1";
+    worker = "ghcr.io/goauthentik/server:2026.8.1";
+  },
+}: let
+  inherit (pkgs) lib;
+  authentikServer = import ./server.nix;
+  authentikWorker = import ./worker.nix;
+  parsedConfigArgs =
+    lib.recursiveUpdate {
+      nameSuffix = "";
+      volumePrefix = "/mnt/nas";
+      volumeSelfPrefix = "authentik";
+      serviceUser = "root";
+      containerUser = null;
+      networks = {
+        server = [];
+        worker = [];
+      };
+      # postgres = {
+      #   host = "postgres";
+      #   port = 5432;
+      #   database = "authentik";
+      #   user = "authentik";
+      # };
+      # ports = {
+      #   http = 9000;
+      #   https = 9443;
+      # };
+    }
+    configArgs;
+  commonArgs = {
+    inherit pkgs;
+    nameSuffix = parsedConfigArgs.nameSuffix;
+    volumePrefix = parsedConfigArgs.volumePrefix;
+    serviceUser = parsedConfigArgs.serviceUser;
+    containerUser = parsedConfigArgs.containerUser;
+    postgres = parsedConfigArgs.postgres;
+  };
+  serverArgs =
+    commonArgs
+    // {
+      networks = parsedConfigArgs.networks.server;
+      ports = parsedConfigArgs.ports;
+    };
+  workerArgs =
+    commonArgs
+    // {
+      networks = parsedConfigArgs.networks.worker;
+    };
+in
+  assert images ? server;
+  assert images ? worker; [
+    (authentikServer {
+      configArgs = serverArgs;
+      image = images.server;
+    })
+    (authentikWorker {
+      configArgs = workerArgs;
+      image = images.worker;
+    })
+  ]

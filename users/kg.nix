@@ -42,7 +42,7 @@
     homebrew.casks = [
       "tunnelblick"
       "discord"
-      "virtualbox" 
+      "virtualbox"
       "caffeine"
     ];
   };

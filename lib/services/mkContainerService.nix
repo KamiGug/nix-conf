@@ -16,6 +16,7 @@
   labels ? {},
   command ? [],
   entrypoint ? null,
+  shmSize ? null,
   dependencies ? [],
   healthcheck ? null,
   extraOptions ? [],
@@ -58,6 +59,10 @@
   entrypointOptions = lib.optionalAttrs (entrypoint != null) {
     inherit entrypoint;
   };
+
+  sharedMemoryOptions = lib.optionals (shmSize != null) [
+    "--shm-size=${shmSize}"
+  ];
 
   healthOptions =
     lib.optionals (healthcheck != null)
@@ -111,6 +116,8 @@ in
     "always"
   ]
   || throw "Invalid restart policy: ${restart}";
+  # TODO: write a validator for this
+  assert (builtins.isString shmSize || shmSize == null) || throw "shmSize must be a string, or a null (for default value)";
   assert lib.all (
     v:
       builtins.isAttrs v
@@ -153,6 +160,7 @@ in
             ++ lib.optional (hostname != null) "--hostname=${hostname}"
             ++ lib.optional (containerUser != null) "--user=${containerUser}"
             ++ healthOptions
+            ++ shmSize
             ++ map
             (n: "--network=${n}")
             networkNames;

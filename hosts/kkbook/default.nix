@@ -97,7 +97,6 @@
 # // myLib.serv.ensureNetwork {
 #   name="nextcloud";
 # }
-
 // (
   lib.foldl'
   lib.recursiveUpdate
@@ -123,7 +122,24 @@
         # serviceUser = "root";
         # containerUser = "1000";
         networks = {
-          nextcloud = [(myLib.serv.mkNetwork {name = "nextcloud";})];
+          nextcloud = [
+            (myLib.serv.mkNetwork {name = "nextcloud";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
+        };
+      };
+    })
+    (myLib.apps.authentik {
+      configArgs = {
+        networks = {
+          server = [
+            (myLib.serv.mkNetwork {name = "authenthik";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
+          worker = [
+            (myLib.serv.mkNetwork {name = "authenthik";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
         };
       };
     })
