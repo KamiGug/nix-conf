@@ -160,7 +160,7 @@ in
             ++ lib.optional (hostname != null) "--hostname=${hostname}"
             ++ lib.optional (containerUser != null) "--user=${containerUser}"
             ++ healthOptions
-            ++ shmSize
+            ++ sharedMemoryOptions
             ++ map
             (n: "--network=${n}")
             networkNames;
