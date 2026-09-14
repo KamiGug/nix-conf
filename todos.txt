@@ -1,7 +1,6 @@
 .dev/switch.sh
-  100:    # TODO: move commiting after successful build, also generate message contianing host, generation number and (if home manger) user name
-  79:# TODO: move commiting here
-  81:# TODO: use to get generation number -
+  85:# TODO: move commiting here
+  87:# TODO: use to get generation number -
 
 flake.nix
   65:    # TODO: split shells to seperate file

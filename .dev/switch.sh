@@ -34,22 +34,28 @@ case "$TARGET" in
     ATTR_PATH="nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}")
     DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
+    LAST_GENERATION_NUMBER=$(nixos-rebuild list-generations | head -n2 | tail -n1 | cut -d ' ' -f1)
     ;;
   darwin)
     ATTR_PATH="darwinConfigurations.${HOSTNAME}.system"
     SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
     DRY_RUN_CMD=(darwin-rebuild dry-run --flake ".#${HOSTNAME}")
+    LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
     ;;
   droid)
     ATTR_PATH="nixOnDroidConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(nix-on-droid switch --flake ".#${HOSTNAME}")
     DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
+    # NOTE: NOT CHECKED
+    LAST_GENERATION_NUMBER=$(nix-on-droid generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f1)
     ;;
   home)
     ATTR="${USER_NAME}@${HOSTNAME}"
     ATTR_PATH="homeConfigurations.\"${ATTR}\".activationPackage"
     SWITCH_CMD=(home-manager switch --flake ".#${ATTR}")
     DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
+    # NOTE: NOT CHECKED!
+    LAST_GENERATION_NUMBER=$(home-manager generations | head -n1 | sed -E 's/.*id ([0-9]+).*/\1/')
     ;;
   *)
     echo "Unknown target: $TARGET"
@@ -75,7 +81,7 @@ fi
 
 echo "→ Running switch"
 "${SWITCH_CMD[@]}"
-
+HAS_COMMIT=false
 # TODO: move commiting here
 
 # TODO: use to get generation number -
@@ -97,10 +103,19 @@ if [[ "$HAS_CHANGES" == true ]]; then
     fi
   fi
 
-    # TODO: move commiting after successful build, also generate message contianing host, generation number and (if home manger) user name
+else
+  if [[ $(git log --all --grep="${HOSTNAME}:${LAST_GENERATION_NUMBER}" --fixed-strings --quiet | grep -E '^commit' | wc -l) -gt 0 ]]; then
+      HAS_COMMIT=true
+  fi
+fi
+
+
+
+if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
   git add -A
-  git commit -m "${MSG}-${HOSTNAME}($()})"
+  git commit -m "${MSG}
+  ${HOSTNAME}:${LAST_GENERATION_NUMBER}"
 else
   echo "→ No changes to commit"
 fi
