@@ -23,7 +23,7 @@
 }: let
   inherit (pkgs) lib;
   myLib = {
-    ensureDirExists = import ../ensureDirExists.nix;
+    ensureDirExists = import ../file/ensureDirExists.nix;
   };
 
   volumeToString = v:

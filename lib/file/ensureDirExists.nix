@@ -25,6 +25,10 @@ in {
       "${parentServiceName}.service"
     ];
 
+    wantedBy = [
+      "multi-user.target"
+    ];
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;

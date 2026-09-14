@@ -6,6 +6,9 @@
   },
 }: let
   inherit (pkgs) lib;
+  myLib = {
+    ensureDirExists = import ../../../file/ensureDirExists.nix;
+  };
   authentikServer = import ./server.nix {inherit pkgs;};
   authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =
@@ -14,6 +17,7 @@
       volumePrefix = "/mnt/nas";
       volumeSelfPrefix = "authentik";
       serviceUser = "root";
+      secretKeyPrefix = "";
       containerUser = null;
       networks = {
         server = [];
@@ -57,6 +61,13 @@ in
     lib.recursiveUpdate
     {}
     [
+      (
+        myLib.ensureDirExists {
+          inherit lib;
+          path = "/etc/authentik";
+        }
+      )
+
       (authentikServer {
         configArgs = serverArgs;
         image = images.server;
