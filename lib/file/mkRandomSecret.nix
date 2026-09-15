@@ -1,11 +1,11 @@
+{lib, ...}:
 {
-  lib,
   path,
   command ? "openssl rand -base64 64",
   mode ? null,
   user ? null,
   group ? null,
-
+  parentServiceName ? null,
 }: let
   serviceName = "GenerateRandomSecret-${lib.replaceStrings ["/"] ["@"] path}";
 in {
@@ -30,6 +30,12 @@ in {
       assertion = group == null || builtins.isString group;
       message = "mkRandomSecret: `group` must be null or a string";
     }
+    {
+      assertion = parentServiceName == null
+        || builtins.isString parentServiceName
+        || builtins.isList parentServiceName;
+      message = "mkRandomSecret: parentServiceName must be null, string or list";
+    }
   ];
 
   systemd.services.${serviceName} = {
@@ -38,6 +44,21 @@ in {
     wantedBy = [
       "multi-user.target"
     ];
+
+
+    before = if (builtins.isString parentServiceName) then
+        [ parentServiceName ]
+      else if (builtins.isList parentServiceName) then
+        parentServiceName
+      else
+        [];
+
+    requiredBy = if (builtins.isString parentServiceName) then
+        [ parentServiceName ]
+      else if (builtins.isList parentServiceName) then
+        parentServiceName
+      else
+        [];
 
     serviceConfig = {
       Type = "oneshot";

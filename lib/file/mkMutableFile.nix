@@ -1,5 +1,5 @@
+{lib, ...}:
 {
-  lib,
   path,
   contents,
   parentService ? null,
@@ -12,13 +12,20 @@ in {
   systemd.services."generate-${serviceName}" = {
     description = "Generate ${path}";
 
-    before = lib.mkIf (parentService != null) [
-      "${parentService}.service"
-    ];
 
-    wantedBy = lib.mkIf (parentService != null) [
-      "${parentService}.service"
-    ];
+    before = if (builtins.isString parentService) then
+        [ parentService ]
+      else if (builtins.isList parentService) then
+        parentService
+      else
+        [];
+
+    requiredBy = if (builtins.isString parentService) then
+        [ parentService ]
+      else if (builtins.isList parentService) then
+        parentService
+      else
+        [];
 
     serviceConfig = {
       Type = "oneshot";

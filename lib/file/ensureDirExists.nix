@@ -1,5 +1,5 @@
+{lib, ...}@args:
 {
-  lib,
   path,
   parentServiceName ? null,
   owner ? null,
@@ -17,13 +17,19 @@ in {
   systemd.services."EnsureDir-${serviceName}" = {
     description = "Ensure directory ${path} exists";
 
-    before = lib.mkIf (parentServiceName != null) [
-      "${parentServiceName}.service"
-    ];
+    before = if (builtins.isString parentServiceName) then
+        [ parentServiceName ]
+      else if (builtins.isList parentServiceName) then
+        parentServiceName
+      else
+        [];
 
-    requiredBy = lib.mkIf (parentServiceName != null) [
-      "${parentServiceName}.service"
-    ];
+    requiredBy = if (builtins.isString parentServiceName) then
+        [ parentServiceName ]
+      else if (builtins.isList parentServiceName) then
+        parentServiceName
+      else
+        [];
 
     wantedBy = [
       "multi-user.target"

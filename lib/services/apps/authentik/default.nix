@@ -6,9 +6,7 @@
   },
 }: let
   inherit (pkgs) lib;
-  myLib = {
-    ensureDirExists = import ../../../file/ensureDirExists.nix;
-  };
+  myLib.file =  import ../../../file/default.nix { inherit lib; };
   authentikServer = import ./server.nix {inherit pkgs;};
   authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =
@@ -62,12 +60,15 @@ in
     {}
     [
       (
-        myLib.ensureDirExists {
-          inherit lib;
+        myLib.file.ensureDirExists {
           path = "/etc/authentik";
         }
       )
-
+      myLib.file.mkRandomSecret {
+        path = "/etc/authentik/${serverArgs.secretKeyPrefix}secret";
+        # TODO: make service name generators serparate functions for each service creating function/modules
+        parentService = ["EnsureDirExists-@etc@authentik"];
+      }
       (authentikServer {
         configArgs = serverArgs;
         image = images.server;

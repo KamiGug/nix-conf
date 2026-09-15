@@ -1,5 +1,5 @@
 {...} @ args: {
-  ensureDirExists = import ./ensureDirExists.nix;
-  mkMutableFile = import ./mkMutableFile.nix;
-  mkRandomSecret = import ./mkRandomSecret.nix;
+  ensureDirExists = import ./ensureDirExists.nix args;
+  mkMutableFile = import ./mkMutableFile.nix args;
+  mkRandomSecret = import ./mkRandomSecret.nix args;
 }

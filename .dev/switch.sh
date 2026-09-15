@@ -33,19 +33,19 @@ case "$TARGET" in
   nixos)
     ATTR_PATH="nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
+    DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(nixos-rebuild list-generations | head -n2 | tail -n1 | cut -d ' ' -f1)
     ;;
   darwin)
     ATTR_PATH="darwinConfigurations.${HOSTNAME}.system"
     SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(darwin-rebuild dry-run --flake ".#${HOSTNAME}")
+    DRY_RUN_CMD=(darwin-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
     ;;
   droid)
     ATTR_PATH="nixOnDroidConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(nix-on-droid switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
+    DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
     # NOTE: NOT CHECKED
     LAST_GENERATION_NUMBER=$(nix-on-droid generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f1)
     ;;
@@ -53,7 +53,7 @@ case "$TARGET" in
     ATTR="${USER_NAME}@${HOSTNAME}"
     ATTR_PATH="homeConfigurations.\"${ATTR}\".activationPackage"
     SWITCH_CMD=(home-manager switch --flake ".#${ATTR}")
-    DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
+    DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
     # NOTE: NOT CHECKED!
     LAST_GENERATION_NUMBER=$(home-manager generations | head -n1 | sed -E 's/.*id ([0-9]+).*/\1/')
     ;;
