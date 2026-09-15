@@ -22,9 +22,8 @@
   extraOptions ? [],
 }: let
   inherit (pkgs) lib;
-  myLib = {
-    ensureDirExists = import ../file/ensureDirExists.nix;
-  };
+  myLib = import ../file {inherit lib;};
+
 
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
@@ -178,7 +177,6 @@ in
             if volume.create
             then
               myLib.ensureDirExists {
-                inherit lib;
                 path = volume.hostMount;
                 inherit (volume) owner group mode;
                 parentServiceName = name;
