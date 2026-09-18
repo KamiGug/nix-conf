@@ -6,6 +6,7 @@ TARGET_INPUT="${2:-""}"
 
 HOSTNAME=${HOSTNAME:-$(hostname)}
 USER_NAME=${USER:-$(whoami)}
+TRACE=${TRACE:-"true"}
 
 # --- detect target ---
 if [[ -n "$TARGET_INPUT" ]]; then
@@ -33,29 +34,45 @@ case "$TARGET" in
   nixos)
     ATTR_PATH="nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(nixos-rebuild list-generations | head -n2 | tail -n1 | cut -d ' ' -f1)
+    if [[ "$TRACE" == 'true' ]]; then
+        DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
+    else
+        DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
+    fi
     ;;
   darwin)
     ATTR_PATH="darwinConfigurations.${HOSTNAME}.system"
     SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(darwin-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
+    if [[ "$TRACE" == 'true' ]]; then
+        DRY_RUN_CMD=(darwin-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
+    else
+        DRY_RUN_CMD=(darwin-rebuild dry-run --flake ".#${HOSTNAME}")
+    fi
     ;;
   droid)
     ATTR_PATH="nixOnDroidConfigurations.${HOSTNAME}.config.system.build.toplevel"
     SWITCH_CMD=(nix-on-droid switch --flake ".#${HOSTNAME}")
-    DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
     # NOTE: NOT CHECKED
     LAST_GENERATION_NUMBER=$(nix-on-droid generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f1)
+    if [[ "$TRACE" == 'true' ]]; then
+        DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
+    else
+        DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
+    fi
     ;;
   home)
     ATTR="${USER_NAME}@${HOSTNAME}"
     ATTR_PATH="homeConfigurations.\"${ATTR}\".activationPackage"
     SWITCH_CMD=(home-manager switch --flake ".#${ATTR}")
-    DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
     # NOTE: NOT CHECKED!
     LAST_GENERATION_NUMBER=$(home-manager generations | head -n1 | sed -E 's/.*id ([0-9]+).*/\1/')
+    if [[ "$TRACE" == 'true' ]]; then
+        DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
+    else
+        DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
+    fi
     ;;
   *)
     echo "Unknown target: $TARGET"
@@ -121,6 +138,9 @@ else
 fi
 
 echo "Starting one off services"
-for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret' | cut -d ' ' -f1); do
-    systemctl restart ${SERVICE}
-done
+
+if [[ "$TARGET" == "nixos" ]]; then
+    for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret' | cut -d ' ' -f1); do
+        systemctl restart ${SERVICE}
+    done
+fi

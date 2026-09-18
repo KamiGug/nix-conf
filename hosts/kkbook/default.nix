@@ -103,15 +103,15 @@
   lib.recursiveUpdate
   {}
   [
-    # (myLib.apps.dbs.postgres {
-    #   configArgs = {
-    #     nameSuffix = "-test";
-    #     # serviceUser = "peon";
-    #     # serviceUser = "root";
-    #     # containerUser = "1000";
-    #     networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
-    #   };
-    # })
+    (myLib.apps.dbs.postgres {
+      configArgs = {
+        nameSuffix = "-test";
+        # serviceUser = "peon";
+        # serviceUser = "root";
+        # containerUser = "1000";
+        networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
+      };
+    })
     # (myLib.apps.nextcloud {
     #   configArgs = {
     #     protocol = "http";

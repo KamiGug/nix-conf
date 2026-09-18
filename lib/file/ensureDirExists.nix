@@ -18,16 +18,16 @@ in {
     description = "Ensure directory ${path} exists";
 
     before = if (builtins.isString parentServiceName) then
-        [ parentServiceName ]
-      else if (builtins.isList parentServiceName) then
-        parentServiceName
+        [ "${parentServiceName}.service" ]
+      # else if (builtins.isList parentServiceName) then
+      #   parentServiceName
       else
         [];
 
     requiredBy = if (builtins.isString parentServiceName) then
-        [ parentServiceName ]
-      else if (builtins.isList parentServiceName) then
-        parentServiceName
+        [ "${parentServiceName}.service" ]
+      # else if (builtins.isList parentServiceName) then
+      #   parentServiceName
       else
         [];
 
