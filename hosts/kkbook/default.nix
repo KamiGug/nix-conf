@@ -112,24 +112,24 @@
         networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
       };
     })
-    # (myLib.apps.nextcloud {
-    #   configArgs = {
-    #     protocol = "http";
-    #     nameSuffix = "-test";
-    #     # put this in some repository (like using) and make it default to that value
-    #     rootDomain = "lab.hm";
-    #     # domain = "127.0.0.1";
-    #     # serviceUser = "peon";
-    #     # serviceUser = "root";
-    #     # containerUser = "1000";
-    #     networks = {
-    #       nextcloud = [
-    #         (myLib.serv.mkNetwork {name = "nextcloud";})
-    #         (myLib.serv.mkNetwork {name = "proxy";})
-    #       ];
-    #     };
-    #   };
-    # })
+    (myLib.apps.nextcloud {
+      configArgs = {
+        protocol = "http";
+        nameSuffix = "-test";
+        # put this in some repository (like using) and make it default to that value
+        rootDomain = "lab.hm";
+        # domain = "127.0.0.1";
+        # serviceUser = "peon";
+        # serviceUser = "root";
+        # containerUser = "1000";
+        networks = {
+          nextcloud = [
+            (myLib.serv.mkNetwork {name = "nextcloud";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
+        };
+      };
+    })
     # (myLib.apps.authentik {
     #   configArgs = {
     #     networks = {
