@@ -12,7 +12,7 @@ lib/flake/_resolveHostSet.nix
   80:  # TODO: handle enableHm == false
 
 lib/services/apps/authentik/default.nix
-  69:        # TODO: make service name generators serparate functions for each service creating function/modules
+  67:        # TODO: make service name generators serparate functions for each service creating function/modules
 
 lib/services/apps/dbs/postgres/default.nix
   31:          owner = "999"; # TODO: allow making this arbitrary user

@@ -6,7 +6,7 @@
   },
 }: let
   inherit (pkgs) lib;
-  myLib.file =  import ../../../file { inherit lib pkgs; };
+  myLib.file =  import ../../../file { inherit pkgs; };
   authentikServer = import ./server.nix {inherit pkgs;};
   authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =
@@ -44,8 +44,8 @@
   serverArgs =
     commonArgs
     // {
+      inherit (parsedConfigArgs) ports secretKeyPrefix;
       networks = parsedConfigArgs.networks.server;
-      ports = parsedConfigArgs.ports;
     };
   workerArgs =
     commonArgs
@@ -59,16 +59,14 @@ in
     lib.recursiveUpdate
     {}
     [
-      (
-        myLib.file.ensureDirExists {
-          path = "/etc/authentik";
-        }
-      )
-      myLib.file.mkRandomSecret {
+      (myLib.file.ensureDirExists {
+        path = "/etc/authentik";
+      })
+      (myLib.file.mkRandomSecret {
         path = "/etc/authentik/${serverArgs.secretKeyPrefix}secret";
         # TODO: make service name generators serparate functions for each service creating function/modules
-        parentService = ["EnsureDirExists-@etc@authentik.service"];
-      }
+        parentServiceName = "EnsureDirExists-@etc@authentik";
+      })
       (authentikServer {
         configArgs = serverArgs;
         image = images.server;

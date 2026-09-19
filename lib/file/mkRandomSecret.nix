@@ -1,12 +1,14 @@
-{lib, ...}:
+{pkgs, ...}:
 {
   path,
   command ? "openssl rand -base64 64",
+  pkgList ? [ pkgs.openssl ],
   mode ? null,
   user ? null,
   group ? null,
   parentServiceName ? null,
 }: let
+  inherit (pkgs) lib;
   serviceName = "GenerateRandomSecret-${lib.replaceStrings ["/"] ["@"] path}";
 in {
   assertions = [
@@ -17,6 +19,10 @@ in {
     {
       assertion = builtins.isString command && command != "";
       message = "mkRandomSecret: `command` must be a non-empty string";
+    }
+    {
+      assertion = builtins.isList pkgList;
+      message = "mkRandomSecret: `pkgList` must be a list";
     }
     {
       assertion =  mode == null || builtins.isString mode;
@@ -45,20 +51,21 @@ in {
       "multi-user.target"
     ];
 
-
     before = if (builtins.isString parentServiceName) then
-        [ parentServiceName ]
-      else if (builtins.isList parentServiceName) then
-        parentServiceName
+        [ "${parentServiceName}.service" ]
+      # else if (builtins.isList parentServiceName) then
+      #   parentServiceName
       else
         [];
 
     requiredBy = if (builtins.isString parentServiceName) then
-        [ parentServiceName ]
-      else if (builtins.isList parentServiceName) then
-        parentServiceName
+        [ "${parentServiceName}.service" ]
+      # else if (builtins.isList parentServiceName) then
+      #   parentServiceName
       else
         [];
+
+    path = pkgList;
 
     serviceConfig = {
       Type = "oneshot";
@@ -67,6 +74,9 @@ in {
 
     script = ''
       set -euo pipefail
+
+      # if mounting a file that is missing docker creates an empty directory
+      rmdir "${path}" > /dev/null 2>&1 || true
 
       if [ ! -e "${path}" ]; then
         echo "Generating secret ${path}"

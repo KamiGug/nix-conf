@@ -1,4 +1,4 @@
-{lib, ...}:
+{pkgs, ...}:
 {
   path,
   contents,
@@ -7,6 +7,7 @@
   group ? null,
   mode ? "0644",
 }: let
+  inherit (pkgs) lib;
   serviceName = lib.replaceStrings ["/"] ["@"] path;
 in {
   systemd.services."generate-${serviceName}" = {

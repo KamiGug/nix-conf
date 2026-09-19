@@ -1,4 +1,4 @@
-{lib, ...}@args:
+{pkgs, ...}@args:
 {
   path,
   parentServiceName ? null,
@@ -6,6 +6,7 @@
   group ? null,
   mode ? null,
 }: let
+  inherit (pkgs) lib;
   serviceName = lib.replaceStrings ["/"] ["@"] path;
   calculatedMode =
     if mode != null

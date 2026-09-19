@@ -130,19 +130,19 @@
         };
       };
     })
-    # (myLib.apps.authentik {
-    #   configArgs = {
-    #     networks = {
-    #       server = [
-    #         (myLib.serv.mkNetwork {name = "authenthik";})
-    #         (myLib.serv.mkNetwork {name = "proxy";})
-    #       ];
-    #       worker = [
-    #         (myLib.serv.mkNetwork {name = "authenthik";})
-    #         (myLib.serv.mkNetwork {name = "proxy";})
-    #       ];
-    #     };
-    #   };
-    # })
+    (myLib.apps.authentik {
+      configArgs = {
+        networks = {
+          server = [
+            (myLib.serv.mkNetwork {name = "authenthik";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
+          worker = [
+            (myLib.serv.mkNetwork {name = "authenthik";})
+            (myLib.serv.mkNetwork {name = "proxy";})
+          ];
+        };
+      };
+    })
   ]
 )

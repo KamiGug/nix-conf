@@ -22,7 +22,7 @@
   extraOptions ? [],
 }: let
   inherit (pkgs) lib;
-  myLib = import ../file {inherit lib;};
+  myLib = import ../file {inherit pkgs;};
 
 
   volumeToString = v:
