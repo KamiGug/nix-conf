@@ -71,6 +71,8 @@ in {
 
             command nvim $argv
           end
+
+          abbr --add :q exit
         '';
 
         shellAbbrs = {};
