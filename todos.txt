@@ -14,6 +14,9 @@ lib/flake/_resolveHostSet.nix
 lib/services/apps/authentik/default.nix
   67:        # TODO: make service name generators serparate functions for each service creating function/modules
 
+lib/services/apps/authentik/server.nix
+  37:      # TODO: fix
+
 lib/services/apps/dbs/postgres/default.nix
   31:          owner = "999"; # TODO: allow making this arbitrary user
 

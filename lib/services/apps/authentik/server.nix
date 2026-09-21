@@ -34,7 +34,9 @@
     containerLib.mkVolume {
       hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
       inherit containerPath;
-      owner = configArgs.serviceUser;
+      # TODO: fix
+      # owner = configArgs.serviceUser;
+      owner = "1000";
     })
   volumes;
 in

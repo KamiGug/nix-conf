@@ -132,7 +132,6 @@
     })
     (myLib.apps.authentik {
       configArgs = {
-        serviceUser = "peon";
         networks = {
           server = [
             (myLib.serv.mkNetwork {name = "authenthik";})
