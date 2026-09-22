@@ -140,7 +140,8 @@ fi
 echo "Starting one off services"
 
 if [[ "$TARGET" == "nixos" ]]; then
-    for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret|GenerateFile' | cut -d ' ' -f1); do
+    for SERVICE in $(systemctl list-unit-files | grep -e 'ensuredir|generaterandomsecret|generatefile' | cut -d ' ' -f1); do
+        echo "restarting ${SERVICE}"
         systemctl restart ${SERVICE}
     done
 fi
