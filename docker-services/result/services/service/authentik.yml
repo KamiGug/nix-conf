@@ -1,0 +1,61 @@
+
+
+services:
+  authentik-server:
+    command: server
+    :
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    env_file:
+      - .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: auth
+      AUTHENTIK_POSTGRESQL__USER: auther
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
+    image: ghcr.io/goauthentik/server:2026.8.1
+    restart: unless-stopped
+    shm_size: 512mb
+
+    volumes:
+      - type: bind
+        source: /mnt/nas/auth/data
+        target: /data
+      - type: bind
+        source: /mnt/nas/auth/custom-templates
+        target: /templates
+
+  authentik-worker:
+    command: worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: auth
+      AUTHENTIK_POSTGRESQL__USER: auther
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
+    image: ghcr.io/goauthentik/server:2026.8.1
+    restart: unless-stopped
+    shm_size: 512mb
+    user: root
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: /mnt/nas/auth/data
+        target: /data
+      - type: bind
+        source: /mnt/nas/auth/certs
+        target: /certs
+      - type: bind
+        source: /mnt/nas/auth/custom-templates
+        target: /templates
+

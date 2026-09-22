@@ -1,0 +1,51 @@
+version: '3'
+
+vars:
+  ENV_FILE: ./environment.yml
+  TEMPLATE_DIR: ./templates
+  RESULT_DIR: ./result
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  check:
+    desc: Check generation prerequisites
+    preconditions:
+      - sh: test -f "{{.ENV_FILE}}"
+        msg: "Missing {{.ENV_FILE}}"
+      - sh: "! grep -q '<<INSERT SECRET HERE>>' '{{.ENV_FILE}}'"
+        msg: "Missing secrets in {{.ENV_FILE}}"
+
+  generate:
+    desc: Generate files from Jinja templates
+    deps:
+      - check
+    cmds:
+      - |
+        find "{{.TEMPLATE_DIR}}" -type f -name '*.jinja' -print |
+        while IFS= read -r template; do
+          relative="${template#"{{.TEMPLATE_DIR}}"/}"
+
+          output="${relative%.jinja}"
+          output="${output/.template/}"
+          output="{{.RESULT_DIR}}/${output}"
+
+          mkdir -p "$(dirname "$output")"
+
+          jinja2 \
+            --strict \
+            -o "$output" \
+            "$template" \
+            "{{.ENV_FILE}}"
+        done
+
+  run:
+    desc: run the services
+    dir: result/services
+    cmds:
+      - docker compose down
+      - task: generate
+      - docker compose up --env-file ../.env -d

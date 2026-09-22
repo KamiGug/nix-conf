@@ -1,5 +1,4 @@
-{pkgs, ...}:
-{
+{pkgs, ...}: {
   path,
   contents,
   parentService ? null,
@@ -13,20 +12,19 @@ in {
   systemd.services."generate-${serviceName}" = {
     description = "Generate ${path}";
 
+    before =
+      if (builtins.isString parentService)
+      then [parentService]
+      else if (builtins.isList parentService)
+      then parentService
+      else [];
 
-    before = if (builtins.isString parentService) then
-        [ parentService ]
-      else if (builtins.isList parentService) then
-        parentService
-      else
-        [];
-
-    requiredBy = if (builtins.isString parentService) then
-        [ parentService ]
-      else if (builtins.isList parentService) then
-        parentService
-      else
-        [];
+    requiredBy =
+      if (builtins.isString parentService)
+      then [parentService]
+      else if (builtins.isList parentService)
+      then parentService
+      else [];
 
     serviceConfig = {
       Type = "oneshot";

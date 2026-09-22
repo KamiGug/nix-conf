@@ -1,0 +1,40 @@
+
+
+services:
+  git:
+    container_name: git
+    image: codeberg.org/forgejo/forgejo:16
+
+    environment:
+      - FORGEJO__server__SSH_DOMAIN=git.lab.hm
+      - FORGEJO__server__ROOT_URL=http://git.lab.hm
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=postgres:5432
+      - FORGEJO__database__NAME=git
+      - FORGEJO__database__USER=gitter
+      - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWORD}
+      - FORGEJO__service__DEFAULT_USER_VISIBILITY=limited
+      - FORGEJO__service__ALLOWED_USER_VISIBILITY_MODES=limited
+      - FORGEJO__service__DEFAULT_ORG_VISIBILITY=limited
+      - FORGEJO__service__DEFAULT_ORG_MEMBER_VISIBLE=true
+      - FORGEJO__repository__DEFAULT_BRANCH=master
+
+    volumes:
+      - type: bind
+        source: /mnt/nas/git/data
+        target: /data
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+
+    ports:
+
+      - "3000:3000"
+
+
+      - "22222:22"
+
+
+

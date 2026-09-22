@@ -1,0 +1,14 @@
+include:
+
+  - services/forgejo.yml
+
+  - services/nextcloud.yml
+
+  - services/euro_office.yml
+
+  - services/authentik.yml
+
+  - services/netbird.yml
+
+  - services/postgres.yml
+

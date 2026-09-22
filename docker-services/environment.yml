@@ -1,0 +1,99 @@
+domain: lab.hm
+protocol: http
+websocket_protocol: ws
+base_mount_dir: /mnt/nas
+services:
+  forgejo:
+    enable: true
+    host: git
+    image: codeberg.org/forgejo/forgejo
+    tag: 16
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: gitter
+      pass: asdf
+
+    # port: false
+    port:
+      http: 3000
+      ssh: 22222
+
+    # networks:
+    #   - git-network
+    network: false
+
+  nextcloud:
+    enable: true
+    host: file
+    image: docker.io/_/nextcloud
+    tag: "32"
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: filer
+      pass: asdf
+    # port: 8080
+    # port: false
+    port: 8080
+
+  euro_office:
+    enable: true
+    host: office
+    image: ghcr.io/euro-office/documentserver
+    tag: v9.3.4
+    jwt_secret: asdf
+
+  authentik:
+    enable: true
+    host: auth
+    image:
+      server: ghcr.io/goauthentik/server
+      worker: ghcr.io/goauthentik/server
+    tag:
+      server: 2026.8.1
+      worker: 2026.8.1
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: auther
+      pass: asdf
+    secret_key: jshdfgwouyi
+
+    ports: 8000
+
+  netbird:
+    enable: true
+    host: vpn
+    image: docker.io/netbirdio/netbird
+    tag: 0.79.0
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: vpner
+      pass: asdf
+
+    port: 2137
+
+  postgres:
+    enable: true
+    host: postgres
+    image: docker.io/_/postgres
+    tag: "18"
+    user: admin
+    pass: asdf
+    # uid: 1000
+    # gid: 1000
+    port: 5432

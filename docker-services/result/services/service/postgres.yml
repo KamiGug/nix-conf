@@ -1,0 +1,28 @@
+
+
+
+
+services:
+  postgres:
+    container_name: postgres
+    image: docker.io/_/postgres:18
+    restart: unless-stopped
+
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+    volumes:
+      - type: bind
+        source: /mnt/nas/postgres/data
+        target: /var/lib/postgresql
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+
+    ports:
+      - "5432:5432"
+
+

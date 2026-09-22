@@ -1,0 +1,52 @@
+
+
+services:
+  file:
+    container_name: file
+    image: docker.io/_/nextcloud:32
+    restart: always
+    user: root
+
+    environment:
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - NEXTCLOUD_TRUSTED_DOMAINS=file.lab.hm
+
+      - POSTGRES_HOST=postgres:5432
+      - POSTGRES_USER=filer
+      - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - POSTGRES_DB=file
+
+
+    volumes:
+      - type: bind
+        source: /mnt/nas/file/data
+        target: /var/www/html/data
+      - type: bind
+        source: /mnt/nas/file/apps
+        target: /var/www/html/apps
+      - type: bind
+        source: /mnt/nas/file/custom-apps
+        target: /var/www/html/custom_apps
+      - type: bind
+        source: /mnt/nas/file/config
+        target: /var/www/html/config
+      - type: bind
+        source: /mnt/nas/file/application
+        target: /var/www/html
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+    ports:
+      - "8080:80"
+
+

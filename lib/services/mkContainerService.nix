@@ -24,7 +24,6 @@
   inherit (pkgs) lib;
   myLib = import ../file {inherit pkgs;};
 
-
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
     + lib.optionalString v.readOnly ":ro";
@@ -172,16 +171,27 @@ in
       lib.recursiveUpdate
       {}
       (
-        map (
-          volume:
-            if volume.create
-            then
-              myLib.ensureDirExists {
-                path = volume.hostMount;
-                inherit (volume) owner group mode;
-                parentServiceName = name;
-              }
-            else {}
+        (
+          map (
+            volume:
+              if volume.create
+              then
+                myLib.ensureDirExists {
+                  path = volume.hostMount;
+                  inherit (volume) owner group mode;
+                  parentServiceName = name;
+                }
+              else {}
+          )
+          volumes
         )
-        volumes
+        ++ [
+          (
+            myLib.ensureDirExists {
+              path = "/run/${name}";
+              owner = serviceUser;
+              parentServiceName = name;
+            }
+          )
+        ]
       )))

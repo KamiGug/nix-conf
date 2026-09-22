@@ -5,7 +5,8 @@
   myLib,
   # inputs,
   ...
-}: {
+}:
+{
   imports = [
     ./hardware-configuration.nix
   ];
