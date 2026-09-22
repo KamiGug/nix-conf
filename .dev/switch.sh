@@ -131,7 +131,7 @@ fi
 if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
   git add -A
-  git commit -m "${MSG}
+  git commit --allow-empty -m "${MSG}
   ${HOSTNAME}:${LAST_GENERATION_NUMBER}"
 else
   echo "→ No changes to commit"
