@@ -133,6 +133,7 @@
     })
     (myLib.apps.authentik {
       configArgs = {
+        nameSuffix = "-test";
         networks = {
           server = [
             (myLib.serv.mkNetwork {name = "authenthik";})
