@@ -27,6 +27,10 @@ in {
       # then parentServiceName
       else [];
 
+    wantedBy = [
+      "multi-user.target"
+    ];
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
