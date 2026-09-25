@@ -12,7 +12,7 @@ lib/flake/_resolveHostSet.nix
   80:  # TODO: handle enableHm == false
 
 lib/services/apps/authentik/default.nix
-  67:        # TODO: make service name generators serparate functions for each service creating function/modules
+  63:        # TODO: make service name generators serparate functions for each service creating function/modules
 
 lib/services/apps/authentik/server.nix
   37:      # TODO: fix
@@ -31,7 +31,7 @@ lib/services/ensureNetwork.nix
 
 lib/services/mkContainerService.nix
   117:  # TODO: write a validator for this
-  200:              # TODO: make this actually call the same a function that is also called by ensureDirExists
+  201:              # TODO: make this actually call the same a function that is also called by ensureDirExists
 
 system-modules/autologin.nix
   26:      # TODO: assert de legal option

@@ -7,4 +7,5 @@ in {
   serv = import ./services parsedArgs;
   apps = import ./services/apps parsedArgs;
   validate = import ./validators;
+  name = import ./name parsedArgs;
 }

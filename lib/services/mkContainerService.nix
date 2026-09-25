@@ -197,6 +197,7 @@ in
             myLib.file.mkMutableFile {
               path = "/run/${name}/ctr-id";
               owner = serviceUser;
+              mode = "0640";
               # TODO: make this actually call the same a function that is also called by ensureDirExists
               parentServiceName = "EnsureDir-@run@authentik-server.service";
               forceModeAndOwnership = true;

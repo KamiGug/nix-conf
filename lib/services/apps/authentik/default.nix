@@ -35,16 +35,12 @@
     configArgs;
   commonArgs = {
     inherit pkgs;
-    nameSuffix = parsedConfigArgs.nameSuffix;
-    volumePrefix = parsedConfigArgs.volumePrefix;
-    serviceUser = parsedConfigArgs.serviceUser;
-    containerUser = parsedConfigArgs.containerUser;
-    postgres = parsedConfigArgs.postgres;
+    inherit (parsedConfigArgs) secretKeyPrefix postgres containerUser serviceUser volumePrefix nameSuffix;
   };
   serverArgs =
     commonArgs
     // {
-      inherit (parsedConfigArgs) ports secretKeyPrefix;
+      inherit (parsedConfigArgs) ports ;
       networks = parsedConfigArgs.networks.server;
     };
   workerArgs =

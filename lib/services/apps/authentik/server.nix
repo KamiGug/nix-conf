@@ -30,7 +30,7 @@
     data = "/data";
     templates = "/templates";
   };
-  volumeMounts = lib.mapAttrsToList (name: containerPath:
+  volumeMounts = (lib.mapAttrsToList (name: containerPath:
     containerLib.mkVolume {
       hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
       inherit containerPath;
@@ -38,7 +38,15 @@
       # owner = configArgs.serviceUser;
       owner = "1000";
     })
-  volumes;
+  volumes)
+  ++ [
+    (containerLib.mkVolume {
+      hostPath = "/etc/authentik/${configArgs.secretKeyPrefix}secret";
+      containerPath = "/run/authentik/secret";
+      owner = "1000";
+    })
+  ]
+  ;
 in
   containerLib.mkContainerService {
     inherit image networks serviceUser containerUser name;
@@ -49,6 +57,10 @@ in
     #   AUTHENTIK_POSTGRESQL__NAME = configArgs.postgres.database;
     #   AUTHENTIK_POSTGRESQL__USER = configArgs.postgres.user;
     # };
+    environment = {
+      AUTHENTIK_SECRET_KEY = "file:///run/authentik/secret";
+    };
+
     volumes = volumeMounts;
     # ports = ["${toString configArgs.ports.http}:9000" "${toString configArgs.ports.https}:9443"];
     ports = [
