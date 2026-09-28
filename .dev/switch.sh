@@ -46,9 +46,9 @@ case "$TARGET" in
     SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
     if [[ "$TRACE" == 'true' ]]; then
-        DRY_RUN_CMD=(darwin-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
+        DRY_RUN_CMD=(darwin-rebuild check --show-trace --flake ".#${HOSTNAME}")
     else
-        DRY_RUN_CMD=(darwin-rebuild dry-run --flake ".#${HOSTNAME}")
+        DRY_RUN_CMD=(darwin-rebuild check --flake ".#${HOSTNAME}")
     fi
     ;;
   droid)

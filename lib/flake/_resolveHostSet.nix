@@ -107,7 +107,12 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
 
   modules =
     commonModules
-    ++ systemModules
+    ++ systemModules.common
+    ++ (
+      if os == "linux"
+      then systemModules.linux
+      else systemModules.darwin
+    )
     ++ helpers
     ++ [
       (lib.path.append root "hosts/${name}")
