@@ -1,0 +1,40 @@
+{% set service = services.forgejo %}
+{% if service is defined and service.enable %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+
+    environment:
+      - FORGEJO__server__SSH_DOMAIN={{ service.host }}.{{ domain }}
+      - FORGEJO__server__ROOT_URL={{ protocol }}://{{ service.host }}.{{ domain }}
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST={{ service.postgres.url }}:{{ service.postgres.port }}
+      - FORGEJO__database__NAME={{ service.host }}
+      - FORGEJO__database__USER={{ service.postgres.user }}
+      - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWORD}
+      - FORGEJO__service__DEFAULT_USER_VISIBILITY=limited
+      - FORGEJO__service__ALLOWED_USER_VISIBILITY_MODES=limited
+      - FORGEJO__service__DEFAULT_ORG_VISIBILITY=limited
+      - FORGEJO__service__DEFAULT_ORG_MEMBER_VISIBLE=true
+      - FORGEJO__repository__DEFAULT_BRANCH=master
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /data
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+{% if service.port is defined and service.port is not false %}
+    ports:
+{% if service.port.http is defined %}
+      - "{{ service.port.http }}:3000"
+{% endif %}
+{% if service.port.ssh is defined %}
+      - "{{ service.port.ssh }}:22"
+{% endif %}
+{% endif %}
+{% endif %}

@@ -12,10 +12,7 @@ lib/flake/_resolveHostSet.nix
   80:  # TODO: handle enableHm == false
 
 lib/services/apps/authentik/default.nix
-  63:        # TODO: make service name generators serparate functions for each service creating function/modules
-
-lib/services/apps/authentik/server.nix
-  37:      # TODO: fix
+  67:        # TODO: make service name generators serparate functions for each service creating function/modules
 
 lib/services/apps/dbs/postgres/default.nix
   31:          owner = "999"; # TODO: allow making this arbitrary user
@@ -30,15 +27,14 @@ lib/services/ensureNetwork.nix
   3:  # TODO: make this rootless
 
 lib/services/mkContainerService.nix
-  117:  # TODO: write a validator for this
-  201:              # TODO: make this actually call the same a function that is also called by ensureDirExists
+  118:  # TODO: write a validator for this
 
 system-modules/autologin.nix
   26:      # TODO: assert de legal option
 
 system-modules/default.nix
-  1:# TODO: make the common files actual nixos modules
-  2:# TODO: similarly to home modules make this a set with common, nixos and darwin
+  1:  # TODO: make the common files actual nixos modules
+  2:  # TODO: similarly to home modules make this a set with common, nixos and darwin
 
 system-modules/printing.nix
   1:# TODO: make it actually work

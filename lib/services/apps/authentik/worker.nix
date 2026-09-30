@@ -42,7 +42,7 @@
   };
 
   volumeMounts =
-    (lib.mapAttrsToList (
+    lib.mapAttrsToList (
       name: containerPath:
         containerLib.mkVolume {
           hostPath = "${configArgs.volumePrefix}/${configArgs.volumeSelfPrefix}/${name}";
@@ -52,14 +52,7 @@
           owner = configArgs.serviceUser;
         }
     )
-    volumes)
-    ++ [
-      (containerLib.mkVolume {
-        hostPath = "/etc/authentik/${configArgs.secretKeyPrefix}secret";
-        containerPath = "/run/authentik/secret";
-        owner = "1000";
-      })
-    ];
+    volumes;
 in
   containerLib.mkContainerService {
     inherit
@@ -73,7 +66,10 @@ in
     command = ["worker"];
 
     environment = {
-      AUTHENTIK_SECRET_KEY = "file:///run/authentik/secret";
+      # AUTHENTIK_POSTGRESQL__HOST = configArgs.postgres.host;
+      # AUTHENTIK_POSTGRESQL__PORT = toString configArgs.postgres.port;
+      # AUTHENTIK_POSTGRESQL__NAME = configArgs.postgres.database;
+      # AUTHENTIK_POSTGRESQL__USER = configArgs.postgres.user;
     };
 
     volumes = volumeMounts;

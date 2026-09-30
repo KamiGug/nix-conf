@@ -79,6 +79,8 @@
             go-task
             commitlint-rs
             git
+
+            jinja2-cli
           ];
 
           shellHook = ''

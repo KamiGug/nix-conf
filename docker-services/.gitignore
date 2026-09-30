@@ -1,0 +1,11 @@
+*.yml
+*.sql
+.env
+result/
+
+
+
+
+!*.sample.*
+!*.template.*
+!*.jinja

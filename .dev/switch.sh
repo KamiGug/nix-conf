@@ -131,7 +131,7 @@ fi
 if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
   git add -A
-  git commit --allow-empty -m "${MSG}
+  git commit -m "${MSG}
   ${HOSTNAME}:${LAST_GENERATION_NUMBER}"
 else
   echo "→ No changes to commit"
@@ -140,7 +140,7 @@ fi
 echo "Starting one off services"
 
 if [[ "$TARGET" == "nixos" ]]; then
-    for SERVICE in $(systemctl list-unit-files | grep -Ee 'EnsureDir|GenerateRandomSecret|GenerateFile' | cut -d ' ' -f1); do
+    for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret' | cut -d ' ' -f1); do
         systemctl restart ${SERVICE}
     done
 fi

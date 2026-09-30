@@ -6,7 +6,7 @@
   },
 }: let
   inherit (pkgs) lib;
-  myLib.file = import ../../../file {inherit pkgs;};
+  myLib.file =  import ../../../file { inherit pkgs; };
   authentikServer = import ./server.nix {inherit pkgs;};
   authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =
@@ -35,12 +35,16 @@
     configArgs;
   commonArgs = {
     inherit pkgs;
-    inherit (parsedConfigArgs) secretKeyPrefix postgres containerUser serviceUser volumePrefix nameSuffix;
+    nameSuffix = parsedConfigArgs.nameSuffix;
+    volumePrefix = parsedConfigArgs.volumePrefix;
+    serviceUser = parsedConfigArgs.serviceUser;
+    containerUser = parsedConfigArgs.containerUser;
+    postgres = parsedConfigArgs.postgres;
   };
   serverArgs =
     commonArgs
     // {
-      inherit (parsedConfigArgs) ports ;
+      inherit (parsedConfigArgs) ports secretKeyPrefix;
       networks = parsedConfigArgs.networks.server;
     };
   workerArgs =

@@ -22,7 +22,8 @@
   extraOptions ? [],
 }: let
   inherit (pkgs) lib;
-  myLib.file = import ../file {inherit pkgs;};
+  myLib = import ../file {inherit pkgs;};
+
 
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
@@ -171,37 +172,16 @@ in
       lib.recursiveUpdate
       {}
       (
-        (
-          map (
-            volume:
-              if volume.create
-              then
-                myLib.file.ensureDirExists {
-                  path = volume.hostMount;
-                  inherit (volume) owner group mode;
-                  parentServiceName = name;
-                }
-              else {}
-          )
-          volumes
+        map (
+          volume:
+            if volume.create
+            then
+              myLib.ensureDirExists {
+                path = volume.hostMount;
+                inherit (volume) owner group mode;
+                parentServiceName = name;
+              }
+            else {}
         )
-        ++ [
-          (
-            myLib.file.ensureDirExists {
-              path = "/run/${name}";
-              owner = serviceUser;
-              parentServiceName = name;
-            }
-          )
-          (
-            myLib.file.mkMutableFile {
-              path = "/run/${name}/ctr-id";
-              owner = serviceUser;
-              mode = "0640";
-              # TODO: make this actually call the same a function that is also called by ensureDirExists
-              parentServiceName = "EnsureDir-@run@authentik-server.service";
-              forceModeAndOwnership = true;
-            }
-          )
-        ]
+        volumes
       )))

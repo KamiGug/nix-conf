@@ -1,0 +1,64 @@
+{% set service = services.authentik %}
+{% if service is defined and service.enable %}
+services:
+  authentik-server:
+    command: server
+    {% if services.postgres is defined %}:
+    depends_on:
+      {{ services.postgres.host }}:
+        condition: service_healthy
+    {% endif %}
+    env_file:
+      - .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: {{ service.postgres.url }}
+      AUTHENTIK_POSTGRESQL__PORT: {{ service.postgres.port }}
+      AUTHENTIK_POSTGRESQL__NAME: {{ service.host }}
+      AUTHENTIK_POSTGRESQL__USER: {{ service.postgres.user }}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
+    image: {{ service.image.server }}:{{ service.tag.server }}
+    restart: unless-stopped
+    shm_size: 512mb
+{% if service.port is defined and service.port is not false %}
+    ports:
+      - "{{ service.port }}:9000"
+{% endif %}
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /data
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/custom-templates
+        target: /templates
+
+  authentik-worker:
+    command: worker
+    depends_on:
+      {{ services.postgres.host }}:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: {{ service.postgres.url }}
+      AUTHENTIK_POSTGRESQL__PORT: {{ service.postgres.port }}
+      AUTHENTIK_POSTGRESQL__NAME: {{ service.host }}
+      AUTHENTIK_POSTGRESQL__USER: {{ service.postgres.user }}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?secret key required}
+    image: {{ service.image.worker }}:{{ service.tag.worker }}
+    restart: unless-stopped
+    shm_size: 512mb
+    user: root
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /data
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/certs
+        target: /certs
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/custom-templates
+        target: /templates
+{% endif %}

@@ -1,7 +1,8 @@
-{pkgs, ...}: {
+{pkgs, ...}:
+{
   path,
   command ? "openssl rand -base64 64",
-  pkgList ? [pkgs.openssl],
+  pkgList ? [ pkgs.openssl ],
   mode ? null,
   user ? null,
   group ? null,
@@ -24,7 +25,7 @@ in {
       message = "mkRandomSecret: `pkgList` must be a list";
     }
     {
-      assertion = mode == null || builtins.isString mode;
+      assertion =  mode == null || builtins.isString mode;
       message = "mkRandomSecret: `mode` must be a string";
     }
     {
@@ -36,9 +37,7 @@ in {
       message = "mkRandomSecret: `group` must be null or a string";
     }
     {
-      assertion =
-        parentServiceName
-        == null
+      assertion = parentServiceName == null
         || builtins.isString parentServiceName
         || builtins.isList parentServiceName;
       message = "mkRandomSecret: parentServiceName must be null, string or list";
@@ -52,19 +51,19 @@ in {
       "multi-user.target"
     ];
 
-    before =
-      if (builtins.isString parentServiceName)
-      then ["${parentServiceName}.service"]
+    before = if (builtins.isString parentServiceName) then
+        [ "${parentServiceName}.service" ]
       # else if (builtins.isList parentServiceName) then
       #   parentServiceName
-      else [];
+      else
+        [];
 
-    requiredBy =
-      if (builtins.isString parentServiceName)
-      then ["${parentServiceName}.service"]
+    requiredBy = if (builtins.isString parentServiceName) then
+        [ "${parentServiceName}.service" ]
       # else if (builtins.isList parentServiceName) then
       #   parentServiceName
-      else [];
+      else
+        [];
 
     path = pkgList;
 

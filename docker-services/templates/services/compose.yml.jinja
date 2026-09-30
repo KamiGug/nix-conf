@@ -1,0 +1,4 @@
+include:
+{% for name, service in services.items() if service.enable %}
+  - services/{{ name }}.yml
+{% endfor %}

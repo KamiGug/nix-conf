@@ -1,3 +1,0 @@
-{lib, myLib, pathList}:
-{
-}
