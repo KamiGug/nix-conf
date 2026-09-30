@@ -71,11 +71,14 @@ in {
 
             command nvim $argv
           end
-
-          abbr --add :q exit
+          
+          ${pkgs.go-task} --completion fish | source
         '';
 
-        shellAbbrs = {};
+        shellAbbrs = {
+            ":q" = "exit";
+            "sl" = "ls";
+          };
       };
       apps.my.scripts.enable = true;
     }
