@@ -72,7 +72,7 @@ in {
             command nvim $argv
           end
           
-          ${pkgs.go-task} --completion fish | source
+          ${lib.getBin pkgs.go-task} --completion fish | source
         '';
 
         shellAbbrs = {
