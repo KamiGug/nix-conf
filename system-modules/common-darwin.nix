@@ -4,6 +4,7 @@
   # inputs,
   ...
 }: {
+  nixpkgs.config.allowUnfree = true;
   homebrew = {
     enable = true;
 

@@ -1,0 +1,3 @@
+include:{% for name, service in services.items() if service.enable %}
+  - service/{{ name }}.yml{% if name == 'netbird' %}
+  - service/netbird-dashboard.yml{% endif %}{% endfor %}

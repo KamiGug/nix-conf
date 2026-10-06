@@ -1,0 +1,123 @@
+{% set service = services.wiki %}{% if service is defined and service.enable -%}
+{#- A PHP single quoted string literal, escaped for whatever environment.yml has.
+    A macro emits nothing on its own, it only renders where it is called. -#}
+{%- macro phpq(value) -%}
+{{- "'" ~ ((value | string) | replace("\\", "\\\\") | replace("'", "\\'")) ~ "'" -}}
+{%- endmacro -%}
+{#- MediaWiki configuration, mounted read-only at /etc/mediawiki/LocalSettings.php
+    and selected with MW_CONFIG_FILE.
+
+    Nothing secret lives here: the database password and the OIDC client secret
+    are read from the container environment, which templates/services/.env.jinja
+    fills from environment.yml. See templates/services/service/wiki.yml.jinja.
+-#}
+<?php
+# Generated from templates/services/mediawiki/LocalSettings.php.jinja by
+# `task generate`. DO NOT EDIT, the next run overwrites this file.
+
+if ( !defined( 'MEDIAWIKI' ) ) {
+	exit;
+}
+
+## ---------------------------------------------------------------- database ---
+
+# The database settings come from the container environment, which
+# templates/services/service/wiki.yml.jinja fills in, so they are defined once.
+$wgDBtype = getenv( 'MW_DB_TYPE' ) ?: 'postgres';
+# A host name only, unlike MySQL PostgreSQL does not accept "host:port" here.
+$wgDBserver = getenv( 'MW_DB_HOST' );
+$wgDBPort = (int)( getenv( 'MW_DB_PORT' ) ?: 5432 );
+$wgDBname = getenv( 'MW_DB_NAME' );
+$wgDBuser = getenv( 'MW_DB_USER' );
+$wgDBpassword = getenv( 'MW_DB_PASSWORD' );
+# install.php puts the tables into this schema, and without naming it here the
+# search_path stays at public and every query misses the wiki tables. Same value
+# the entrypoint passes to install.php, and the installer's default. The odd
+# spelling is MediaWiki's, PHP variable names are case sensitive.
+$wgDBmwschema = getenv( 'MW_DB_SCHEMA' ) ?: 'mediawiki';
+
+## --------------------------------------------------------------------- site ---
+
+$wgSitename = getenv( 'MW_SITENAME' );
+$wgLanguageCode = getenv( 'MW_LANG' ) ?: 'en';
+
+# nginx passes Host and X-Forwarded-Proto through, but MediaWiki has no way to
+# know that the request was forwarded, so pin the canonical URL instead of
+# letting MediaWiki guess it from the request.
+$wgServer = '{{ protocol }}://{{ service.host }}.{{ domain }}';
+
+# The image serves the wiki from the Apache document root and rewrites every
+# request to index.php, so there is no script path prefix. Leaving this at the
+# MediaWiki default (/w) would make every URL 404.
+$wgScriptPath = '';
+$wgArticlePath = '/index.php/$1';
+
+## ------------------------------------------------------------------ secrets ---
+
+# $wgSecretKey and $wgPasswordSecret sign cookies, sessions and tokens. They are
+# generated once by the entrypoint and kept in the data volume, because losing
+# them invalidates every login and token the wiki ever handed out.
+if ( !is_readable( '/var/lib/mediawiki/secrets.php' ) ) {
+	http_response_code( 500 );
+	exit( 'No /var/lib/mediawiki/secrets.php yet, the container entrypoint writes it' );
+}
+require_once '/var/lib/mediawiki/secrets.php';
+
+## -------------------------------------------------------------- extensions ---
+
+# Hard-coded set, installed by templates/services/mediawiki/Dockerfile.jinja.
+wfLoadExtension( 'SemanticMediaWiki' );
+wfLoadExtension( 'PageForms' );
+
+# OIDC login: PluggableAuth is the framework, OpenIDConnect the provider plugin.
+wfLoadExtension( 'PluggableAuth' );
+wfLoadExtension( 'OpenIDConnect' );
+
+# The default is false, which would hide the local login form and lock everyone
+# out unless the provider below works.
+$wgPluggableAuth_EnableLocalLogin = true;
+
+{% if service.oidc is defined and service.oidc.enable | default(false) and service.oidc.client_secret is defined %}
+{%- if service.oidc.provider_url is defined %}
+{% set oidc_provider_url = service.oidc.provider_url %}
+{% elif services.authentik is defined and services.authentik.enable %}
+{#- Authentik serves every application from its own subdomain, see its
+    "Applications" section in the admin interface. -#}
+{% set oidc_provider_url = protocol ~ "://" ~ services.authentik.host ~ "." ~ domain ~ "/application/o/mediawiki/" %}
+{% else %}
+{% set oidc_provider_url = "https://" ~ service.host ~ "." ~ domain ~ "/application/o/mediawiki/" %}
+{% endif %}
+# Register an OIDC provider with authentik (or any other OIDC provider) and
+# point its redirect URI at
+#   {{ protocol }}://{{ service.host }}.{{ domain }}/index.php/Special:PluggableAuthLogin
+# The key of the array is the label of the login button.
+$wgPluggableAuth_Config[{{ phpq(service.oidc.label | default("Sign in with SSO")) }}] = [
+	'plugin' => 'OpenIDConnect',
+	'data' => [
+		'providerURL' => {{ phpq(oidc_provider_url) }},
+		'clientID' => {{ phpq(service.oidc.client_id) }},
+		'clientsecret' => getenv( 'MW_OIDC_CLIENT_SECRET' ),
+		# The OpenID Connect library adds the "openid" scope itself, so listing it
+		# here would only ask for it twice.
+		'scope' => [{% for scope in service.oidc.scope | default(["profile", "email"]) %}{{ phpq(scope) }}{{ ", " if not loop.last }}{% endfor %}],
+	],
+];
+{% endif %}
+
+## ------------------------------------------------------- semantic data (SMW) ---
+
+# Semantic MediaWiki 7 renamed every setting from $wgSMW* to $smwg* and does not
+# translate the old names, so a $wgSMW* assignment here is an unused global that
+# silently does nothing. Semantic data itself is enabled by default.
+
+# This stack has no triple store, so queries run against Semantic MediaWiki's own
+# repository in the wiki database. Set this to a repository connector (and add
+# e.g. $smwgSparqlRepositoryConnectorUri) to query an external one.
+$smwgSparqlRepositoryFeatures = false;
+
+## -------------------------------------------------------- structured forms (PF) ---
+
+# Forms are ordinary pages in the "Form" namespace, so PageForms needs no
+# further configuration. Field types backed by database tables additionally need
+# the Cargo extension.
+{% endif %}

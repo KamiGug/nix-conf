@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+force=false
+
+usage() {
+    echo "Usage: ${0##*/} [-f|--force] <file>..." >&2
+    exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -f|--force)
+            force=true
+            shift
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            usage
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+[[ $# -gt 0 ]] || usage
+
+for file in "$@"; do
+    backup="${file}.old"
+
+    if [[ -e "$backup" && "$force" != true ]]; then
+        echo "Error: $backup already exists (use --force to overwrite)" >&2
+        exit 1
+    fi
+
+    cp -f -- "$file" "$backup"
+done

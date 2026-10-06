@@ -1,0 +1,29 @@
+{% set service = services.euro_office %}{% if service is defined and service.enable %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+    restart: unless-stopped
+
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=${EURO_OFFICE_JWT_SECRET}
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /var/lib/euro-office/documentserver
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+      - type: bind
+        source: /tmp/euro-home-ro
+        target: /home/ds
+        read_only: true
+
+{% if service.port is defined and service.port is not false %}
+    ports:
+      - "{{ service.port }}:80"
+{% endif %}
+{% endif %}

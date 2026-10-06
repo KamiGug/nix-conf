@@ -1,0 +1,65 @@
+{pkgs, ...}: {
+  # pkgs,
+  configArgs ? {},
+  images ? {
+    nextcloud = "docker.io/library/nextcloud:31";
+    onlyoffice = "";
+  },
+}: let
+  inherit (pkgs) lib;
+  # containerLib = import ../.. {inherit pkgs;};
+  nextcloud = import ./nextcloud.nix;
+  # onlyoffice = import ./onlyoffice.nix;
+
+  parsedConfigArgs =
+    lib.recursiveUpdate {
+      protocol = "http";
+      nameSuffix = "";
+      volumePrefix = "/mnt/nas";
+      volumeSelfPrefix = {
+        nextcloud = "nextcloud";
+        onlyoffice = "onlyoffice";
+      };
+      serviceUser = "root";
+      # containerUser = "wisp";
+      containerUser = null;
+      networks = {
+        nextcloud = [];
+        onlyoffice = [];
+      };
+    }
+    configArgs;
+
+  nextcloudArgs =
+    parsedConfigArgs
+    // {
+      volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.nextcloud;
+      networks = parsedConfigArgs.networks.nextcloud;
+    };
+  # onlyofficeArgs = parsedConfigArgs // {
+  #   volumeSelfPrefix = parsedConfigArgs.volumeSelfPrefix.onlyoffice;
+  #   networks = parsedConfigArgs.networks.onlyoffice;
+  # };
+in
+  assert (images ? nextcloud);
+  assert (images ? onlyoffice);
+  # assert (parsedConfigArgs ? domain && validators.domain parsedConfigArgs.domain)
+  #   || (parsedConfigArgs ? rootDomain && validators.domain parsedConfigArgs.rootDomain);
+  assert builtins.elem parsedConfigArgs.protocol ["http" "https"];
+  # TODO: add more asserts (at least one each)
+  # lib.foldl'
+  # lib.recursiveUpdate
+  # {}
+  # [
+    (nextcloud {
+      inherit pkgs;
+      configArgs = nextcloudArgs;
+      image = images.nextcloud;
+    })
+# ]
+# (onlyoffice {
+#   inherit pkgs;
+#   configArgs = onlyofficeArgs;
+#   image = images.onlyoffice;
+# })
+

@@ -14,7 +14,10 @@
       description = "peon";
       home = "/home/peon";
       shell = pkgs.fish;
-      extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
+      linger = true;
+      extraGroups =
+        ["wheel" "networkmanager" "docker" "config-editor"]
+        ++ ["video" "input" "render"]; # for sunshine
       # hashedPasswordFile = config.sops.secrets.peon-password.path;
     };
   };
@@ -47,13 +50,10 @@
       historyLimit = 100000;
       keyMode = "vi";
     };
-    apps.fish = {
-      enable = true;
-    };
 
-    apps.zsh = {
-      enable = true;
-    };
+    apps.fish.enable = true;
+    # apps.zsh.enable = true;
+    apps.elvish.enable = true;
 
     apps.git = {
       enable = true;
@@ -95,13 +95,14 @@
       sshfs.enable = true;
     };
 
-    apps.steam.gamescope.enable = true;
-    apps.lutris.gamescope.enable = true;
+    # apps.steam.gamescope.enable = true;
+    # apps.lutris.gamescope.enable = true;
 
     apps.niri.enable = true;
     apps.plasma.enable = true;
 
     apps.blender.enable = true;
+    apps.kando.enable = true;
 
     home.packages = with pkgs; [
       # neovim

@@ -16,6 +16,12 @@
       # neededForUsers = true;
     };
 
+    nixos-secret-test = {
+    };
+
+    hm-secret-test = {
+    };
+
     # github-priv-key = {};
 
     # ananas-priv-key = {};

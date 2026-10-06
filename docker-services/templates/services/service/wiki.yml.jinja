@@ -1,0 +1,114 @@
+{% set service = services.wiki %}{% if service is defined and service.enable %}
+{%- set mediawiki_tag = service.tag | default("1.43") %}
+{#- A sitename may contain anything, so quote it: a "#" in a plain scalar would
+    start a YAML comment. -#}
+{%- set sitename = service.sitename | default(service.host) | replace("'", "''") %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    # MediaWiki needs three things the base image does not have: the pgsql
+    # extension, composer for the extensions' dependencies and an entrypoint
+    # that runs the installer. All three come from the generated Dockerfile,
+    # which `podman compose up` builds when the image is missing.
+    build:
+      context: ./mediawiki
+    # Locally built from templates/services/mediawiki/Dockerfile.jinja, which
+    # reads the same services.wiki.image and .tag as its FROM line. Tagged with
+    # the release so the two never drift apart.
+    image: localhost/mediawiki:{{ mediawiki_tag }}
+    restart: unless-stopped
+    init: true
+
+{% if service.uid is defined and service.gid is defined %}
+    # Apache has to start as root to bind port 80, and the entrypoint needs root
+    # to drop to www-data for the maintenance scripts and to own the uploads
+    # directory. Leave this at 0:0; anything else has to be able to do both.
+    user: "{{ service.uid }}:{{ service.gid }}"
+{% endif %}
+
+    # Installs the wiki on the first start, updates it afterwards, then execs
+    # the image's apache2-foreground.
+    entrypoint: ["/usr/local/bin/mediawiki-setup"]
+    command: ["apache2-foreground"]
+
+    # The port Apache serves on inside the container. helpers/validate.sh checks
+    # nginx's proxy port against this, so a proxy.port left over from a different
+    # wiki engine fails validation instead of 502ing at runtime.
+    expose:
+      - "80"
+
+{% if services.postgres is defined %}
+    depends_on:
+      {{ services.postgres.host }}:
+        condition: service_healthy
+{% endif %}
+
+    healthcheck:
+      # curl ships in the image, and -f rejects only 4xx/5xx.
+      # Special:Version answers 200 for anonymous requests as soon as Apache
+      # serves the wiki.
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null 'http://localhost/index.php?title=Special:Version' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      # install.php plus the Semantic MediaWiki schema take minutes on an empty
+      # database, and Apache only starts once they are done.
+      start_period: 600s
+
+    environment:
+      # No env_file here: it would inject every other service's secrets from
+      # .env into this container. Everything MediaWiki needs is listed below.
+      # MediaWiki itself is configured by the mounted LocalSettings.php, which
+      # reads the two secrets from here.
+      - MW_CONFIG_FILE=/etc/mediawiki/LocalSettings.php
+      - MW_DB_TYPE=postgres
+      - MW_DB_HOST={{ service.postgres.url }}
+      - MW_DB_PORT={{ service.postgres.port }}
+      - MW_DB_NAME={{ service.host }}
+      - MW_DB_USER={{ service.postgres.user }}
+      # PostgreSQL schema holding the wiki. install.php creates it and
+      # LocalSettings.php reads it back, both have to agree on the name.
+      - MW_DB_SCHEMA=mediawiki
+      - MW_DB_PASSWORD=${WIKI_DB_PASSWORD:?database password required}
+      - 'MW_SITENAME={{ sitename }}'
+      - MW_LANG={{ service.lang | default("en") }}
+      - MW_ADMIN_USER={{ (service.admin | default({})).user | default("Admin") }}
+{%- if (service.admin | default({})).pass is defined %}
+      - MW_ADMIN_PASSWORD=${WIKI_ADMIN_PASSWORD:?admin password required}
+{%- else %}
+      # No admin password configured, so the entrypoint generates one on the
+      # first start, prints it in the container log and keeps it in the data
+      # volume.
+{%- endif %}
+{%- if service.oidc is defined and service.oidc.enable | default(false) and service.oidc.client_secret is defined %}
+      - MW_OIDC_CLIENT_SECRET=${WIKI_OIDC_CLIENT_SECRET:?OIDC client secret required}
+{% endif %}
+
+    volumes:
+      # Generated from environment.yml, read-only: the entrypoint writes what it
+      # generates (the secrets) to the data volume instead.
+      - type: bind
+        source: ./mediawiki/LocalSettings.php
+        target: /etc/mediawiki/LocalSettings.php
+        read_only: true
+      # Uploads and thumbnails. Pages, users and settings live in PostgreSQL, so
+      # this directory and the database are what a backup needs.
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/images
+        target: /var/www/html/images
+      # $wgSecretKey, $wgPasswordSecret and, without a configured admin
+      # password, that password too. All generated on the first start.
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /var/lib/mediawiki
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+{% if service.port is defined and service.port is not false %}
+    ports:
+      # MediaWiki listens on Apache's port 80.
+      - "{{ service.port }}:80"
+{% endif %}
+{% endif %}

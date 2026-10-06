@@ -1,5 +1,5 @@
-{pkgs}: let
-  lib = pkgs.lib;
+{pkgs, ...}: let
+  inherit (pkgs) lib;
   scan = rootPath: currentPath: let
     entries = builtins.readDir currentPath;
     isRoot = rootPath == currentPath;

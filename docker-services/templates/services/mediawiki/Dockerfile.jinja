@@ -1,0 +1,73 @@
+{% set service = services.wiki %}{% if service is defined and service.enable -%}
+{#- Image for the MediaWiki wiki (services.wiki).
+
+    The base image cannot be used as it is:
+      * it has no pgsql extension, so it cannot talk to PostgreSQL at all
+      * it has no composer, which Semantic MediaWiki and OpenID Connect need
+        to install their PHP dependencies
+      * it ships no entrypoint, so install.php has to run from somewhere
+
+    Everything below is therefore added on top of it. `podman compose up`
+    builds this file automatically the first time the image is missing. Changing
+    services.wiki.image or .tag does not rebuild an image that already exists
+    locally: remove it (podman rmi localhost/mediawiki:<tag>) or build with
+    --no-cache first. This file renders empty while services.wiki is disabled.
+-#}
+{#- The base image, which has to be a MediaWiki Apache image (docker.io/library/
+    mediawiki) and not a bare php-apache one: the wiki also needs the extensions,
+    the language files and the Apache rewrite rules that the official image
+    ships. helpers/validate.sh checks this. -#}
+{% set base_image = service.image | default("docker.io/library/mediawiki") %}
+{% set tag = service.tag | default("1.43") %}
+{#- Wikimedia extension branches are named REL<major>_<minor>, e.g. REL1_43. -#}
+{% set tag_parts = tag.split(".") %}{% set mediawiki_branch = "REL" ~ tag_parts[0] ~ ("_" ~ tag_parts[1] if tag_parts|length > 1 else "") %}
+FROM {{ base_image }}:{{ tag }}
+
+# unzip is not in the base image but composer needs it to unpack dist archives.
+# The composer series is pinned because --no-security-blocking was added in 2.9.
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends libpq-dev unzip; \
+    docker-php-ext-install -j "$(nproc)" pgsql; \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=docker.io/library/composer:2.10 /usr/bin/composer /usr/local/bin/composer
+
+# Hard-coded extension set, keep in sync with LocalSettings.php.jinja:
+#   SemanticMediaWiki  semantic data, needs composer packages
+#   PageForms          structured forms ("Form:" pages), no composer packages
+#   PluggableAuth      authentication framework, no composer packages
+#   OpenIDConnect      the OIDC provider plugin, needs composer packages
+# The branches pin MediaWiki {{ tag }} ({{ mediawiki_branch }}); Semantic MediaWiki
+# needs 1.43 or newer, so older MediaWiki releases need older extension branches.
+RUN set -eux; \
+    cd /var/www/html/extensions; \
+    git clone --depth 1 --branch 7.3.1 \
+        https://github.com/SemanticMediaWiki/SemanticMediaWiki.git SemanticMediaWiki; \
+    git clone --depth 1 --branch {{ mediawiki_branch }} \
+        https://gerrit.wikimedia.org/r/mediawiki/extensions/PageForms PageForms; \
+    git clone --depth 1 --branch {{ mediawiki_branch }} \
+        https://gerrit.wikimedia.org/r/mediawiki/extensions/PluggableAuth PluggableAuth; \
+    git clone --depth 1 --branch {{ mediawiki_branch }} \
+        https://gerrit.wikimedia.org/r/mediawiki/extensions/OpenIDConnect OpenIDConnect; \
+    for ext in SemanticMediaWiki OpenIDConnect; do \
+        cd "/var/www/html/extensions/$ext"; \
+        # --no-dev still resolves require-dev, so a security advisory in one of
+        # those unused development tools would break the build for no reason.
+        COMPOSER_ALLOW_SUPERUSER=1 composer install \
+            --no-dev --no-security-blocking --no-interaction --no-progress --no-plugins; \
+        cd /var/www/html/extensions; \
+    done; \
+    # maintenance scripts run as www-data and have to write into the extension
+    # directories, e.g. SMW's setup and the localisation cache.
+    chown -R www-data:www-data /var/www/html/extensions
+
+# Uploads and thumbnails. The tarball already ships this directory, so install -d
+# only fixes its mode and owner. The wiki service bind-mounts over it, which
+# masks this and can leave it root-owned, so the entrypoint re-asserts the
+# ownership on every start as well; this keeps the image usable without a mount.
+RUN install -d -o www-data -g www-data -m 0755 /var/www/html/images
+
+COPY setup.sh /usr/local/bin/mediawiki-setup
+RUN chmod 0755 /usr/local/bin/mediawiki-setup
+{% endif %}

@@ -1,0 +1,66 @@
+[bar.default]
+position = "left"
+thickness = 44
+start = [
+  "launcher",
+  "wallpaper",
+  "clock",
+]
+
+center = [
+  "workspaces",
+]
+
+end = [
+  "volume",
+  "brightness",
+  "media",
+  "network",
+  "bluetooth",
+  "battery",
+  "notifications",
+  "tray",
+  "control-center",
+]
+
+widget_spacing = 12
+margin_ends = 0
+margin_edge = 0
+
+[widget.volume]
+show_label = false
+scale = 1.2
+
+[widget.brightness]
+show_label = false
+scale = 1.2
+
+[widget.battery]
+show_label = false
+scale = 1.2
+
+[widget.bluetooth]
+show_label = false
+scale = 1.2
+
+[widget.network]
+show_label = false
+show_vpn_label = false
+scale = 1.2
+
+[widget.media]
+scale = 1.2
+
+[widget.control-center]
+scale = 1.2
+
+[widget.tray]
+scale = 1.2
+
+[widget.workspaces]
+scale = 1.2
+
+[location]
+# auto_locate = true
+auto_locate = false
+address = "Piekary Śląskie, Poland"

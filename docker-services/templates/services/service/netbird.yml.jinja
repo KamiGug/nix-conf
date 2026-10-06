@@ -1,0 +1,40 @@
+{% set service = services.netbird %}{% if service is defined and service.enable %}
+{% set port = service.port | default({}) %}
+services:
+  # Combined server: management + signal + relay + embedded STUN.
+  # Configuration lives in netbird/config.yaml, see templates/services/netbird.
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+    restart: unless-stopped
+    command: ["--config", "/etc/netbird/config.yaml"]
+
+{% if service.postgres is defined and service.postgres.enable %}
+    depends_on:
+      {{ service.postgres.url }}:
+        condition: service_healthy
+{% endif %}
+
+    environment:
+      # Store credentials come from .env, the server picks the DSN up from here.
+      - NB_STORE_ENGINE_POSTGRES_DSN=host={{ service.postgres.url }} port={{ service.postgres.port }} user={{ service.postgres.user }} password=${NETBIRD_DB_PASSWORD} dbname={{ service.host }} sslmode=disable
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /var/lib/netbird
+      - type: bind
+        source: ./netbird/config.yaml
+        target: /etc/netbird/config.yaml
+        read_only: true
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+    ports:
+      # Management API, gRPC signal, relay and OAuth2 endpoints.
+      - "{{ port.api | default(8081) }}:80"
+      # Embedded STUN, UDP cannot be proxied by the reverse proxy.
+      - "{{ port.stun | default(3478) }}:{{ port.stun | default(3478) }}/udp"
+{% endif %}

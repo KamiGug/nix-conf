@@ -1,0 +1,284 @@
+domain: lab.hm
+protocol: http
+tls:
+  # Path inside the nginx container, certificates are expected as
+  # <fqdn>.crt / <fqdn>.key in the directory mounted there.
+  certificate_dir: /etc/nginx/tls
+  # Host directory mounted at `certificate_dir`. Only used with protocol https.
+  certificate_dir_host: /mnt/nas/tls
+  ocsp_stapling: false
+
+http2: true
+
+# Reverse proxy upstreams are resolved once at startup by default. Setting this
+# makes nginx re-resolve them through the container resolver, so a recreated
+# backend does not need an nginx restart. Check the value with:
+#   podman run --rm --network services_default docker.io/library/nginx:1.31 \
+#     cat /etc/resolv.conf
+# dns_resolver: 10.89.1.1 valid=10s ipv6=off
+
+security:
+  hsts: true
+  hsts_max_age: 31536000
+  hsts_include_subdomains: true
+  permissions_policy: true
+
+acme:
+  # Path inside the nginx container.
+  http01_root: /var/www/acme
+  # Host directory mounted at `http01_root`, where the http-01 challenges are
+  # written. Without it the challenge location serves nothing.
+  http01_root_host: /mnt/nas/acme
+
+base_mount_dir: /mnt/nas
+services:
+  forgejo:
+    enable: true
+    host: git
+    image: codeberg.org/forgejo/forgejo
+    tag: '16'
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: gitter
+      pass: <<INSERT SECRET HERE>>
+
+    proxy:
+      enable: true
+      port: 3000
+      ip: false # used when should infer from container config
+      # ip: 127.0.0.1:3000
+      websocket: true
+      max_body_size: 512m
+      connect_timeout: 10s
+      send_timeout: 60s
+      read_timeout: 300s
+      request_buffering: true
+    # port: false
+    port:
+      http: 3000
+      ssh: 22222
+
+    # Extra compose networks for this service, e.g. [git-network].
+    networks: false
+
+  nextcloud:
+    enable: true
+    host: file
+    image: docker.io/library/nextcloud
+    # uid: 1000
+    # gid: 1000
+    tag: '32'
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: filer
+      pass: <<INSERT SECRET HERE>>
+    # Container runs as root so the entrypoint can chown the bind mounts.
+    # Set both to pin another user, e.g. 33:33 (www-data).
+    # uid: 33
+    # gid: 33
+
+    proxy:
+      enable: true
+      port: 80
+      ip: false # omit to infer the address from the service name
+      # ip: 127.0.0.1:3000
+      # Without this every request looks like it came from the proxy and
+      # rate limiting/audit logs see only nginx. Check the network with
+      # `podman network inspect services_default`.
+      trusted_proxies: 10.89.0.0/16
+      # The global permissions policy blocks camera and microphone, which
+      # breaks Nextcloud Talk.
+      permissions_policy: microphone=(self), camera=(self), geolocation=()
+      max_body_size: 10g
+      read_timeout: 300s
+
+  euro_office:
+    enable: true
+    host: office
+    image: ghcr.io/euro-office/documentserver
+    tag: v9.3.4
+    jwt_secret: <<INSERT SECRET HERE>>
+    proxy:
+      enable: true
+      ip: false # used when should infer from container config
+      port: 80
+      websocket: true
+      read_timeout: 300s
+
+  authentik:
+    enable: true
+    host: auth
+    image:
+      server: ghcr.io/goauthentik/server
+      worker: ghcr.io/goauthentik/server
+    tag:
+      server: 2026.8.1
+      worker: 2026.8.1
+    # uid: 1000
+    # gid: 1000
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: auther
+      pass: <<INSERT SECRET HERE>>
+    secret_key: <<INSERT SECRET HERE>>
+
+    proxy:
+      enable: true
+      # ip: 127.0.0.1:3000
+      port: 9000
+      ip: false
+      websocket: true
+    port: 8000
+
+  netbird:
+    enable: true
+    host: vpn
+    # Combined server (management + signal + relay + STUN), not the client image.
+    image: docker.io/netbirdio/netbird-server
+    tag: 0.79.0
+    # uid: 1000
+    # gid: 1000
+
+    # Shared secret for the embedded relay, required unless an external relay
+    # is configured. Read by the server from the generated config.yaml.
+    auth_secret: <<INSERT SECRET HERE>>
+    # base64 of 32 random bytes: openssl rand -base64 32. Losing it means
+    # losing every secret stored in the database.
+    store_encryption_key: <<INSERT SECRET HERE>>
+    # Optional admin user, created on first start.
+    owner:
+      email: admin@lab.hm
+      pass: <<INSERT SECRET HERE>>
+
+    dashboard:
+      image: docker.io/netbirdio/dashboard
+      tag: v2.94.0
+
+    port:
+      # Management API, gRPC signal, relay and OAuth2 endpoints.
+      api: 8081
+      # Dashboard, always published on the host even when proxied.
+      dashboard: 8080
+      # Embedded STUN, UDP, cannot be proxied.
+      stun: 3478
+
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: vpner
+      pass: <<INSERT SECRET HERE>>
+
+    proxy:
+      # Note: the reverse proxy must forward gRPC (HTTP/2) for peers to connect,
+      # dashboard and server paths are not split by the generated nginx config.
+      enable: false
+      port: 80
+      ip: false # used when should infer from container config
+      websocket: true
+
+  wiki:
+    enable: true
+    host: wiki
+    # Base image the wiki image is built from. It has to be a MediaWiki Apache
+    # image, not a bare php-apache one: the wiki also needs the extensions, the
+    # language files and the Apache rewrite rules the official image ships.
+    # Point this at a mirror when you pull through one.
+    image: docker.io/library/mediawiki
+    # MediaWiki core release to build from. Quoted, so 1.43 is not read as a
+    # decimal and rendered truncated. 1.43 is the current LTS. The same value
+    # tags the image that gets built and derives the extension branch
+    # REL<major>_<minor>, so it has to be a <major>.<minor> release; Semantic
+    # MediaWiki, PageForms, PluggableAuth and OpenID Connect are installed at
+    # fixed versions, see templates/services/mediawiki/Dockerfile.jinja.
+    tag: '1.43'
+    # Shown in the browser tab and in page titles, defaults to the host above.
+    # sitename: lab wiki
+    # Language of the interface and of the wiki content, MediaWiki needs the
+    # matching language pack.
+    lang: en
+    # The image runs Apache as root and drops to www-data (33:33) for the
+    # maintenance scripts, so leave this at 0:0. Only change it if the bind
+    # mounts below are owned by another user, and note that the entrypoint then
+    # needs that user to be able to run install.php.
+    # uid: 0
+    # gid: 0
+
+    postgres:
+      enable: true
+      url: postgres
+      port: 5432
+      user: wikir
+      pass: <<INSERT SECRET HERE>>
+
+    # The first administrator, created by install.php on the first start.
+    # Drop `pass` and the entrypoint generates a random one and prints it in
+    # `podman logs wiki`.
+    admin:
+      user: Admin
+      pass: <<INSERT SECRET HERE>>
+
+    # Login with an OpenID Connect provider (authentik below by default).
+    # Register the client with the redirect URI
+    #   <protocol>://wiki.lab.hm/index.php/Special:PluggableAuthLogin
+    # where <protocol> is the top-level `protocol` above. It has to match what
+    # the wiki generates, or the provider rejects the redirect and the login
+    # button never completes.
+    oidc:
+      enable: true
+      # Leave out to use the authentik service below, set it for any other
+      # provider. Same scheme as the top-level `protocol` above.
+      # provider_url: https://authentik.lab.hm/application/o/mediawiki/
+      client_id: mediawiki
+      client_secret: <<INSERT SECRET HERE>>
+      # Label of the login button, the OIDC provider URL is the fallback.
+      label: Sign in with SSO
+      # The OpenID Connect extension adds the openid scope itself.
+      scope: [profile, email]
+
+    proxy:
+      enable: true
+      # MediaWiki listens on Apache's port 80, which the proxy maps to 80 here.
+      port: 80
+      ip: false # omit to infer the address from the service name
+      # ip: 127.0.0.1:80
+      # websocket: false is the default and is correct here: MediaWiki serves
+      # plain HTTP, no WebSocket connections.
+      # Uploads and the Semantic MediaWiki maintenance jobs are slow.
+      max_body_size: 512m
+      read_timeout: 300s
+      send_timeout: 300s
+
+    # Published on the host as well as behind the proxy, so the wiki is
+    # reachable before the proxy is configured. Set to false to expose it only
+    # through the proxy.
+    port: 3001
+
+  postgres:
+    enable: true
+    host: postgres
+    image: docker.io/library/postgres
+    tag: '18'
+    user: admin
+    pass: <<INSERT SECRET HERE>>
+    # uid: 1000
+    # gid: 1000
+    port: 5432
+
+  nginx:
+    enable: true
+    host: nginx
+    image: docker.io/library/nginx
+    tag: '1.31'
+    ports:
+      http: 80
+      https: 443
+    config_dir: /etc/nixos/docker-services/result/nginx

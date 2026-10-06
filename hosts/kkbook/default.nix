@@ -1,6 +1,8 @@
 {
   pkgs,
   config,
+  lib,
+  myLib,
   # inputs,
   ...
 }: {
@@ -16,14 +18,18 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.grub.useOSProber = true;
 
+  boot.kernel.sysctl = {
+    "net.ipv4.ip_unprivileged_port_start" = 80;
+  };
+
   fileSystems."/workspace" = {
     device = "/dev/disk/by-uuid/a7b0cad3-8bd9-43f4-8ca1-8eed05384dc1";
     fsType = "ext4";
     options = ["nofail" "x-systemd.automount"];
   };
 
-  my.gaming = {
-    enable = true;
+  my = {
+    autoLogin.enable = true;
 
     steam.enable = false;
     lutris.enable = false;
@@ -32,16 +38,34 @@
       enable = true;
       open = false;
       package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
+    hardware.printing = {
+      enable = true;
+      users = ["peon"];
+    };
 
-      prime = {
+    gaming = {
+      enable = true;
+
+      steam.enable = true;
+      lutris.enable = true;
+      sunshine.enable = false;
+
+      nvidia = {
         enable = true;
+        open = false;
+        package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
 
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
+        prime = {
+          enable = true;
+
+          intelBusId = "PCI:0:2:0";
+          nvidiaBusId = "PCI:1:0:0";
+        };
       };
     };
   };
 
+  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.nvidia.acceptLicense = true;
   # programs.neovim = {
   #   enable = true;
@@ -64,8 +88,78 @@
   ];
 
   networking.hostName = "kkbook";
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  # networking.wireless.enable = tr:hardware;  # Enables wireless support via wpa_supplicant.
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
+
+  #   Tests
+  networking.hosts."127.0.0.1" = let
+    domain = "lab.hm";
+    services = [
+      "file"
+      "office"
+      "auth"
+      "git"
+      "vpn"
+      "wiki"
+      "video"
+      "music"
+    ];
+  in
+    map (name: "${name}.${domain}") services;
+  # services.my.nextcloud = {
+  #   enable = false;
+  #   user = "peon";
 }
+# // myLib.serv.ensureNetwork {
+#   name="nextcloud";
+# }
+# // (
+#   lib.foldl'
+#   lib.recursiveUpdate
+#   {}
+#   [
+#     (myLib.apps.dbs.postgres {
+#       configArgs = {
+#         nameSuffix = "-test";
+#         # serviceUser = "peon";
+#         # serviceUser = "root";
+#         # containerUser = "1000";
+#         networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
+#       };
+#     })
+#     (myLib.apps.nextcloud {
+#       configArgs = {
+#         protocol = "http";
+#         nameSuffix = "-test";
+#         # put this in some repository (like using) and make it default to that value
+#         rootDomain = "lab.hm";
+#         # domain = "127.0.0.1";
+#         # serviceUser = "peon";
+#         # serviceUser = "root";
+#         # containerUser = "1000";
+#         networks = {
+#           nextcloud = [
+#             (myLib.serv.mkNetwork {name = "nextcloud";})
+#             (myLib.serv.mkNetwork {name = "proxy";})
+#           ];
+#         };
+#       };
+#     })
+#     (myLib.apps.authentik {
+#       configArgs = {
+#         networks = {
+#           server = [
+#             (myLib.serv.mkNetwork {name = "authenthik";})
+#             (myLib.serv.mkNetwork {name = "proxy";})
+#           ];
+#           worker = [
+#             (myLib.serv.mkNetwork {name = "authenthik";})
+#             (myLib.serv.mkNetwork {name = "proxy";})
+#           ];
+#         };
+#       };
+#     })
+#   ]
+# )

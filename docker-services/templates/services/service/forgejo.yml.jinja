@@ -1,0 +1,64 @@
+{% set service = services.forgejo %}{% if service is defined and service.enable %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    {% if services.postgres is defined %}
+    depends_on:
+      {{ services.postgres.host }}:
+        condition: service_healthy
+    {% endif %}
+
+    environment:
+      - FORGEJO__server__SSH_DOMAIN={{ service.host }}.{{ domain }}
+      - FORGEJO__server__ROOT_URL={{ protocol }}://{{ service.host }}.{{ domain }}
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST={{ service.postgres.url }}:{{ service.postgres.port }}
+      - FORGEJO__database__NAME={{ service.host }}
+      - FORGEJO__database__USER={{ service.postgres.user }}
+      - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWORD}
+      - FORGEJO__service__DEFAULT_USER_VISIBILITY=limited
+      - FORGEJO__service__ALLOWED_USER_VISIBILITY_MODES=limited
+      - FORGEJO__service__DEFAULT_ORG_VISIBILITY=limited
+      - FORGEJO__service__DEFAULT_ORG_MEMBER_VISIBLE=true
+      - FORGEJO__repository__DEFAULT_BRANCH=master
+{% if service.port is defined and service.port is not false %}
+{% if service.port.ssh is defined %}
+      - FORGEJO__server__SSH_LISTEN_PORT={{ service.port.ssh }}
+      - FORGEJO__server__SSH_PORT={{ service.port.ssh }}
+      - FORGEJO__server__START_SSH_SERVER=true
+{% endif %}
+{% if service.port.http is defined %}
+      - FORGEJO__server__HTTP_PORT={{ service.port.http }}
+      - FORGEJO__server__START_HTTP_SERVER=true
+{% endif %}
+{% endif %}
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /data
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+{% if service.port is defined and service.port is not false %}
+    ports:
+{% if service.port.http is defined %}
+      - "{{ service.port.http }}:3000"
+{% endif %}
+{% if service.port.ssh is defined %}
+      - "{{ service.port.ssh }}:{{ service.port.ssh }}"
+{% endif %}
+{% endif %}
+{% endif %}

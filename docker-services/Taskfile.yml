@@ -1,0 +1,158 @@
+version: '3'
+
+vars:
+  SELF_DIR: '{{.TASKFILE_DIR}}'
+  ENV_FILE: '{{.SELF_DIR}}/environment.yml'
+  TEMPLATE_DIR: '{{.SELF_DIR}}/templates'
+  RESULT_DIR: '{{.SELF_DIR}}/result'
+  SERVICES_DIR: '{{.RESULT_DIR}}/services'
+  CONTAINER_BIN:
+    sh: |
+      for BIN in podman docker; do
+        if command -v $BIN > /dev/null 2>&1; then
+          echo $BIN
+          exit 0
+        fi
+      done
+      exit 1
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  check:
+    desc: Check generation prerequisites
+    preconditions:
+      - sh: test -f "{{.ENV_FILE}}"
+        msg: "Missing {{.ENV_FILE}}"
+      - sh: "! grep -q '<<INSERT SECRET HERE>>' '{{.ENV_FILE}}'"
+        msg: "Missing secrets in {{.ENV_FILE}}"
+      # The wiki Dockerfile derives the extension branch REL<major>_<minor>
+      # from services.wiki.tag, so a tag that is not a <major>.<minor> release
+      # makes the template fail with a Jinja error about a missing list element.
+      # Check it here instead, where the message can say what is wrong.
+      - sh: |
+          yq -e 'if .services.wiki.enable == true
+                 then (.services.wiki.tag | test("^[0-9]+\\.[0-9]+"))
+                 else true end' "{{.ENV_FILE}}" > /dev/null
+        msg: "services.wiki.tag must be a MediaWiki release like '1.43': the extension branch REL<major>_<minor> is derived from it"
+      # Same reason: the Dockerfile layers the pgsql extension, composer and an
+      # entrypoint onto services.wiki.image, which only works on a MediaWiki
+      # image. Any other image fails much later, at build time.
+      - sh: |
+          yq -e 'if .services.wiki.enable == true
+                 then (.services.wiki.image | test("(^|/)mediawiki(:|$)"))
+                 else true end' "{{.ENV_FILE}}" > /dev/null
+        msg: "services.wiki.image must be a MediaWiki base image, e.g. docker.io/library/mediawiki: the wiki image is built on top of it"
+
+  generate:
+    desc: Generate files from Jinja templates
+    deps:
+      - check
+    cmds:
+      - |
+        set -euo pipefail
+
+        # A missing template dir must fail loudly instead of silently
+        # generating nothing.
+        test -d "{{.TEMPLATE_DIR}}"
+
+        find "{{.TEMPLATE_DIR}}" -type f -name '*.jinja' -print |
+        while IFS= read -r template; do
+          relative="${template#"{{.TEMPLATE_DIR}}"/}"
+
+          output="${relative%.jinja}"
+          output="{{.RESULT_DIR}}/${output}"
+
+          mkdir -p "$(dirname "$output")"
+
+          jinja2 \
+            --strict \
+            -o "$output" \
+            "$template" \
+            "{{.ENV_FILE}}"
+        done
+
+  run:
+    desc: regenerate and restart everything
+    cmds:
+      - task: down
+      - task: generate
+      # Databases first: every app depends on them and would crash loop
+      # until initdb created its role and database.
+      - task: up
+        vars: { SERVICES: postgres }
+      - task: initdb
+      - task: up
+      - task: ps
+
+  up:
+    desc: start services (SERVICES=name[,name] to start a subset)
+    dir: '{{.SERVICES_DIR}}'
+    cmds:
+      - cmd: '{{.CONTAINER_BIN}} compose --env-file=.env up -d {{.SERVICES | default ""}}'
+
+  initdb:
+    desc: Initialize PostgreSQL databases from generated SQL
+    deps:
+      - check
+    preconditions:
+      - sh: test -f "{{.RESULT_DIR}}/sql/postgres.sql"
+        msg: "No postgres SQL generated; run `task generate` first"
+      - sh: yq -e '.services.postgres.enable == true' "{{.ENV_FILE}}" > /dev/null
+        msg: "services.postgres.enable is not true in {{.ENV_FILE}}"
+    cmds:
+      - |
+        set -euo pipefail
+        PG_VALUES="$(yq -r '[.services.postgres.host, .services.postgres.user, .services.postgres.pass] | @tsv' "{{.ENV_FILE}}")"
+        IFS=$'\t' read -r PG_CONTAINER PG_USER PG_PASS <<< "$PG_VALUES"
+        if [ -z "$PG_CONTAINER" ] || [ -z "$PG_USER" ] || [ -z "$PG_PASS" ]; then
+          echo "services.postgres.host, .user and .pass must all be set in {{.ENV_FILE}}" >&2
+          exit 1
+        fi
+        # Wait for the server to accept connections, podman-compose honours
+        # the healthcheck but the first up may still be mid initdb.
+        for _ in $(seq 30); do
+          if {{.CONTAINER_BIN}} exec "$PG_CONTAINER" pg_isready -U "$PG_USER" -d postgres > /dev/null 2>&1; then
+            break
+          fi
+          sleep 1
+        done
+        cat "{{.RESULT_DIR}}/sql/postgres.sql" | {{.CONTAINER_BIN}} exec -i "$PG_CONTAINER" env PGPASSWORD="$PG_PASS" psql -h localhost -U "$PG_USER" -d postgres -v ON_ERROR_STOP=1 -P pager=off
+
+  down:
+    desc: stop the services
+    dir: '{{.SERVICES_DIR}}'
+    cmds:
+      - cmd: '{{.CONTAINER_BIN}} compose --env-file=.env down'
+
+  ps:
+    desc: show service status
+    dir: '{{.SERVICES_DIR}}'
+    cmds:
+      - cmd: '{{.CONTAINER_BIN}} compose --env-file=.env ps'
+
+  validate:
+    desc: Validate environment + generated output
+    cmds:
+      - task: generate
+      - '{{.SELF_DIR}}/helpers/validate.sh'
+
+  resolver:
+    desc: show the DNS server containers get on the compose network
+    cmds:
+      - |
+        set -euo pipefail
+
+        # podman-compose names the project after the compose file directory
+        # (result/services -> services) and the network <project>_default. The
+        # address itself depends on the subnet podman picked, so it can change
+        # when the network is recreated - this is the value to put in
+        # `dns_resolver`.
+        NETWORK="$(basename "{{.SERVICES_DIR}}")_default"
+        IMAGE="$(yq -r '.services.nginx.image + ":" + (.services.nginx.tag | tostring)' "{{.ENV_FILE}}")"
+
+        echo "network: $NETWORK"
+        {{.CONTAINER_BIN}} run --rm --network "$NETWORK" "$IMAGE" cat /etc/resolv.conf

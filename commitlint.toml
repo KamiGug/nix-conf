@@ -1,8 +1,27 @@
-[general]
-ignore_merge_commits = true
+[rules]
+header-max-length = { level = "error", value = 100 }
+header-min-length = { level = "error", value = 10 }
 
-[header]
-max_length = 100
+type-enum = { level = "error", value = [
+    "feat",
+    "fix",
+    "docs",
+    "style",
+    "refactor",
+    "test",
+    "chore",
+    "perf",
+    "ci",
+    "build",
+    "revert"
+] }
+type-case = { level = "error", value = "lower-case" }
+type-empty = { level = "error" }
 
-[type]
-allowed = ["feat", "fix", "chore", "nix", "infra", "refactor"]
+subject-case = { level = "error", value = "lower-case" }
+subject-empty = { level = "error" }
+subject-full-stop = { level = "error", value = false }
+
+body-max-line-length = { level = "warning", value = 100 }
+
+footer-max-line-length = { level = "warning", value = 100 }

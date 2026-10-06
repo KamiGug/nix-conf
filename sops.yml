@@ -4,3 +4,4 @@ keys:
 creation_rules:
   - path_regex: secrets\.ya?ml
     age: *secret_key
+    sops_key: /etc/sops/age.key

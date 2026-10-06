@@ -1,0 +1,47 @@
+{% set service = services.netbird %}{% if service is defined and service.enable %}
+{% set port = service.port | default({}) %}
+{% set dashboard = service.dashboard | default({}) %}
+{% set fqdn = service.host ~ '.' ~ domain %}
+{% if service.proxy is defined and service.proxy.enable %}
+{% set public_url = protocol ~ '://' ~ fqdn %}
+{% else %}
+{% set public_url = 'http://' ~ fqdn ~ ':' ~ (port.api | default(8081)) %}
+{% endif %}
+services:
+  # Web management console, talks to the combined server over the public URL.
+  {{ service.host }}-dashboard:
+    container_name: {{ service.host }}-dashboard
+    image: {{ dashboard.image | default("docker.io/netbirdio/dashboard") }}:{{ dashboard.tag | default("latest") }}
+    restart: unless-stopped
+
+    depends_on:
+      {{ service.host }}:
+        condition: service_started
+
+    environment:
+      - NETBIRD_MGMT_API_ENDPOINT={{ public_url }}
+      - NETBIRD_MGMT_GRPC_API_ENDPOINT={{ public_url }}
+      - AUTH_AUDIENCE=netbird-dashboard
+      - AUTH_CLIENT_ID=netbird-dashboard
+      - AUTH_CLIENT_SECRET=
+      - AUTH_AUTHORITY={{ public_url }}/oauth2
+      - USE_AUTH0=false
+      - AUTH_SUPPORTED_SCOPES=openid profile email groups
+      - AUTH_REDIRECT_URI=/nb-auth
+      - AUTH_SILENT_REDIRECT_URI=/nb-silent-auth
+      # TLS is terminated by the reverse proxy.
+      - NGINX_SSL_PORT=443
+      - LETSENCRYPT_DOMAIN=none
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/dashboard/certs
+        target: /etc/letsencrypt
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+    ports:
+      - "{{ port.dashboard | default(8080) }}:80"
+{% endif %}

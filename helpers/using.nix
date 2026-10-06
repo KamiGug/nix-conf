@@ -19,5 +19,10 @@
       type = lib.types.str;
       default = "GeistMono Nerd Font";
     };
+
+    domain = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+    };
   };
 }

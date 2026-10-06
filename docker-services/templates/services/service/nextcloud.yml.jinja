@@ -1,0 +1,73 @@
+{% set service = services.nextcloud %}{% if service is defined and service.enable %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+    restart: always
+{% if service.uid is defined and service.gid is defined %}
+    user: "{{ service.uid }}:{{ service.gid }}"
+{% else %}
+    # Bind mounts are chowned to www-data by the entrypoint. Set both `uid`
+    # and `gid` to run as another user, e.g. 33:33 (www-data).
+    user: root
+{% endif %}
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/status.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+    environment:
+      - NEXTCLOUD_TRUSTED_DOMAINS={{ service.host }}.{{ domain }} {{ service.host}}
+{% if service.proxy is defined and service.proxy.enable | default(false) %}
+      # Without these, every request looks like it came from the proxy and
+      # background jobs/cron mails would use an unreachable internal URL.
+      - overwriteprotocol={{ protocol }}
+      - overwritehost={{ service.host }}.{{ domain }}
+      - overwrite.cli.url={{ protocol }}://{{ service.host }}.{{ domain }}
+{% if service.proxy.trusted_proxies is defined %}
+      # CIDR of the reverse proxy network, without it the client IP is lost.
+      - NEXTCLOUD_TRUSTED_PROXIES={{ service.proxy.trusted_proxies }}
+{% endif %}
+{% endif %}
+{% if service.postgres is defined and service.postgres.enable %}
+      - POSTGRES_HOST={{ service.postgres.url }}:{{ service.postgres.port }}
+      - POSTGRES_USER={{ service.postgres.user }}
+      - POSTGRES_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - POSTGRES_DB={{ service.host }}
+{% endif %}
+
+    volumes:
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/data
+        target: /var/www/html/data
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/apps
+        target: /var/www/html/apps
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/custom-apps
+        target: /var/www/html/custom_apps
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/config
+        target: /var/www/html/config
+      - type: bind
+        source: {{ base_mount_dir }}/{{ service.host }}/application
+        target: /var/www/html
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+
+{% if service.postgres is defined and service.postgres.enable %}
+    depends_on:
+      {{ service.postgres.url }}:
+        condition: service_healthy
+{% endif %}
+
+{% if service.port is defined and service.port is not false %}
+    ports:
+      - "{{ service.port }}:80"
+{% endif %}
+{% endif %}

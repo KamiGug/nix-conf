@@ -1,0 +1,67 @@
+{% set service = services.nginx %}{% if service is defined and service.enable %}
+services:
+  {{ service.host }}:
+    container_name: {{ service.host }}
+    image: {{ service.image }}:{{ service.tag }}
+    restart: unless-stopped
+
+    depends_on:
+      {% for name, s in services.items() %}
+      {% if s.enable and s.proxy is defined and s.proxy.enable %}
+      {% if name == 'authentik' %}
+      {{s.host}}-server:
+        condition: service_started
+      {{s.host}}-worker:
+        condition: service_started
+      {% else %}
+      {{ s.host }}:
+        condition: service_started
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+
+    ports:
+      - "{{ service.ports.http }}:80"
+      - "{{ service.ports.https }}:443"
+
+    volumes:
+      # Mount just the generated file. Replacing the whole /etc/nginx drops
+      # mime.types and everything else the image ships.
+      - type: bind
+        source: {{ service.config_dir }}/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+{% if protocol == "https" %}
+      # Certificates, one <fqdn>.crt / <fqdn>.key pair per vhost.
+      - type: bind
+       {% set proxy_cfg = proxy if proxy is defined else {} %}
+       {% if proxy_cfg.tls is defined and proxy_cfg.tls.certificate_dir_host is defined %}
+       source: {{ proxy_cfg.tls.certificate_dir_host }}
+       {% elif tls is defined and tls.certificate_dir_host is defined %}
+       source: {{ tls.certificate_dir_host }}
+       {% else %}
+       source: {{ base_mount_dir ~ "/tls" }}
+       {% endif %}
+       {% if proxy_cfg.tls is defined and proxy_cfg.tls.certificate_dir is defined %}
+       target: {{ proxy_cfg.tls.certificate_dir }}
+       {% elif tls is defined and tls.certificate_dir is defined %}
+       target: {{ tls.certificate_dir }}
+       {% else %}
+       target: /etc/nginx/tls
+       {% endif %}
+       read_only: true
+{% set proxy_cfg = proxy if proxy is defined else {} %}
+{% set acme_root = proxy_cfg.acme.http01_root if proxy_cfg.acme is defined and proxy_cfg.acme.http01_root is defined else (acme.http01_root if acme is defined else none) %}
+{% set acme_root_host = proxy_cfg.acme.http01_root_host if proxy_cfg.acme is defined and proxy_cfg.acme.http01_root_host is defined else (acme.http01_root_host if acme is defined else none) %}
+{% if acme_root is defined and acme_root_host is defined %}
+      # Host directory nginx serves as the ACME http-01 challenge root.
+      - type: bind
+        source: {{ acme_root_host }}
+        target: {{ acme_root }}
+{% endif %}
+{% endif %}
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+{% endif %}

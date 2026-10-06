@@ -77,8 +77,7 @@ in {
           name = ".config/git/gitconfig-${host}";
           value.text = gitConfigText {
             user = {
-              name = data.name;
-              email = data.email;
+              inherit (data) name email;
             };
           };
         })

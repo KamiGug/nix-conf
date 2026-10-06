@@ -1,6 +1,7 @@
 disabled = [
   "redundant_pattern_bind",
-  "empty_pattern"
+  "empty_pattern",
+  "repeated_keys"
 ]
 
 ignore = [

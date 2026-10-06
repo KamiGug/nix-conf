@@ -1,8 +1,4 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
+{...}: {
   networking.hostName = "kg-continabook";
   users.users.kg = {
     home = "/Users/kg";

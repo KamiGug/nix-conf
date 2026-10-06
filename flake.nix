@@ -2,8 +2,6 @@
   description = "My nix based OS configs";
 
   inputs = {
-    nixpkgs-stable.url = "github:nixos/nixpkgs/?ref=nixos-25.05";
-
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -30,6 +28,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # niri = {
     #   url = "github:niri-wm/niri";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -38,36 +41,37 @@
   };
 
   outputs = inputs @ {
-    self,
     nixpkgs,
-    noctalia,
     flake-utils,
-    home-manager,
-    nix-darwin,
-    sops-nix,
     ...
   }: let
-    pkgs = nixpkgs;
-    myUsers = import ./users/default.nix {inherit inputs;};
-    systemModules = import ./system-modules;
-    homeModules = import ./home-modules;
-    helpers = import ./helpers;
-    myLib = import ./lib {inherit pkgs;};
-    services = import ./services;
+    flakeLib = import ./lib/flake;
+    nixosHosts = {
+      kkbook = {gui = true;};
+      kktab = {
+        gui = true;
+        extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel];
+      };
+
+      kkserv = {};
+      kknas = {};
+      kkworker = {};
+    };
+
+    darwinHosts = {
+      kg-continabook = {users = ["kg"];};
+    };
   in
-    # Merge per-system outputs with global outputs
+    # TODO: split shells to seperate file
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
+          SOPS_AGE_KEY_FILE = "/etc/sops/age.key";
           packages = with pkgs; [
             sops
-            git
-            vim
             openssh
-            go-task
-            lefthook
             alejandra
             statix
             deadnix
@@ -75,9 +79,14 @@
             go-task
             commitlint-rs
             git
+            opencode
+
+            yq
+            jinja2-cli
           ];
 
           shellHook = ''
+            lefthook install
             echo "NixOS admin shell for ${system}"
           '';
         };
@@ -86,181 +95,35 @@
       }
     )
     // {
+      # inherit services systemModules homeModules helpers myUsers;
+
       overlays = [
         (import ./overlays {inherit inputs;})
       ];
 
-      nixosConfigurations = {
-        kkbook = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-
-          specialArgs = {
-            inherit inputs self systemModules homeModules myLib services;
-          };
-
-          modules =
-            systemModules
-            ++ services
-            ++ helpers
-            ++ [
-              ./hosts/kkbook
-              ./system-modules/common.nix
-              ./system-modules/common-linux.nix
-              ./system-modules/common-gui-linux.nix
-              sops-nix.nixosModules.sops
-              myUsers.peon.system
-              myUsers.root.system
-
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.peon = myUsers.peon.home;
-                home-manager.users.root = myUsers.root.home;
-                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
-                #   homeModules
-                #   ++ [sops-nix.homeManagerModules.sops]
-                #   ++ helpers
-                # );
-                home-manager.extraSpecialArgs = {inherit myLib;};
-                home-manager.sharedModules =
-                  homeModules.common
-                  ++ homeModules.linux
-                  ++ [
-                    sops-nix.homeManagerModules.sops
-                    noctalia.homeModules.default
-                  ]
-                  ++ helpers;
+      nixosConfigurations =
+        builtins.mapAttrs
+        (
+          name: hostArgs:
+            flakeLib.mkLinuxHost (
+              hostArgs
+              // {
+                inherit inputs name;
               }
-            ];
-        };
-
-        kktab = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-
-          specialArgs = {
-            inherit inputs self systemModules homeModules myLib services;
-          };
-
-          modules =
-            systemModules
-            ++ services
-            ++ helpers
-            ++ [
-              ./hosts/kktab
-              ./system-modules/common.nix
-              ./system-modules/common-linux.nix
-              ./system-modules/common-gui-linux.nix
-              sops-nix.nixosModules.sops
-              myUsers.peon.system
-              myUsers.root.system
-
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.peon = myUsers.peon.home;
-                home-manager.users.root = myUsers.root.home;
-                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
-                #   homeModules
-                #   ++ [sops-nix.homeManagerModules.sops]
-                #   ++ helpers
-                # );
-                home-manager.extraSpecialArgs = {inherit myLib;};
-                home-manager.sharedModules =
-                  homeModules.common
-                  ++ homeModules.linux
-                  ++ [
-                    sops-nix.homeManagerModules.sops
-                    noctalia.homeModules.default
-                  ]
-                  ++ helpers;
+            )
+        )
+        nixosHosts;
+      darwinConfigurations =
+        builtins.mapAttrs
+        (
+          name: hostArgs:
+            flakeLib.mkDarwinHost (
+              hostArgs
+              // {
+                inherit inputs name;
               }
-            ];
-        };
-        kkserv = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-
-          specialArgs = {
-            inherit inputs self systemModules homeModules myLib;
-          };
-
-          modules =
-            systemModules
-            ++ services
-            ++ helpers
-            ++ [
-              ./hosts/kkserv
-              ./system-modules/common.nix
-              ./system-modules/common-linux.nix
-              sops-nix.nixosModules.sops
-              myUsers.peonNoGui.system
-              myUsers.root.system
-
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.peon = myUsers.peonNoGui.home;
-                home-manager.users.root = myUsers.root.home;
-                # home-manager.sharedModules = map (m: m // {myLib = myLib;}) (
-                #   homeModules
-                #   ++ [sops-nix.homeManagerModules.sops]
-                #   ++ helpers
-                # );
-                home-manager.extraSpecialArgs = {inherit myLib;};
-                home-manager.sharedModules =
-                  homeModules.common
-                  ++ homeModules.linux
-                  ++ [
-                    sops-nix.homeManagerModules.sops
-                    noctalia.homeModules.default
-                  ]
-                  ++ helpers;
-              }
-            ];
-        };
-      };
-
-      darwinConfigurations = {
-        kg-continabook = nix-darwin.lib.darwinSystem {
-          system = "aarch64-darwin";
-
-          specialArgs = {
-            inherit inputs self systemModules homeModules myLib services;
-          };
-
-          modules =
-            systemModules
-            ++ helpers
-            ++ [
-              ./hosts/kg-continabook
-              ./system-modules/common.nix
-              ./system-modules/common-darwin.nix
-              sops-nix.darwinModules.sops
-
-              home-manager.darwinModules.home-manager
-              myUsers.kg.system
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-
-                home-manager.users.kg = myUsers.kg.home;
-
-                home-manager.extraSpecialArgs = {
-                  inherit myLib;
-                };
-
-                home-manager.sharedModules =
-                  homeModules.common
-                  ++ homeModules.darwin
-                  ++ [
-                    sops-nix.homeManagerModules.sops
-                  ]
-                  ++ helpers;
-              }
-            ];
-        };
-      };
+            )
+        )
+        darwinHosts;
     };
 }
