@@ -3,26 +3,28 @@
 let
   cfg = config.apps.kakoune;
 
-  editor = import ./editor.nix;
-  lsp = import ./lsp.nix;
-
-  editorConfig = editor {
+  moduleArgs = {
     inherit config lib pkgs;
   };
 
-  lspConfig = lsp {
-    inherit config lib pkgs;
-  };
+  files =
+    lib.filterAttrs
+      (name: type:
+        type == "regular"
+        && lib.hasSuffix ".nix" name
+        && name != "default.nix")
+      (builtins.readDir ./.);
 
-  nixConfig = lib.mkMerge [
-    editorConfig.nix
-    lspConfig.nix
-  ];
+  modules =
+    map
+      (name: (import ./${name}) moduleArgs)
+      (lib.attrNames files);
 
-  kakouneConfig = lib.concatStringsSep "\n" [
-    editorConfig.kakoune
-    lspConfig.kakoune
-  ];
+  nixConfig =
+    lib.mkMerge (map (module: module.nix) modules);
+
+  kakouneConfig =
+    lib.concatStringsSep "\n" (map (module: module.kakoune) modules);
 in
 {
   options.apps.kakoune = {
