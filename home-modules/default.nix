@@ -16,6 +16,7 @@
     ./terminal/shell-tools/starship.nix
     ./creative/blender.nix
     ./kando.nix
+    ./ide/kakoune
   ];
   linux = [
     ./de/plasma.nix

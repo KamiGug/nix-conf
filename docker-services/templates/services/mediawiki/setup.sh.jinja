@@ -29,7 +29,25 @@ as_wiki_user() {
 	runuser -u "$WIKI_USER" -- "$@"
 }
 
-install -d -o "$WIKI_USER" -g "$WIKI_USER" -m 0755 "$DATA_DIR"
+# Give a directory to the wiki user. Best effort: both directories below are
+# bind mounts from the host, and a rootless runtime only maps the host owner's
+# own uid and gid into the container (podman rootless maps 0 -> the user plus
+# the subuid/subgid ranges, nothing else). A directory whose group belongs to
+# anyone else - a leftover from an earlier rootful run, a NAS default group -
+# cannot be chowned from in here even as root: chown needs the inode's uid
+# *and* gid to be mapped and fails with "Operation not permitted", which under
+# `set -e` aborted the entrypoint before the wiki was installed. The mode is
+# what lets the wiki user reach the directory at all, so fix that and warn
+# about the lost ownership instead of dying.
+own_dir() {
+	if install -d -o "$WIKI_USER" -g "$WIKI_USER" -m 0755 "$1"; then
+		return 0
+	fi
+	log "cannot chown $1 to $WIKI_USER (its owner is not mapped into this container?): $WIKI_USER can read it but not write to it"
+	chmod 0755 "$1" || log "$1 cannot be changed here at all, $WIKI_USER may not be able to use it"
+}
+
+own_dir "$DATA_DIR"
 
 # The images bind mount masks whatever the image ships, and the container runtime
 # creates a missing host source directory as root, which www-data cannot write to.
@@ -37,7 +55,7 @@ install -d -o "$WIKI_USER" -g "$WIKI_USER" -m 0755 "$DATA_DIR"
 # expects (see the user: note in templates/services/service/wiki.yml.jinja), so
 # warn instead of failing when the container was pinned to another user.
 if [ "$(id -u)" -eq 0 ]; then
-	install -d -o "$WIKI_USER" -g "$WIKI_USER" -m 0755 "$IP/images"
+	own_dir "$IP/images"
 else
 	log "not running as root, cannot own $IP/images: uploads may fail"
 fi

@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.my.kakoune;
+  cfg = config.apps.kakoune;
 
   editor = import ./editor.nix;
   lsp = import ./lsp.nix;
@@ -25,7 +25,7 @@ let
   ];
 in
 {
-  options.my.kakoune = {
+  options.apps.kakoune = {
     enable = lib.mkEnableOption "Kakoune editor";
   };
 

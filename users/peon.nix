@@ -102,7 +102,8 @@
     apps.plasma.enable = true;
 
     apps.blender.enable = true;
-    apps.kando.enable = true;
+    apps.kando.enable = false;
+    apps.kakoune.enable = true;
 
     home.packages = with pkgs; [
       # neovim
