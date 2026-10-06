@@ -31,13 +31,6 @@
   my = {
     autoLogin.enable = true;
 
-    steam.enable = false;
-    lutris.enable = false;
-
-    nvidia = {
-      enable = true;
-      open = false;
-      package = config.boot.kernelPackages.nvidiaPackages.legacy_535;
     hardware.printing = {
       enable = true;
       users = ["peon"];
@@ -106,8 +99,7 @@
       "video"
       "music"
     ];
-  in
-    map (name: "${name}.${domain}") services;
+  in map (name: "${name}.${domain}") services;
   # services.my.nextcloud = {
   #   enable = false;
   #   user = "peon";

@@ -1,8 +1,6 @@
-args:
-let
+args: let
   parsedArgs = args // {lib = args.pkgs.lib;};
-in
-{
+in {
   template = import ./template.nix;
   scanPkgs = import ./scan-pkgs.nix parsedArgs;
   file = import ./file parsedArgs;

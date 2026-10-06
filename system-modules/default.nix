@@ -4,10 +4,8 @@
   # ./common-gui-linux.nix
   # ./common-darwin.nix
   common = [
-    
   ];
   darwin = [
-    
   ];
   linux = [
     ./gaming.nix

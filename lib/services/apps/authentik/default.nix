@@ -6,7 +6,7 @@
   },
 }: let
   inherit (pkgs) lib;
-  myLib.file =  import ../../../file { inherit pkgs; };
+  myLib.file = import ../../../file {inherit pkgs;};
   authentikServer = import ./server.nix {inherit pkgs;};
   authentikWorker = import ./worker.nix {inherit pkgs;};
   parsedConfigArgs =

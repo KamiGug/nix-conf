@@ -1,5 +1,4 @@
-{pkgs, ...}@args:
-{
+{pkgs, ...} @ args: {
   path,
   parentServiceName ? null,
   owner ? null,
@@ -18,19 +17,19 @@ in {
   systemd.services."EnsureDir-${serviceName}" = {
     description = "Ensure directory ${path} exists";
 
-    before = if (builtins.isString parentServiceName) then
-        [ "${parentServiceName}.service" ]
+    before =
+      if (builtins.isString parentServiceName)
+      then ["${parentServiceName}.service"]
       # else if (builtins.isList parentServiceName) then
       #   parentServiceName
-      else
-        [];
+      else [];
 
-    requiredBy = if (builtins.isString parentServiceName) then
-        [ "${parentServiceName}.service" ]
+    requiredBy =
+      if (builtins.isString parentServiceName)
+      then ["${parentServiceName}.service"]
       # else if (builtins.isList parentServiceName) then
       #   parentServiceName
-      else
-        [];
+      else [];
 
     wantedBy = [
       "multi-user.target"

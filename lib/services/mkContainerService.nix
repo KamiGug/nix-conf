@@ -24,7 +24,6 @@
   inherit (pkgs) lib;
   myLib = import ../file {inherit pkgs;};
 
-
   volumeToString = v:
     "${v.hostMount}:${v.containerMount}"
     + lib.optionalString v.readOnly ":ro";
