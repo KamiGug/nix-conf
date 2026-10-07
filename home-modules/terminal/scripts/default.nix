@@ -19,6 +19,7 @@ in {
         ".local/share/scripts" = {
           source = ./bash;
           recursive = true;
+          executable = true;
         };
       };
     }

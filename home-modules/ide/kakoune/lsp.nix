@@ -1,12 +1,16 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   servers = {
     rust = {
       package = pkgs.rust-analyzer;
-      command = "rust-analyzer";
-      filetypes = [ "rust" ];
-      roots = [
+      name = "rust-analyzer";
+      args = [];
+      filetypes = ["rust"];
+      root_globs = [
         "Cargo.toml"
         "Cargo.lock"
         ".git"
@@ -15,9 +19,10 @@ let
 
     nix = {
       package = pkgs.nil;
-      command = "nil";
-      filetypes = [ "nix" ];
-      roots = [
+      name = "nil";
+      args = [];
+      filetypes = ["nix"];
+      root_globs = [
         "flake.nix"
         "flake.lock"
         ".git"
@@ -26,15 +31,15 @@ let
 
     typescript = {
       package = pkgs.typescript-language-server;
-      command = "typescript-language-server";
-      args = [ "--stdio" ];
+      name = "typescript-language-server";
+      args = ["--stdio"];
       filetypes = [
         "typescript"
         "javascript"
         "typescriptreact"
         "javascriptreact"
       ];
-      roots = [
+      root_globs = [
         "package.json"
         "tsconfig.json"
         "jsconfig.json"
@@ -44,10 +49,10 @@ let
 
     json = {
       package = pkgs.vscode-langservers-extracted;
-      command = "vscode-json-language-server";
-      args = [ "--stdio" ];
-      filetypes = [ "json" ];
-      roots = [
+      name = "vscode-json-language-server";
+      args = ["--stdio"];
+      filetypes = ["json"];
+      root_globs = [
         "package.json"
         ".git"
       ];
@@ -55,21 +60,21 @@ let
 
     yaml = {
       package = pkgs.yaml-language-server;
-      command = "yaml-language-server";
-      args = [ "--stdio" ];
-      filetypes = [ "yaml" ];
-      roots = [ ".git" ];
+      name = "yaml-language-server";
+      args = ["--stdio"];
+      filetypes = ["yaml"];
+      root_globs = [".git"];
     };
 
     toml = {
       package = pkgs.taplo;
-      command = "taplo";
+      name = "taplo";
       args = [
         "lsp"
         "stdio"
       ];
-      filetypes = [ "toml" ];
-      roots = [
+      filetypes = ["toml"];
+      root_globs = [
         "Cargo.toml"
         "pyproject.toml"
         ".git"
@@ -78,21 +83,21 @@ let
 
     bash = {
       package = pkgs.bash-language-server;
-      command = "bash-language-server";
-      args = [ "start" ];
+      name = "bash-language-server";
+      args = ["start"];
       filetypes = [
         "bash"
         "sh"
       ];
-      roots = [ ".git" ];
+      root_globs = [".git"];
     };
 
     fish = {
       package = pkgs.fish-lsp;
-      command = "fish-lsp";
-      args = [ "start" ];
-      filetypes = [ "fish" ];
-      roots = [
+      name = "fish-lsp";
+      args = ["start"];
+      filetypes = ["fish"];
+      root_globs = [
         "config.fish"
         ".git"
       ];
@@ -100,17 +105,18 @@ let
 
     elvish = {
       package = pkgs.elvish;
-      command = "elvish";
-      args = [ "-lsp" ];
-      filetypes = [ "elvish" ];
-      roots = [ ".git" ];
+      name = "elvish";
+      args = ["-lsp"];
+      filetypes = ["elvish"];
+      root_globs = [".git"];
     };
 
     go = {
       package = pkgs.gopls;
-      command = "gopls";
-      filetypes = [ "go" ];
-      roots = [
+      name = "gopls";
+      args = [];
+      filetypes = ["go"];
+      root_globs = [
         "go.mod"
         "go.work"
         ".git"
@@ -119,14 +125,15 @@ let
 
     c = {
       package = pkgs.clang-tools;
-      command = "clangd";
+      name = "clangd";
+      args = [];
       filetypes = [
         "c"
         "cpp"
         "objc"
         "objcpp"
       ];
-      roots = [
+      root_globs = [
         "compile_commands.json"
         "compile_flags.txt"
         ".clangd"
@@ -136,24 +143,23 @@ let
 
     python = {
       package = pkgs.pyright;
-      command = "pyright-langserver";
-      args = [ "--stdio" ];
-      filetypes = [ "python" ];
-      roots = [
+      name = "pyright-langserver";
+      args = ["--stdio"];
+      filetypes = ["python"];
+      root_globs = [
         "pyproject.toml"
         "setup.py"
         "setup.cfg"
-        "requirements.txt"
         ".git"
       ];
     };
 
     csharp = {
       package = pkgs.roslyn-ls;
-      command = "Microsoft.CodeAnalysis.LanguageServer";
-      args = [ "--stdio" ];
-      filetypes = [ "csharp" ];
-      roots = [
+      name = "Microsoft.CodeAnalysis.LanguageServer";
+      args = ["--stdio"];
+      filetypes = ["csharp"];
+      root_globs = [
         "*.sln"
         "*.csproj"
         ".git"
@@ -161,43 +167,41 @@ let
     };
   };
 
-  toml = pkgs.formats.toml { };
-
-  kakLspConfig = toml.generate "kak-lsp.toml" {
-    language = lib.mapAttrs (
-      _: server: {
-        filetypes = server.filetypes;
-        roots = server.roots;
-        command = server.command;
-        args = server.args or [ ];
-      }
-    ) servers;
-  };
-
-  filetypes =
-    lib.concatStringsSep "|" (
-      lib.unique (
-        lib.concatLists (
-          lib.mapAttrsToList (
-            _: server: server.filetypes
-          ) servers
+  filetypes = lib.concatStringsSep "|" (
+    lib.unique (
+      lib.concatLists (
+        lib.mapAttrsToList (
+          _: server: server.filetypes
         )
+        servers
       )
-    );
+    )
+  );
 
   packages =
     lib.mapAttrsToList (
       _: server: server.package
-    ) servers;
-in
-{
-  nix = {
-    home.packages = packages ++ [
-      pkgs.kakoune-lsp
-    ];
+    )
+    servers;
 
-    xdg.configFile."kak-lsp/kak-lsp.toml".source =
-      kakLspConfig;
+  mkServerBlock = name: server: ''
+    hook global BufSetOption filetype=(${lib.concatStringsSep "|" server.filetypes}) %{
+      set-option buffer lsp_servers %{
+        [${server.name}]
+        ${lib.optionalString (server.args != []) "args = ${builtins.toJSON server.args}"}
+        root_globs = ${builtins.toJSON server.root_globs}
+      }
+    }
+  '';
+
+  serverHooks = lib.concatStringsSep "\n\n" (lib.mapAttrsToList mkServerBlock servers);
+in {
+  nix = {
+    home.packages =
+      packages
+      ++ [
+        pkgs.kakoune-lsp
+      ];
   };
 
   kakoune = ''
@@ -205,7 +209,9 @@ in
     # LSP
     # ─────────────────────────────────────────────────────────────
 
-    eval %sh{kak-lsp --kakoune -s $kak_session}
+    eval %sh{kak-lsp}
+
+    ${serverHooks}
 
     # Automatically enable LSP for configured filetypes.
     hook global WinSetOption filetype=(${filetypes}) %{

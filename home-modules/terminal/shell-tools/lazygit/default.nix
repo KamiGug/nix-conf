@@ -61,18 +61,19 @@ in {
             editInTerminal = true;
           };
 
+          # The first renderer is the default; `|` cycles through the rest.
           git.diffRenderers =
-            lib.optionals config.apps.gitDelta.enable [
-              {
-                name = "delta";
-                command = "delta --paging=never";
-              }
-            ]
-            ++ lib.optionals config.apps.difftastic.enable [
+            lib.optionals config.apps.difftastic.enable [
               {
                 type = "extDiff";
                 name = "difftastic";
                 command = "difft --color=always --context={{diffContext}}";
+              }
+            ]
+            ++ lib.optionals config.apps.gitDelta.enable [
+              {
+                name = "delta";
+                command = "delta --paging=never";
               }
             ];
         }

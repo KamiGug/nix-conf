@@ -99,7 +99,8 @@
       "video"
       "music"
     ];
-  in map (name: "${name}.${domain}") services;
+  in
+    map (name: "${name}.${domain}") services;
   # services.my.nextcloud = {
   #   enable = false;
   #   user = "peon";
@@ -155,3 +156,4 @@
 #     })
 #   ]
 # )
+

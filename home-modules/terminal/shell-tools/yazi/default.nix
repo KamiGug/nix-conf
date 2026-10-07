@@ -12,6 +12,7 @@ in {
     programs.yazi = {
       enable = true;
       enableFishIntegration = true;
+      shellWrapperName = "y";
     };
 
     xdg.configFile."yazi".source = ./config;
