@@ -111,6 +111,10 @@ tasks:
 
         echo "→ Fixing files"
         git ls-files | while read -r f; do
+          if [ -L "$f" ] || [ ! -f "$f" ]; then
+            continue
+          fi
+
           chgrp "$GROUP" "$f"
           if [ -x "$f" ]; then
             chmod ug=rwx,o= "$f"

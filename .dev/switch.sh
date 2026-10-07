@@ -80,6 +80,7 @@ case "$TARGET" in
     ;;
 esac
 
+git add .
 if ! "${DRY_RUN_CMD[@]}"; then
     echo  "→ Failed to evaluate the configuration"
     exit 1

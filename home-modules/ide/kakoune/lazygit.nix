@@ -16,7 +16,11 @@
       }
     }
 
-    map global normal <a-g> ':lazygit<ret>' \
-      -docstring 'Open Lazygit'
+    define-user-mode tools
+    map global user c ':enter-user-mode code<ret>' -docstring 'code/tools'
+    map global user f ':enter-user-mode files<ret>' -docstring 'files'
+
+    define-user-mode code
+    map global code g ':lazygit<ret>' -docstring 'lazygit'
   '';
 }

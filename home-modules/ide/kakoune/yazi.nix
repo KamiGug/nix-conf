@@ -15,7 +15,7 @@
       }
     }
 
-    map global normal <a-y> ':yazi<ret>' \
-      -docstring 'Open Yazi'
+    define-user-mode files
+    map global files y ':yazi<ret>' -docstring 'yazi'
   '';
 }

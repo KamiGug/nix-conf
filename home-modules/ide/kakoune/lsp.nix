@@ -227,7 +227,7 @@ in {
     set-option global modelinefmt "%opt{lsp_modeline} %opt{modelinefmt}"
 
     # LSP mode.
-    map global user l ':enter-user-mode lsp<ret>' \
+    map global code l ':enter-user-mode lsp<ret>' \
       -docstring 'LSP mode'
 
     # Navigation.
