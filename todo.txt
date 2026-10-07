@@ -46,8 +46,6 @@ add plasma hm config
 migrate tmux to templating rather than inline
 migrate lazygit to templating rather than inline
 templating for git and ssh
-add mako (notification daemon) (niri manual)
-make waybar more usable (niri manual)
+diff tool and git pager
 
 add automatic pkg adding
-add mkHost function

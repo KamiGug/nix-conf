@@ -1,0 +1,403 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+self="${BASH_SOURCE[0]}"
+case "$self" in
+  */*) self_dir="${self%/*}" ;;
+  *) self_dir="." ;;
+esac
+clip_common="$(cd -- "$self_dir" && pwd -P)/clipboard-common.sh"
+if [[ ! -r $clip_common ]]; then
+  printf '%s: cannot read %s\n' "${0##*/}" "$clip_common" >&2
+  exit 1
+fi
+# shellcheck source=clipboard-common.sh
+. "$clip_common"
+
+usage() {
+  cat <<'EOF'
+Usage: pst [options]
+
+Write the system clipboard to stdout. Works on Wayland, X11 and macOS.
+
+Options:
+  -p, --primary          read the primary selection instead of the clipboard
+  -t, --type MIME        request the content as MIME (e.g. text/plain, image/png)
+  -n, --no-newline       do not append a trailing newline to the output
+  -l, --list-types       list the MIME types the clipboard content is offered as
+  -w, --watch CMD [ARG]  run CMD whenever the clipboard changes, feeding it the
+                         new content on stdin (implies --no-newline)
+  -c, --clear            clear the clipboard instead of reading it (extension)
+  -s, --seat SEAT        Wayland seat to use (Wayland only)
+  -v, --version          print the version and exit
+  -h, --help             print this help and exit
+
+A newline is appended to textual output by default, matching wl-paste.
+
+Environment:
+  CLIPBOARD_BACKEND      force a backend: macos | wayland | x11
+  CLIP_X11_TOOL          force an X11 tool: xclip | xsel
+  CLIPBOARD_POLL_INTERVAL
+                         seconds between clipboard polls in --watch mode on
+                         X11/macOS (default: 0.5)
+
+Examples:
+  pst
+  pst -n > clipboard.txt
+  pst -l
+  pst --watch wl-copy
+EOF
+}
+
+primary=0
+mime_type=""
+no_newline=0
+list_types=0
+clear=0
+seat=""
+want_help=0
+want_version=0
+watch=0
+watch_cmd=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -p | --primary)
+      primary=1
+      shift
+      ;;
+    -n | --no-newline)
+      no_newline=1
+      shift
+      ;;
+    -l | --list-types)
+      list_types=1
+      shift
+      ;;
+    -c | --clear)
+      clear=1
+      shift
+      ;;
+    -t | --type)
+      if [[ $# -lt 2 ]]; then
+        clip::err "option '$1' requires an argument"
+        usage >&2
+        exit 1
+      fi
+      mime_type="$2"
+      shift 2
+      ;;
+    --type=*)
+      mime_type="${1#*=}"
+      shift
+      ;;
+    -t?*)
+      mime_type="${1#-t}"
+      shift
+      ;;
+    -s | --seat)
+      if [[ $# -lt 2 ]]; then
+        clip::err "option '$1' requires an argument"
+        usage >&2
+        exit 1
+      fi
+      seat="$2"
+      shift 2
+      ;;
+    --seat=*)
+      seat="${1#*=}"
+      shift
+      ;;
+    -s?*)
+      seat="${1#-s}"
+      shift
+      ;;
+    -w | --watch | -w?* | --watch=*)
+      if [[ $1 == --watch=* ]]; then
+        watch_cmd=("${1#*=}")
+        shift
+      elif [[ $1 == -w?* ]]; then
+        watch_cmd=("${1#-w}")
+        shift
+      else
+        if [[ ${2:-} == -- ]]; then
+          shift
+        fi
+        if [[ $# -lt 2 ]]; then
+          clip::err "option '-w/--watch' requires a command"
+          usage >&2
+          exit 1
+        fi
+        watch_cmd=("$2")
+        shift 2
+      fi
+      if [[ $# -gt 0 ]]; then
+        watch_cmd+=("$@")
+      fi
+      watch=1
+      break
+      ;;
+    -v | --version)
+      want_version=1
+      shift
+      ;;
+    -h | --help)
+      want_help=1
+      shift
+      ;;
+    --)
+      shift
+      if [[ $# -gt 0 ]]; then
+        clip::err "unexpected argument: $1"
+        usage >&2
+        exit 1
+      fi
+      break
+      ;;
+    -*)
+      clip::err "unknown option: $1"
+      usage >&2
+      exit 1
+      ;;
+    *)
+      clip::err "unexpected argument: $1"
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+if ((want_help)); then
+  usage
+  exit 0
+fi
+if ((want_version)); then
+  printf 'pst %s\n' "$CLIP_TOOL_VERSION"
+  exit 0
+fi
+if ((watch)) && ((${#watch_cmd[@]} == 0)); then
+  clip::err "--watch requires a command"
+  exit 1
+fi
+
+backend="$(clip::backend)" || exit 1
+
+x11_tool=""
+sel="clipboard"
+xsel_flag="-b"
+
+if [[ $backend == x11 ]]; then
+  x11_tool="$(clip::x11_tool)" || exit 1
+  if ((primary)); then
+    sel="primary"
+    xsel_flag="-p"
+  fi
+  if [[ -n $mime_type && $x11_tool != xclip ]]; then
+    clip::warn "xsel cannot request a MIME type, ignoring --type"
+  fi
+elif [[ $backend == macos ]]; then
+  if ((primary)); then
+    clip::warn "macOS has no primary selection, using the general pasteboard"
+  fi
+  if [[ -n $mime_type ]]; then
+    clip::warn "macOS cannot request a MIME type, ignoring --type"
+  fi
+fi
+
+if [[ $backend != wayland && -n $seat ]]; then
+  clip::warn "--seat is only supported on Wayland, ignoring"
+fi
+
+# Raw clipboard bytes, with no trailing newline added.
+paste_raw() {
+  case "$backend" in
+    x11)
+      if [[ $x11_tool == xclip ]]; then
+        if [[ -n $mime_type ]]; then
+          xclip -selection "$sel" -o -t "$mime_type"
+        else
+          xclip -selection "$sel" -o
+        fi
+      else
+        xsel -o "$xsel_flag"
+      fi
+      ;;
+    macos)
+      pbpaste
+      ;;
+    *)
+      clip::err "internal error: paste_raw called on backend '$backend'"
+      return 1
+      ;;
+  esac
+}
+
+# Decide whether wl-paste-style behaviour means appending a newline.
+append_newline() {
+  if ((no_newline)); then
+    return 1
+  fi
+  if [[ -n $mime_type ]]; then
+    clip::is_text_type "$mime_type"
+    return
+  fi
+  if [[ $backend == x11 && $x11_tool == xclip ]]; then
+    clip::x11_selection_is_text "$sel"
+    return
+  fi
+  # pbpaste and xsel only ever hand back text.
+  return 0
+}
+
+wayland_paste_args() {
+  WAYLAND_ARGS=()
+  if ((primary)); then
+    WAYLAND_ARGS+=(-p)
+  fi
+  if [[ -n $mime_type ]]; then
+    WAYLAND_ARGS+=(-t "$mime_type")
+  fi
+  if ((no_newline)); then
+    WAYLAND_ARGS+=(-n)
+  fi
+  if [[ -n $seat ]]; then
+    WAYLAND_ARGS+=(-s "$seat")
+  fi
+}
+
+do_paste() {
+  if [[ $backend == wayland ]]; then
+    wayland_paste_args
+    exec wl-paste ${WAYLAND_ARGS[@]+"${WAYLAND_ARGS[@]}"}
+  fi
+  paste_raw
+  if append_newline; then
+    printf '\n'
+  fi
+}
+
+do_list_types() {
+  local targets out
+
+  if [[ $backend == wayland ]]; then
+    wayland_paste_args
+    exec wl-paste ${WAYLAND_ARGS[@]+"${WAYLAND_ARGS[@]}"} -l
+  fi
+
+  if [[ $backend == x11 ]]; then
+    if [[ $x11_tool != xclip ]]; then
+      clip::err "xsel cannot list clipboard types, install xclip instead"
+      return 1
+    fi
+    if ! targets="$(xclip -selection "$sel" -o -t TARGETS 2>/dev/null)"; then
+      clip::err "nothing is copied"
+      return 1
+    fi
+    printf '%s' "$targets" | tr -s '[:space:]' '\n' | sed -e '/^$/d' | awk '!seen[$0]++'
+    return
+  fi
+
+  if ! out="$(osascript -e 'clipboard info' 2>/dev/null)"; then
+    clip::err "could not read the pasteboard"
+    return 1
+  fi
+  printf '%s\n' "$out" |
+    tr ',' '\n' |
+    sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' -e '/^[0-9][0-9]*$/d' |
+    tr '[:upper:]' '[:lower:]' |
+    sed -e 's/^string$/text\/plain;charset=utf-8/' \
+      -e 's/^unicode text$/text\/plain;charset=utf-8/' \
+      -e 's/^text$/text\/plain;charset=utf-8/' |
+    awk '!seen[$0]++'
+}
+
+do_clear() {
+  if [[ $backend == wayland ]]; then
+    local argv=()
+    if ((primary)); then
+      argv+=(-p)
+    fi
+    if [[ -n $seat ]]; then
+      argv+=(-s "$seat")
+    fi
+    exec wl-copy ${argv[@]+"${argv[@]}"} --clear
+  fi
+
+  if [[ $backend == x11 ]]; then
+    if [[ $x11_tool == xclip ]]; then
+      xclip -selection "$sel" -i </dev/null
+    else
+      xsel "$xsel_flag" -c
+    fi
+    return
+  fi
+
+  printf '' | pbcopy
+}
+
+watch_poll() {
+  local interval="${CLIPBOARD_POLL_INTERVAL:-0.5}"
+  local tmp first=1 last="" cur state
+
+  tmp="$(mktemp "${TMPDIR:-/tmp}/pst-watch.XXXXXX")"
+  # shellcheck disable=SC2064
+  trap "rm -f \"$tmp\"" EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+
+  # CLIPBOARD_STATE is part of the --watch protocol: data (content is on
+  # stdin), nil (nothing to read) or sensitive (a password-manager hint is
+  # offered alongside the content).
+  while true; do
+    if paste_raw >"$tmp" 2>/dev/null; then
+      state=data
+      if [[ $backend == x11 && $x11_tool == xclip ]] &&
+        clip::x11_selection_is_sensitive "$sel"; then
+        state=sensitive
+      fi
+    else
+      state=nil
+      : >"$tmp"
+    fi
+
+    cur="$(cksum <"$tmp")"
+
+    if ((first)) || [[ $cur != "$last" ]]; then
+      first=0
+      last="$cur"
+      CLIPBOARD_STATE="$state" "${watch_cmd[@]}" <"$tmp" || true
+    fi
+
+    sleep "$interval"
+  done
+}
+
+do_watch() {
+  if [[ $backend == wayland ]]; then
+    local argv=()
+    if ((primary)); then
+      argv+=(-p)
+    fi
+    if [[ -n $mime_type ]]; then
+      argv+=(-t "$mime_type")
+    fi
+    if ((no_newline)); then
+      argv+=(-n)
+    fi
+    if [[ -n $seat ]]; then
+      argv+=(-s "$seat")
+    fi
+    exec wl-paste ${argv[@]+"${argv[@]}"} --watch "${watch_cmd[@]}"
+  fi
+  watch_poll
+}
+
+if ((list_types)); then
+  do_list_types
+elif ((clear)); then
+  do_clear
+elif ((watch)); then
+  do_watch
+else
+  do_paste
+fi

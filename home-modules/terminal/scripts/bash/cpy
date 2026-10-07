@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+self="${BASH_SOURCE[0]}"
+case "$self" in
+  */*) self_dir="${self%/*}" ;;
+  *) self_dir="." ;;
+esac
+clip_common="$(cd -- "$self_dir" && pwd -P)/clipboard-common.sh"
+if [[ ! -r $clip_common ]]; then
+  printf '%s: cannot read %s\n' "${0##*/}" "$clip_common" >&2
+  exit 1
+fi
+# shellcheck source=clipboard-common.sh
+. "$clip_common"
+
+usage() {
+  cat <<'EOF'
+Usage: cpy [options] [text]...
+
+Copy text to the system clipboard. Reads stdin when no text arguments are
+given. Works on Wayland, X11 and macOS.
+
+Options:
+  -p, --primary          copy to the primary selection instead of the clipboard
+  -t, --type MIME        offer the content as MIME (default: plain text)
+  -n, --trim-newline     do not copy a trailing newline from stdin
+  -c, --clear            clear the clipboard instead of copying anything
+  -o, --paste-once       serve one paste request and then exit
+  -f, --foreground       stay in the foreground instead of forking
+      --sensitive        hint that the content is sensitive (passwords, keys)
+  -s, --seat SEAT        Wayland seat to use (Wayland only)
+  -v, --version          print the version and exit
+  -h, --help             print this help and exit
+
+Environment:
+  CLIPBOARD_BACKEND      force a backend: macos | wayland | x11
+  CLIP_X11_TOOL          force an X11 tool: xclip | xsel
+
+Examples:
+  echo "hello" | cpy
+  cpy "hello world"
+  cpy -- --leading-dash
+  cpy -t image/png < photo.png
+EOF
+}
+
+primary=0
+mime_type=""
+trim_newline=0
+clear=0
+paste_once=0
+foreground=0
+sensitive=0
+seat=""
+want_help=0
+want_version=0
+args=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -p | --primary)
+      primary=1
+      shift
+      ;;
+    -c | --clear)
+      clear=1
+      shift
+      ;;
+    -n | --trim-newline)
+      trim_newline=1
+      shift
+      ;;
+    -o | --paste-once)
+      paste_once=1
+      shift
+      ;;
+    -f | --foreground)
+      foreground=1
+      shift
+      ;;
+    --sensitive)
+      sensitive=1
+      shift
+      ;;
+    -t | --type)
+      if [[ $# -lt 2 ]]; then
+        clip::err "option '$1' requires an argument"
+        usage >&2
+        exit 1
+      fi
+      mime_type="$2"
+      shift 2
+      ;;
+    --type=*)
+      mime_type="${1#*=}"
+      shift
+      ;;
+    -t?*)
+      mime_type="${1#-t}"
+      shift
+      ;;
+    -s | --seat)
+      if [[ $# -lt 2 ]]; then
+        clip::err "option '$1' requires an argument"
+        usage >&2
+        exit 1
+      fi
+      seat="$2"
+      shift 2
+      ;;
+    --seat=*)
+      seat="${1#*=}"
+      shift
+      ;;
+    -s?*)
+      seat="${1#-s}"
+      shift
+      ;;
+    -v | --version)
+      want_version=1
+      shift
+      ;;
+    -h | --help)
+      want_help=1
+      shift
+      ;;
+    --)
+      shift
+      if [[ $# -gt 0 ]]; then
+        args+=("$@")
+      fi
+      break
+      ;;
+    -*)
+      clip::err "unknown option: $1"
+      usage >&2
+      exit 1
+      ;;
+    *)
+      args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if ((want_help)); then
+  usage
+  exit 0
+fi
+if ((want_version)); then
+  printf 'cpy %s\n' "$CLIP_TOOL_VERSION"
+  exit 0
+fi
+
+backend="$(clip::backend)" || exit 1
+
+# Feed the backend: copied arguments, stdin, or nothing when clearing.
+emit_payload() {
+  if ((clear)); then
+    return 0
+  fi
+  if ((${#args[@]} > 0)); then
+    local IFS=' '
+    printf '%s' "${args[*]}"
+  elif ((trim_newline)); then
+    clip::trim_stdin
+  else
+    cat
+  fi
+}
+
+copy_wayland() {
+  local argv=()
+  if ((primary)); then
+    argv+=(-p)
+  fi
+  if [[ -n $mime_type ]]; then
+    argv+=(-t "$mime_type")
+  fi
+  if ((trim_newline)); then
+    argv+=(-n)
+  fi
+  if ((paste_once)); then
+    argv+=(-o)
+  fi
+  if ((foreground)); then
+    argv+=(-f)
+  fi
+  if ((sensitive)); then
+    argv+=(--sensitive)
+  fi
+  if [[ -n $seat ]]; then
+    argv+=(-s "$seat")
+  fi
+
+  if ((clear)); then
+    exec wl-copy ${argv[@]+"${argv[@]}"} --clear
+  elif ((${#args[@]} > 0)); then
+    # -- keeps text that starts with a dash from being parsed as options.
+    exec wl-copy ${argv[@]+"${argv[@]}"} -- "${args[@]}"
+  else
+    exec wl-copy ${argv[@]+"${argv[@]}"}
+  fi
+}
+
+copy_x11() {
+  local tool argv=()
+  tool="$(clip::x11_tool)" || exit 1
+
+  if [[ -n $seat ]]; then
+    clip::warn "--seat is only supported on Wayland, ignoring"
+  fi
+
+  if [[ $tool == xclip ]]; then
+    if ((primary)); then
+      argv+=(-selection primary)
+    else
+      argv+=(-selection clipboard)
+    fi
+    if ((foreground)); then
+      argv+=(-quiet)
+    fi
+    if ((paste_once)); then
+      argv+=(-loops 1)
+    fi
+    if ((sensitive)); then
+      # xclip has no sensitivity hint (the flag of that name only exists in
+      # patched builds), and X11 offers no standard way to set one.
+      clip::warn "xclip cannot mark content as sensitive, ignoring --sensitive"
+    fi
+    if [[ -n $mime_type ]]; then
+      argv+=(-t "$mime_type")
+    fi
+
+    if ((clear)); then
+      xclip ${argv[@]+"${argv[@]}"} </dev/null
+    else
+      emit_payload | xclip ${argv[@]+"${argv[@]}"}
+    fi
+    return
+  fi
+
+  if ((primary)); then
+    argv+=(-p)
+  else
+    argv+=(-b)
+  fi
+  if ((foreground)); then
+    argv+=(-n)
+  fi
+  if [[ -n $mime_type ]]; then
+    clip::warn "xsel cannot set a MIME type, ignoring --type"
+  fi
+  if ((paste_once)); then
+    clip::warn "xsel cannot serve a single paste request, ignoring --paste-once"
+  fi
+  if ((sensitive)); then
+    clip::warn "xsel does not support --sensitive, ignoring"
+  fi
+
+  if ((clear)); then
+    xsel ${argv[@]+"${argv[@]}"} -c
+  else
+    emit_payload | xsel ${argv[@]+"${argv[@]}"} -i
+  fi
+}
+
+copy_macos() {
+  if ((primary)); then
+    clip::warn "macOS has no primary selection, using the general pasteboard"
+  fi
+  if [[ -n $mime_type ]]; then
+    clip::warn "macOS cannot offer a MIME type, copying as plain text"
+  fi
+  if ((paste_once)); then
+    clip::warn "--paste-once is not supported on macOS, ignoring"
+  fi
+  if ((sensitive)); then
+    clip::warn "--sensitive is not supported on macOS, ignoring"
+  fi
+  if [[ -n $seat ]]; then
+    clip::warn "--seat is not supported on macOS, ignoring"
+  fi
+
+  emit_payload | pbcopy
+}
+
+case "$backend" in
+  wayland) copy_wayland ;;
+  x11) copy_x11 ;;
+  macos) copy_macos ;;
+  *)
+    clip::err "unsupported backend: $backend"
+    exit 1
+    ;;
+esac

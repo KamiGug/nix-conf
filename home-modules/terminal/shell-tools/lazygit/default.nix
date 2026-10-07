@@ -16,6 +16,9 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    apps.difftastic.enable = lib.mkDefault true;
+    apps.gitDelta.enable = lib.mkDefault true;
+
     programs.lazygit = {
       enable = true;
 
@@ -57,6 +60,21 @@ in {
 
             editInTerminal = true;
           };
+
+          git.diffRenderers =
+            lib.optionals config.apps.gitDelta.enable [
+              {
+                name = "delta";
+                command = "delta --paging=never";
+              }
+            ]
+            ++ lib.optionals config.apps.difftastic.enable [
+              {
+                type = "extDiff";
+                name = "difftastic";
+                command = "difft --color=always --context={{diffContext}}";
+              }
+            ];
         }
         cfg.extraSettings;
     };

@@ -9,6 +9,8 @@
 
     ./terminal/shell-tools/neovim-fhs.nix
     ./terminal/shell-tools/lazygit
+    ./terminal/shell-tools/difftastic.nix
+    ./terminal/shell-tools/git-delta.nix
     ./terminal/shell-tools/multiplexer/tmux
     ./terminal/git.nix
     ./terminal/terminal.nix
