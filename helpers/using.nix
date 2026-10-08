@@ -1,6 +1,7 @@
 {
   # config,
   lib,
+  myLib,
   # pkgs,
   ...
 }: {
@@ -23,6 +24,12 @@
     domain = lib.mkOption {
       type = lib.types.str;
       default = "";
+    };
+
+    editor = lib.mkOption {
+      type = lib.types.enum myLib.editor.supportedEditors;
+      default = "neovim";
+      description = "Editor used by tools that open files on your behalf, like lazygit and yazi.";
     };
   };
 }

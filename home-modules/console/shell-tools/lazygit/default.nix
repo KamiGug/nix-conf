@@ -1,9 +1,17 @@
 {
   config,
   lib,
+  myLib,
   ...
 }: let
   cfg = config.apps.lazygit;
+
+  edit =
+    myLib.editor.mkEditCommands {
+      file = ''"{{filename}}"'';
+      line = ''"{{line}}"'';
+    }
+    config.apps.using.editor;
 in {
   options.apps.lazygit = {
     enable = lib.mkEnableOption "lazygit";
@@ -26,37 +34,13 @@ in {
         lib.recursiveUpdate
         {
           os = {
-            edit = ''
-              if [ -n "$KAKOUNE_SESSION" ]; then
-                kak -c "$KAKOUNE_SESSION" "{{filename}}"
-              else
-                kak "{{filename}}"
-              fi
-            '';
+            edit = edit.file;
 
-            editAtLine = ''
-              if [ -n "$KAKOUNE_SESSION" ]; then
-                kak -c "$KAKOUNE_SESSION" "{{filename}}" "{{line}}"
-              else
-                kak "{{filename}}" "{{line}}"
-              fi
-            '';
+            editAtLine = edit.atLine;
 
-            editAtLineAndWait = ''
-              if [ -n "$KAKOUNE_SESSION" ]; then
-                kak -c "$KAKOUNE_SESSION" "{{filename}}" "{{line}}"
-              else
-                kak "{{filename}}" "{{line}}"
-              fi
-            '';
+            editAtLineAndWait = edit.atLine;
 
-            open = ''
-              if [ -n "$KAKOUNE_SESSION" ]; then
-                kak -c "$KAKOUNE_SESSION" "{{filename}}"
-              else
-                kak "{{filename}}"
-              fi
-            '';
+            open = edit.file;
 
             editInTerminal = true;
           };

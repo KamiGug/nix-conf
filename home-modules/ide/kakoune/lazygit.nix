@@ -12,7 +12,7 @@
   kakoune = ''
     define-command lazygit %{
       execute-keys %{
-        :sh KAKOUNE_SESSION="$kak_session" zellij action new-pane --floating -- lazygit<ret>
+        :sh zellij action new-pane --floating -n lazygit -- env KAKOUNE_SESSION="$kak_session" lazygit<ret>
       }
     }
 

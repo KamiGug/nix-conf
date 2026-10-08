@@ -15,7 +15,7 @@ in {
 
       settings = {
         font = lib.generators.mkLuaInline ''wezterm.font("${config.apps.using.terminalFont}")'';
-        font_size = 11;
+        font_size = 12;
       };
     };
   };

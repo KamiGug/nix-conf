@@ -38,8 +38,17 @@
     # desktop.niri.enable = true;
     #   desktop.plasma.enable = true;
     #    apps.nvim.enable = true;
-    apps.zed.enable = true;
+    apps.zed = {
+      enable = true;
+      defaultEditor = true;
+    };
+    apps.helix = {
+      enable = true;
+      defaultEditor = true;
+    };
+    apps.kakoune.defaultEditor = false;
     apps.lazygit.enable = true;
+    apps.opencode.enable = true;
     # apps.tmux = {
     #   enable = true;
     #   leader = "C-a";

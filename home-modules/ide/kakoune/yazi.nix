@@ -11,7 +11,7 @@
   kakoune = ''
     define-command yazi %{
       execute-keys %{
-        :sh KAKOUNE_SESSION="$kak_session" zellij action new-pane --direction left -- yazi<ret>
+        :sh zellij action new-pane --direction left -n yazi -- env KAKOUNE_SESSION="$kak_session" yazi<ret>
       }
     }
 

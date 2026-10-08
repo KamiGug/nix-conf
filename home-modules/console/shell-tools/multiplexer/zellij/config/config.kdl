@@ -2,6 +2,20 @@ pane_frames false
 simplified_ui false
 
 keybinds clear-defaults=true {
+    normal {
+        bind "g" {
+            Run "zellij-lazygit" {
+                floating true
+                close_on_exit true
+                name "lazygit"
+                x "10%"
+                y "10%"
+                width "80%"
+                height "80%"
+            }
+            SwitchToMode "locked"
+        }
+    }
     locked {
         bind "Ctrl z" { SwitchToMode "normal"; }
     }

@@ -6,6 +6,27 @@
 }: let
   cfg = config.apps.zellij;
 
+  lazygitScript = pkgs.writeShellApplication {
+    name = "zellij-lazygit";
+    runtimeInputs = [
+      pkgs.git
+      pkgs.lazygit
+    ];
+    text = ''
+      root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+
+      if [ -z "$root" ]; then
+        echo "no git repo found for: $PWD"
+        echo "press any key to close"
+        read -r -n 1 -s
+        exit 0
+      fi
+
+      cd "$root"
+      exec lazygit
+    '';
+  };
+
   cleanupScript = pkgs.writeShellApplication {
     name = "zellij-session-cleanup";
     runtimeInputs = [
@@ -104,7 +125,10 @@ in {
 
       xdg.configFile."zellij".source = ./config;
 
-      home.packages = [cleanupScript];
+      home.packages = [
+        cleanupScript
+        lazygitScript
+      ];
     }
 
     (lib.mkIf (cfg.cleanup.enable && pkgs.stdenv.hostPlatform.isLinux) {

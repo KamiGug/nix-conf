@@ -7,7 +7,7 @@
   nix = {
     programs.kakoune = {
       enable = true;
-      defaultEditor = true;
+      defaultEditor = config.apps.kakoune.defaultEditor;
 
       config = {
         numberLines = {

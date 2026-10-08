@@ -66,6 +66,7 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
+        opencodeV2 = pkgs.callPackage ./pkgs/opencode-v2 {};
       in {
         devShells.default = pkgs.mkShell {
           SOPS_AGE_KEY_FILE = "/etc/sops/age.key";
@@ -79,7 +80,7 @@
             go-task
             commitlint-rs
             git
-            opencode
+            opencodeV2
 
             yq
             jinja2-cli

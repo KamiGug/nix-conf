@@ -1,6 +1,7 @@
 {
   common = [
     ./zed.nix
+    ./opencode.nix
 
     ./console/scripts
     ./console/shell/fish
@@ -21,6 +22,7 @@
     ./creative/blender.nix
     ./kando.nix
     ./ide/kakoune
+    ./ide/helix
     ./console/shell-tools/yazi
     ./console/shell-tools/multiplexer/zellij
   ];

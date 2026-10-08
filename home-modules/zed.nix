@@ -21,140 +21,164 @@
       csharp = pkgs.csharp-ls;
     };
 in {
-  options.apps.zed.enable =
-    lib.mkEnableOption "Zed Editor (LSP + Vim motions + Typos)";
+  options.apps.zed = {
+    enable = lib.mkEnableOption "Zed Editor (LSP + Vim motions + Typos)";
 
-  config = lib.mkIf cfg.enable {
-    programs.zed-editor.enable = true;
-    programs.zed-editor.extensions = ["nix" "toml" "kdl" "sops" "vue"];
+    defaultEditor = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to set zeditor as the default editor: $EDITOR/$VISUAL,
+        apps.using.editor and the XDG text/plain handler.
+      '';
+    };
+  };
 
-    programs.zed-editor.userSettings = {
-      vim_mode = true;
-      ui_font_size = 16;
-      buffer_font_size = 13.5;
-      format_on_save = "off";
-      load_direnv = "shell_hook";
+  config = lib.mkIf cfg.enable (lib.mkMerge [
+    {
+      programs.zed-editor.enable = true;
+      programs.zed-editor.extensions = ["nix" "toml" "kdl" "sops" "vue"];
 
-      terminal = {
-        shell = "system";
-        working_directory = "current_project_directory";
-      };
+      programs.zed-editor.userSettings = {
+        vim_mode = true;
+        ui_font_size = 16;
+        buffer_font_size = 13.5;
+        format_on_save = "off";
+        load_direnv = "shell_hook";
 
-      lsp =
-        {
-          # phpantom = {
-          #   binary = {
-          #     path = lib.getExe lspBinaries.phpantom;
-          #   };
-          # };
-
-          phpactor = {
-            binary = {
-              path = lib.getExe lspBinaries.phpactor;
-            };
-          };
-
-          clangd = {
-            binary = {
-              path = "${lspBinaries.clangd}/bin/clangd";
-            };
-          };
-
-          rust-analyzer = {
-            binary = {
-              path = lib.getExe lspBinaries.rust;
-            };
-          };
-
-          cmake-language-server = {
-            binary = {
-              path = lib.getExe lspBinaries.cmake;
-            };
-          };
-
-          yaml-language-server = {
-            binary = {
-              path = lib.getExe lspBinaries.yaml;
-              arguments = ["--stdio"];
-            };
-          };
-
-          nixd = {
-            binary = {
-              path = lib.getExe lspBinaries.nix;
-            };
-          };
-
-          tix = {
-            binary = {
-              path = lib.getExe lspBinaries.tix;
-              arguments = ["lsp"];
-            };
-          };
-
-          typos = {
-            binary = {
-              path = lib.getExe lspBinaries.typos;
-            };
-
-            initialization_options = {
-              config_path = "./typos.toml";
-              diagnostic_severity = "Warning";
-            };
-          };
-        }
-        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-          csharp-ls = {
-            binary = {
-              path = lib.getExe lspBinaries.csharp;
-            };
-          };
+        terminal = {
+          shell = "system";
+          working_directory = "current_project_directory";
         };
 
-      languages =
-        {
-          "Rust" = {
-            language_servers = ["rust-analyzer" "typos"];
-          };
+        lsp =
+          {
+            # phpantom = {
+            #   binary = {
+            #     path = lib.getExe lspBinaries.phpantom;
+            #   };
+            # };
 
-          "C" = {
-            language_servers = ["clangd" "typos"];
-          };
+            phpactor = {
+              binary = {
+                path = lib.getExe lspBinaries.phpactor;
+              };
+            };
 
-          "C++" = {
-            language_servers = ["clangd" "typos"];
-          };
+            clangd = {
+              binary = {
+                path = "${lspBinaries.clangd}/bin/clangd";
+              };
+            };
 
-          "PHP" = {
-            language_servers = ["phpactor" "typos"];
-          };
+            rust-analyzer = {
+              binary = {
+                path = lib.getExe lspBinaries.rust;
+              };
+            };
 
-          "YAML" = {
-            language_servers = ["yaml-language-server" "typos"];
-          };
+            cmake-language-server = {
+              binary = {
+                path = lib.getExe lspBinaries.cmake;
+              };
+            };
 
-          "CMake" = {
-            language_servers = ["cmake-language-server" "typos"];
-          };
+            yaml-language-server = {
+              binary = {
+                path = lib.getExe lspBinaries.yaml;
+                arguments = ["--stdio"];
+              };
+            };
 
-          "Nix" = {
-            language_servers = ["nixd" "tix" "typos"];
+            nixd = {
+              binary = {
+                path = lib.getExe lspBinaries.nix;
+              };
+            };
 
-            formatter = {
-              external = {
-                command = lib.getExe lspBinaries.nixFormatter;
-                arguments = ["-"];
+            tix = {
+              binary = {
+                path = lib.getExe lspBinaries.tix;
+                arguments = ["lsp"];
+              };
+            };
+
+            typos = {
+              binary = {
+                path = lib.getExe lspBinaries.typos;
+              };
+
+              initialization_options = {
+                config_path = "./typos.toml";
+                diagnostic_severity = "Warning";
+              };
+            };
+          }
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+            csharp-ls = {
+              binary = {
+                path = lib.getExe lspBinaries.csharp;
               };
             };
           };
-        }
-        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-          "C#" = {
-            language_servers = ["csharp-ls" "typos"];
-          };
-        };
-    };
 
-    home.packages = lib.attrValues lspBinaries;
-  };
+        languages =
+          {
+            "Rust" = {
+              language_servers = ["rust-analyzer" "typos"];
+            };
+
+            "C" = {
+              language_servers = ["clangd" "typos"];
+            };
+
+            "C++" = {
+              language_servers = ["clangd" "typos"];
+            };
+
+            "PHP" = {
+              language_servers = ["phpactor" "typos"];
+            };
+
+            "YAML" = {
+              language_servers = ["yaml-language-server" "typos"];
+            };
+
+            "CMake" = {
+              language_servers = ["cmake-language-server" "typos"];
+            };
+
+            "Nix" = {
+              language_servers = ["nixd" "tix" "typos"];
+
+              formatter = {
+                external = {
+                  command = lib.getExe lspBinaries.nixFormatter;
+                  arguments = ["-"];
+                };
+              };
+            };
+          }
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+            "C#" = {
+              language_servers = ["csharp-ls" "typos"];
+            };
+          };
+      };
+
+      home.packages = lib.attrValues lspBinaries;
+    }
+
+    (lib.mkIf cfg.defaultEditor {
+      programs.zed-editor.defaultEditor = true;
+      apps.using.editor = "zed";
+    })
+
+    (lib.mkIf (cfg.defaultEditor && pkgs.stdenv.hostPlatform.isLinux) {
+      xdg.mimeApps = {
+        enable = true;
+        defaultApplications."text/plain" = "dev.zed.Zed.desktop";
+      };
+    })
+  ]);
 }
