@@ -2,24 +2,35 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }: let
   cfg = config.apps.zed;
 
-  lspBinaries =
-    {
-      # phpantom = pkgs.phpantom-lsp;
-      inherit (pkgs) phpactor typos tix;
-      clangd = pkgs.clang-tools;
-      rust = pkgs.rust-analyzer;
-      cmake = pkgs.cmake-language-server;
-      yaml = pkgs.yaml-language-server;
-      nix = pkgs.nixd;
-      nixFormatter = pkgs.alejandra;
-    }
-    // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-      csharp = pkgs.csharp-ls;
-    };
+  selected = myLib.lsp.mkServers {
+    blacklist = [
+      "nix/nil"
+      "csharp/roslyn"
+    ];
+  };
+
+  langs = lib.filterAttrs (_: lang: lang.editors.zed != null) selected.langs;
+
+  allServers = lib.mergeAttrsList (
+    lib.mapAttrsToList (_: lang: lang.servers) langs ++ [selected.globals]
+  );
+
+  languageServersFor = lang:
+    lib.mapAttrsToList (id: _: id) lang.servers ++ lib.attrNames selected.globals;
+
+  zedLanguages =
+    lib.foldl' (
+      acc: lang:
+        acc
+        // lib.genAttrs lang.editors.zed (_: {language_servers = languageServersFor lang;})
+    )
+    {}
+    (lib.attrValues langs);
 in {
   options.apps.zed = {
     enable = lib.mkEnableOption "Zed Editor (LSP + Vim motions + Typos)";
@@ -52,121 +63,40 @@ in {
         };
 
         lsp =
-          {
-            # phpantom = {
-            #   binary = {
-            #     path = lib.getExe lspBinaries.phpantom;
-            #   };
-            # };
-
-            phpactor = {
-              binary = {
-                path = lib.getExe lspBinaries.phpactor;
-              };
-            };
-
-            clangd = {
-              binary = {
-                path = "${lspBinaries.clangd}/bin/clangd";
-              };
-            };
-
-            rust-analyzer = {
-              binary = {
-                path = lib.getExe lspBinaries.rust;
-              };
-            };
-
-            cmake-language-server = {
-              binary = {
-                path = lib.getExe lspBinaries.cmake;
-              };
-            };
-
-            yaml-language-server = {
-              binary = {
-                path = lib.getExe lspBinaries.yaml;
-                arguments = ["--stdio"];
-              };
-            };
-
-            nixd = {
-              binary = {
-                path = lib.getExe lspBinaries.nix;
-              };
-            };
-
-            tix = {
-              binary = {
-                path = lib.getExe lspBinaries.tix;
-                arguments = ["lsp"];
-              };
-            };
-
-            typos = {
-              binary = {
-                path = lib.getExe lspBinaries.typos;
-              };
-
-              initialization_options = {
-                config_path = "./typos.toml";
-                diagnostic_severity = "Warning";
-              };
-            };
-          }
-          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-            csharp-ls = {
-              binary = {
-                path = lib.getExe lspBinaries.csharp;
-              };
-            };
-          };
+          lib.mapAttrs (
+            _: server:
+              {
+                binary =
+                  {
+                    path = "${server.package}/bin/${server.command}";
+                  }
+                  // lib.optionalAttrs (server.args != []) {arguments = server.args;};
+              }
+              // lib.optionalAttrs (server ? initializationOptions) {
+                initialization_options = server.initializationOptions;
+              }
+          )
+          allServers;
 
         languages =
-          {
-            "Rust" = {
-              language_servers = ["rust-analyzer" "typos"];
-            };
-
-            "C" = {
-              language_servers = ["clangd" "typos"];
-            };
-
-            "C++" = {
-              language_servers = ["clangd" "typos"];
-            };
-
-            "PHP" = {
-              language_servers = ["phpactor" "typos"];
-            };
-
-            "YAML" = {
-              language_servers = ["yaml-language-server" "typos"];
-            };
-
-            "CMake" = {
-              language_servers = ["cmake-language-server" "typos"];
-            };
-
-            "Nix" = {
-              language_servers = ["nixd" "tix" "typos"];
-
-              formatter = {
-                external = {
-                  command = lib.getExe lspBinaries.nixFormatter;
+          zedLanguages
+          // lib.optionalAttrs (langs ? nix) {
+            "Nix" =
+              (zedLanguages."Nix" or {})
+              // {
+                formatter.external = {
+                  command = lib.getExe pkgs.alejandra;
                   arguments = ["-"];
                 };
               };
-            };
-          }
-          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-            "C#" = {
-              language_servers = ["csharp-ls" "typos"];
-            };
           };
       };
 
-      home.packages = lib.attrValues lspBinaries;
+      home.packages =
+        lib.mapAttrsToList (_: server: server.package) allServers
+        ++ [
+          pkgs.alejandra
+        ];
     }
 
     (lib.mkIf cfg.defaultEditor {

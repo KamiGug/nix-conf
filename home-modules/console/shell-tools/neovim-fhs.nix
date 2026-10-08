@@ -99,13 +99,6 @@ in {
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
-        xdg.configFile."nvim".source = pkgs.fetchFromGitHub {
-          owner = "KamiGug";
-          repo = "nvim-config";
-          rev = "HEAD";
-          sha256 = "sha256-4yoOqpxYrycyAtQmVfkmaVdPNMba/z9Y5qRisbNs6SY=";
-        };
-
         home.packages = [
           nvimFhs
         ];

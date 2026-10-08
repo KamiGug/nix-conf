@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }: let
   cfg = config.apps.helix;
@@ -9,7 +10,7 @@
   hxrPackage = pkgs.callPackage ../../../pkgs/hxr {};
 
   moduleArgs = {
-    inherit config lib pkgs;
+    inherit config lib pkgs myLib;
   };
 
   files =

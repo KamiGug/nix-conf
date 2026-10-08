@@ -2,12 +2,13 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }: let
   cfg = config.apps.kakoune;
 
   moduleArgs = {
-    inherit config lib pkgs;
+    inherit config lib pkgs myLib;
   };
 
   files =

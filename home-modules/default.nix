@@ -1,7 +1,6 @@
 {
   common = [
     ./zed.nix
-    ./opencode.nix
 
     ./console/scripts
     ./console/shell/fish
@@ -23,8 +22,10 @@
     ./kando.nix
     ./ide/kakoune
     ./ide/helix
+    ./ide/nvim
     ./console/shell-tools/yazi
     ./console/shell-tools/multiplexer/zellij
+    ./console/opencode
   ];
   linux = [
     ./de/plasma.nix

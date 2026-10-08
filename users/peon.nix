@@ -40,11 +40,11 @@
     #    apps.nvim.enable = true;
     apps.zed = {
       enable = true;
-      defaultEditor = true;
+      defaultEditor = false;
     };
     apps.helix = {
       enable = true;
-      defaultEditor = true;
+      defaultEditor = false;
     };
     apps.kakoune.defaultEditor = false;
     apps.lazygit.enable = true;

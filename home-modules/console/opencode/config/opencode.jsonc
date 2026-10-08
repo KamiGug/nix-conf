@@ -1,0 +1,81 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "permission": {
+    // ─────────────────────────────────────────────
+    // Default: require approval for everything
+    // ─────────────────────────────────────────────
+
+    "*": "ask",
+
+    // ─────────────────────────────────────────────
+    // Reading the repository is OK
+    // But never read secrets
+    // (matching is last-rule-wins, denies after allow)
+    // ─────────────────────────────────────────────
+
+    "read": {
+      "*": "allow",
+
+      "*.env": "deny",
+      "*.env.*": "deny",
+
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.pfx": "deny",
+
+      "secrets/**": "deny"
+    },
+
+    "glob": "allow",
+    "grep": "allow",
+
+    // ─────────────────────────────────────────────
+    // Every modification requires approval
+    // edit covers edit/write/patch
+    // ─────────────────────────────────────────────
+
+    "edit": "ask",
+
+    // ─────────────────────────────────────────────
+    // Shell commands require approval
+    // (matching is last-rule-wins: blanket git deny
+    // before the allows, specific never-list after)
+    // ─────────────────────────────────────────────
+
+    "bash": {
+      "*": "ask",
+
+      // Don't allow arbitrary writes through git commands
+      "git *": "deny",
+
+      // Safe Git inspection can happen automatically
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "git show *": "allow",
+
+      // ─────────────────────────────────────────────
+      // Git state-changing operations: NEVER
+      // ─────────────────────────────────────────────
+
+      "git add *": "deny",
+      "git commit *": "deny",
+      "git push *": "deny",
+      "git pull *": "deny",
+      "git fetch *": "deny",
+      "git reset *": "deny",
+      "git checkout *": "deny",
+      "git switch *": "deny",
+      "git restore *": "deny",
+      "git clean *": "deny"
+    },
+
+    // ─────────────────────────────────────────────
+    // Never leave the project
+    // ─────────────────────────────────────────────
+
+    "external_directory": "deny"
+  }
+}
