@@ -69,7 +69,7 @@
         };
       };
     };
-    apps.terminal.enable = true;
+    apps.terminal.wezterm.enable = true;
 
     apps.ssh = {
       enable = true;

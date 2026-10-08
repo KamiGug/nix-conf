@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+  echo "missing the session name!" >&2
+fi
+
+session_name="$1"
+
+if [ -n "$ZELLIJ" ]; then
+  if [ "$ZELLIJ" = "$session_name" ]; then
+    echo "Already on ${session_name} session"
+  else
+    zellij action switch-session "$session_name"
+  fi
+else
+  zellij attach -c "$session_name"
+fi

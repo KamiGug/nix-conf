@@ -5,7 +5,7 @@
 flake.nix
   65:    # TODO: split shells to seperate file
 
-home-modules/terminal/shell/elvish/default.nix
+home-modules/console/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
 lib/flake/_resolveHostSet.nix

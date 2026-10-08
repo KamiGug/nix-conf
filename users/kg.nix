@@ -28,7 +28,7 @@
       persistent-apps = [
         "/Users/kg/Applications/Home Manager Apps/Brave Browser.app"
         "/Users/kg/Applications/Home Manager Apps/Thunderbird.app"
-        "/Users/kg/Applications/Home Manager Apps/kitty.app"
+        "/Users/kg/Applications/Home Manager Apps/WezTerm.app"
         "/System/Applications/App Store.app"
         "/Applications/Discord.app"
         "/Users/kg/Applications/Home Manager Apps/Spotify.app"
@@ -92,7 +92,7 @@
         };
       };
     };
-    apps.terminal.enable = true;
+    apps.terminal.wezterm.enable = true;
 
     apps.karabiner.enable = true;
 

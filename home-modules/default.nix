@@ -2,25 +2,27 @@
   common = [
     ./zed.nix
 
-    ./terminal/scripts
-    ./terminal/shell/fish
-    ./terminal/shell/elvish
-    ./terminal/shell/zsh
+    ./console/scripts
+    ./console/shell/fish
+    ./console/shell/elvish
+    ./console/shell/zsh
 
-    ./terminal/shell-tools/neovim-fhs.nix
-    ./terminal/shell-tools/lazygit
-    ./terminal/shell-tools/difftastic.nix
-    ./terminal/shell-tools/git-delta.nix
-    ./terminal/shell-tools/multiplexer/tmux
-    ./terminal/git.nix
-    ./terminal/terminal.nix
-    ./terminal/shell-tools/ssh.nix
-    ./terminal/shell-tools/starship.nix
+    ./console/shell-tools/neovim-fhs.nix
+    ./console/shell-tools/lazygit
+    ./console/shell-tools/difftastic.nix
+    ./console/shell-tools/git-delta.nix
+    ./console/shell-tools/multiplexer/tmux
+    ./console/git.nix
+    ./console/terminal
+    ./console/terminal/kitty
+    ./console/terminal/wezterm
+    ./console/shell-tools/ssh.nix
+    ./console/shell-tools/starship.nix
     ./creative/blender.nix
     ./kando.nix
     ./ide/kakoune
-    ./terminal/shell-tools/yazi
-    ./terminal/shell-tools/multiplexer/zellij
+    ./console/shell-tools/yazi
+    ./console/shell-tools/multiplexer/zellij
   ];
   linux = [
     ./de/plasma.nix

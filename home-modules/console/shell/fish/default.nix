@@ -15,6 +15,12 @@ in {
       description = "Automatically enter tmux on shell startup.";
     };
 
+    zellijAutostart = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Automatically enter zellij on shell startup.";
+    };
+
     starshipEnabled = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -50,9 +56,21 @@ in {
             alias atb="add-to-tmux-session --session $BACKGROUND_SESSION_NAME --cmd"
           end
 
+          if command -q zellij
+            alias ezf="enter-zellij-session $FOREGROUND_SESSION_NAME"
+            alias ezb="enter-zellij-session $BACKGROUND_SESSION_NAME"
+            alias ezs="enter-zellij-session"
+          end
+
           ${lib.optionalString cfg.tmuxAutostart ''
             if not set -q IS_SSH_HOST; and not set -q TMUX
               exec tmux
+            end
+          ''}
+
+          ${lib.optionalString cfg.zellijAutostart ''
+            if not set -q IS_SSH_HOST; and not set -q ZELLIJ; and not set -q TMUX; and command -q zellij
+              exec zellij
             end
           ''}
 
@@ -84,6 +102,9 @@ in {
     }
     (lib.mkIf cfg.starshipEnabled {
       apps.starship.enable = true;
+    })
+    (lib.mkIf cfg.zellijAutostart {
+      apps.zellij.enable = lib.mkDefault true;
     })
   ]);
 }
