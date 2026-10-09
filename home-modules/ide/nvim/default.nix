@@ -6,7 +6,10 @@
 }: let
   cfg = config.apps.nvim;
 
-  selected = myLib.lsp.mkServers {blacklist = [];};
+  selected =
+    if config.apps.lsp != null
+    then config.apps.lsp
+    else myLib.lsp.mkServers {};
 
   allServers =
     lib.mergeAttrsList (

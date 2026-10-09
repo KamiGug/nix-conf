@@ -1,6 +1,5 @@
 {
   common = [
-    ./zed.nix
 
     ./console/scripts
     ./console/shell/fish
@@ -20,9 +19,11 @@
     ./console/shell-tools/starship.nix
     ./creative/blender.nix
     ./kando.nix
+    ./ide/lsp.nix
     ./ide/kakoune
     ./ide/helix
     ./ide/nvim
+    ./ide/zed
     ./console/shell-tools/yazi
     ./console/shell-tools/multiplexer/zellij
     ./console/opencode

@@ -11,6 +11,7 @@
 
   moduleArgs = {
     inherit config lib pkgs myLib;
+    lsp = config.apps.lsp;
   };
 
   files =

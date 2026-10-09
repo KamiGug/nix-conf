@@ -7,12 +7,10 @@
 }: let
   cfg = config.apps.zed;
 
-  selected = myLib.lsp.mkServers {
-    blacklist = [
-      "nix/nil"
-      "csharp/roslyn"
-    ];
-  };
+  selected =
+    if config.apps.lsp != null
+    then config.apps.lsp
+    else myLib.lsp.mkServers {};
 
   langs = lib.filterAttrs (_: lang: lang.editors.zed != null) selected.langs;
 

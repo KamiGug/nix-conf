@@ -3,14 +3,13 @@
   lib,
   pkgs,
   myLib,
+  lsp,
   ...
 }: let
-  selected = myLib.lsp.mkServers {
-    blacklist = [
-      "nix/nil"
-      "csharp/roslyn"
-    ];
-  };
+  selected =
+    if lsp != null
+    then lsp
+    else myLib.lsp.mkServers {};
 
   inherit (selected) langs globals;
 

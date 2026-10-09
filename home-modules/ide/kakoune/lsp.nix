@@ -3,16 +3,13 @@
   lib,
   pkgs,
   myLib,
+  lsp,
   ...
 }: let
-  selected = myLib.lsp.mkServers {
-    blacklist = [
-      "typos"
-      "nix/nixd"
-      "nix/tix"
-      "csharp/csharp-ls"
-    ];
-  };
+  selected =
+    if lsp != null
+    then lsp
+    else myLib.lsp.mkServers {};
 
   inherit (selected) langs;
 
