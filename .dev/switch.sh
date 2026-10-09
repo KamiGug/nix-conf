@@ -122,7 +122,7 @@ if [[ "$HAS_CHANGES" == true ]]; then
   fi
 
 else
-  if [[ $(git log --all --grep="${HOSTNAME}:${LAST_GENERATION_NUMBER}" --fixed-strings --quiet | grep -E '^commit' | wc -l) -gt 0 ]]; then
+  if git log --oneline --all --grep="${HOSTNAME}:${LAST_GENERATION_NUMBER}" --fixed-strings | grep -q .; then
       HAS_COMMIT=true
   fi
 fi
@@ -132,7 +132,7 @@ fi
 if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
   git add -A
-  git commit -m "${MSG}
+  git commit --allow-empty -m "${MSG}
   ${HOSTNAME}:${LAST_GENERATION_NUMBER}"
 else
   echo "→ No changes to commit"

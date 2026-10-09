@@ -19,13 +19,27 @@
 
       "*.env": "deny",
       "*.env.*": "deny",
+      "*.env.example": "allow",
+      "*.envrc": "deny",
+      "*.envrc.*": "deny",
 
       "*.pem": "deny",
       "*.key": "deny",
       "*.p12": "deny",
       "*.pfx": "deny",
+      "*.kdbx": "deny",
 
-      "secrets/**": "deny"
+      "*id_rsa*": "deny",
+      "*id_ed25519*": "deny",
+      "*id_ecdsa*": "deny",
+      "*id_dsa*": "deny",
+      "*.netrc": "deny",
+      "*.pgpass": "deny",
+      "*.npmrc": "deny",
+      "*.pypirc": "deny",
+
+      "*secrets*": "deny",
+      "*sops*": "deny"
     },
 
     "glob": "allow",
@@ -51,9 +65,10 @@
     "edit": "ask",
 
     // ─────────────────────────────────────────────
-    // Shell commands require approval
-    // (matching is last-rule-wins: blanket git deny
-    // before the allows, specific never-list after)
+    // Shell commands require approval. Matching is
+    // last-rule-wins: read-only allows first, then the
+    // hardening rules at the end turn anything that can
+    // change state back into `ask`.
     // ─────────────────────────────────────────────
 
     "bash": {
@@ -61,9 +76,8 @@
 
       // ─────────────────────────────────────────────
       // Read-only inspection runs without approval.
-      // Convenience allowlist, not a hard security
-      // boundary: a few of these can still write or
-      // exec (e.g. `find -exec`, `sort -o`).
+      // Risky flags, shell redirection and secret paths
+      // are pulled back to `ask`/`deny` at the end.
       // ─────────────────────────────────────────────
 
       // listing / metadata
@@ -87,14 +101,11 @@
       "nl *": "allow",
       "head *": "allow",
       "tail *": "allow",
-      "less *": "allow",
-      "more *": "allow",
       "wc *": "allow",
 
       // searching
       "grep *": "allow",
       "rg *": "allow",
-      "ag *": "allow",
 
       // comparing
       "diff *": "allow",
@@ -103,7 +114,6 @@
 
       // data / binary / hashing
       "jq *": "allow",
-      "xxd *": "allow",
       "hexdump *": "allow",
       "od *": "allow",
       "strings *": "allow",
@@ -133,7 +143,6 @@
       "whoami *": "allow",
       "id *": "allow",
       "groups *": "allow",
-      "hostname *": "allow",
       "uname *": "allow",
       "uptime *": "allow",
       "date *": "allow",
@@ -154,29 +163,87 @@
       "printf *": "allow",
       "test *": "allow",
 
-      // Don't allow arbitrary writes through git commands
-      "git *": "deny",
+      // Git: read-only inspection is automatic; anything that
+      // changes state is never auto-approved, it asks first.
+      "git *": "ask",
 
-      // Safe Git inspection can happen automatically
       "git status *": "allow",
       "git diff *": "allow",
       "git log *": "allow",
       "git show *": "allow",
 
+      "git add *": "ask",
+      "git commit *": "ask",
+      "git push *": "ask",
+      "git pull *": "ask",
+      "git fetch *": "ask",
+      "git reset *": "ask",
+      "git checkout *": "ask",
+      "git switch *": "ask",
+      "git restore *": "ask",
+      "git clean *": "ask",
+
       // ─────────────────────────────────────────────
-      // Git state-changing operations: NEVER
+      // Hardening. MUST stay last: last matching rule wins.
+      // Anything that can change state asks (never auto-runs);
+      // only secret reads are denied outright.
       // ─────────────────────────────────────────────
 
-      "git add *": "deny",
-      "git commit *": "deny",
-      "git push *": "deny",
-      "git pull *": "deny",
-      "git fetch *": "deny",
-      "git reset *": "deny",
-      "git checkout *": "deny",
-      "git switch *": "deny",
-      "git restore *": "deny",
-      "git clean *": "deny"
+      // Redirection: `>`/`>>`/`2>` can write files (bypassing
+      // `edit: ask`) and `<`/`<<` can read arbitrary files
+      // without the external_directory check. Ask first.
+      // Caveat: this also catches a literal `>`/`<` in a
+      // pattern, e.g. `rg '=>'`. Relax to `* >*`, `* >>*`,
+      // `*2>*`, `*&>*` if that gets annoying.
+      "*>*": "ask",
+      "*<*": "ask",
+
+      // Allowlisted tools that can still write/exec: ask
+      "sort -o*": "ask",
+      "sort * -o*": "ask",
+      "sort * --output*": "ask",
+      "tree -o*": "ask",
+      "tree * -o*": "ask",
+      "tree * --output*": "ask",
+      "find * -exec*": "ask",
+      "find * -execdir*": "ask",
+      "find * -ok*": "ask",
+      "find * -okdir*": "ask",
+      "find * -delete*": "ask",
+      "find * -fprint*": "ask",
+      "find * -fls*": "ask",
+      "fd * -x*": "ask",
+      "fd * -X*": "ask",
+      "fd * --exec*": "ask",
+      "fd * --exec-batch*": "ask",
+      "rg * --pre*": "ask",
+      "bat * --pager*": "ask",
+      "date -s*": "ask",
+      "date * -s*": "ask",
+      "date --set*": "ask",
+      "date * --set*": "ask",
+
+      // Secrets: never readable through the shell either
+      // (the `read` deny does not apply to bash). These stay
+      // last so nothing above can turn a secret read back on.
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.envrc*": "deny",
+      "*.pem*": "deny",
+      "*.key*": "deny",
+      "*.p12*": "deny",
+      "*.pfx*": "deny",
+      "*.kdbx*": "deny",
+      "*id_rsa*": "deny",
+      "*id_ed25519*": "deny",
+      "*id_ecdsa*": "deny",
+      "*id_dsa*": "deny",
+      "*.netrc*": "deny",
+      "*.pgpass*": "deny",
+      "*.npmrc*": "deny",
+      "*.pypirc*": "deny",
+      "*secrets*": "deny",
+      "*sops*": "deny"
     },
 
     // ─────────────────────────────────────────────
