@@ -90,7 +90,7 @@ in {
             command nvim $argv
           end
 
-          ${lib.getExe pkgs.go-task} --completion fish | source
+          ${lib.getExe' pkgs.go-task "task"} --completion fish | source
         '';
 
         shellAbbrs = {
