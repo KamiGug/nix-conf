@@ -197,7 +197,8 @@
       // `*2>*`, `*&>*` if that gets annoying.
       "*>*": "ask",
       "*<*": "ask",
-
+      "*> /dev/null*": "ask",
+      "*>/dev/null*": "ask",
       // Allowlisted tools that can still write/exec: ask
       "sort -o*": "ask",
       "sort * -o*": "ask",
@@ -251,5 +252,139 @@
     // ─────────────────────────────────────────────
 
     "external_directory": "deny"
+  },
+
+  // ─────────────────────────────────────────────
+  // Primary-agent profiles. Agent rules are appended
+  // after the global `permission` block above and are
+  // evaluated last, so each profile overrides only what
+  // it needs. Switch between them with Tab.
+  // ─────────────────────────────────────────────
+
+  "agent": {
+    // ─────────────────────────────────────────────
+    // yolo: allow almost anything. Only secret reads and
+    // anything outside the repo prompt; /tmp is exempt.
+    // ─────────────────────────────────────────────
+
+    "yolo": {
+      "description": "Full-send: allow almost everything, prompt for secrets and out-of-repo access (/tmp allowed).",
+      "mode": "primary",
+      "permission": {
+        // Override the global `*: ask`; every tool not named
+        // below now runs without approval.
+        "*": "allow",
+
+        "edit": "allow",
+
+        // Read anything, but prompt before touching secrets.
+        "read": {
+          "*": "allow",
+
+          "*.env": "ask",
+          "*.env.*": "ask",
+          "*.env.example": "allow",
+          "*.envrc": "ask",
+          "*.envrc.*": "ask",
+
+          "*.pem": "ask",
+          "*.key": "ask",
+          "*.p12": "ask",
+          "*.pfx": "ask",
+          "*.kdbx": "ask",
+
+          "*id_rsa*": "ask",
+          "*id_ed25519*": "ask",
+          "*id_ecdsa*": "ask",
+          "*id_dsa*": "ask",
+          "*.netrc": "ask",
+          "*.pgpass": "ask",
+          "*.npmrc": "ask",
+          "*.pypirc": "ask",
+
+          "*secrets*": "ask",
+          "*sops*": "ask"
+        },
+
+        // Run anything, but prompt before reading secrets and
+        // before changing git state.
+        "bash": {
+          "*": "allow",
+
+          "git add *": "ask",
+          "git commit *": "ask",
+          "git push *": "ask",
+          "git pull *": "ask",
+          "git fetch *": "ask",
+          "git reset *": "ask",
+          "git checkout *": "ask",
+          "git switch *": "ask",
+          "git restore *": "ask",
+          "git clean *": "ask",
+
+          "*.env": "ask",
+          "*.env.*": "ask",
+          "*.env.example": "allow",
+          "*.envrc*": "ask",
+          "*.pem*": "ask",
+          "*.key*": "ask",
+          "*.p12*": "ask",
+          "*.pfx*": "ask",
+          "*.kdbx*": "ask",
+          "*id_rsa*": "ask",
+          "*id_ed25519*": "ask",
+          "*id_ecdsa*": "ask",
+          "*id_dsa*": "ask",
+          "*.netrc*": "ask",
+          "*.pgpass*": "ask",
+          "*.npmrc*": "ask",
+          "*.pypirc*": "ask",
+          "*secrets*": "ask",
+          "*sops*": "ask"
+        },
+
+        // Anything outside the repo prompts, except /tmp.
+        "external_directory": {
+          "*": "ask",
+          "/tmp": "allow",
+          "/tmp/**": "allow"
+        }
+      }
+    },
+
+    // ─────────────────────────────────────────────
+    // build: edits allowed, read-only commands allowed,
+    // everything else asks. Secrets denied, repo-only.
+    // ─────────────────────────────────────────────
+
+    "build": {
+      "description": "Implementation: edits and read-only commands allowed, everything else asks.",
+      "mode": "primary",
+      "permission": {
+        "edit": "allow"
+      }
+    },
+
+    // ─────────────────────────────────────────────
+    // plan: reads and read-only commands allowed, edits
+    // denied. Anything outside the repo prompts except
+    // /tmp. Secrets denied.
+    // ─────────────────────────────────────────────
+
+    "plan": {
+      "description": "Planning: reads and read-only commands allowed, edits denied, /tmp allowed.",
+      "mode": "primary",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          ".opencode/plans/*.md": "allow"
+        },
+        "external_directory": {
+          "*": "ask",
+          "/tmp": "allow",
+          "/tmp/**": "allow"
+        }
+      }
+    }
   }
 }
