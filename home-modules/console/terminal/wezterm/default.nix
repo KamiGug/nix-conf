@@ -16,6 +16,14 @@ in {
       settings = {
         font = lib.generators.mkLuaInline ''wezterm.font("${config.apps.using.terminalFont}")'';
         font_size = 12;
+        hide_tab_bar_if_only_one_tab = true;
+        keys = [
+          {
+            key = "Z";
+            mods = "CTRL";
+            action = "DisableDefaultAssignment";
+          }
+        ];
       };
     };
   };
