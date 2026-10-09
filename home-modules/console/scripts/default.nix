@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   cfg = config.apps.my.scripts;
@@ -11,6 +12,10 @@ in {
 
   config = lib.mkIf cfg.enable (lib.mkMerge [
     {
+      home.packages = [
+        pkgs.jq
+      ];
+
       home.sessionPath = [
         "$HOME/.local/share/scripts"
       ];

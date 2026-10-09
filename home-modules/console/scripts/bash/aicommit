@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: aicommit [options]
+
+Generate a Conventional Commits message for the staged changes using opencode.
+
+Options:
+  -c, --copy    also copy the generated message to the clipboard (via cpy)
+  -m, --model M use model M (provider/model) instead of the default
+  -h, --help    show this help
+
+The message is written to stdout either way, so it can be piped:
+
+  aicommit | git commit -F -
+EOF
+}
+
+self="${0##*/}"
+
+copy=0
+model=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -c | --copy)
+      copy=1
+      shift
+      ;;
+    -m | --model)
+      if [[ $# -lt 2 ]]; then
+        printf '%s: --model requires an argument\n' "$self" >&2
+        exit 2
+      fi
+      model="$2"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf '%s: unknown option %s\n' "$self" "$1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+for tool in git opencode jq; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    printf '%s: required command not found: %s\n' "$self" "$tool" >&2
+    exit 1
+  fi
+done
+
+if [[ $copy -eq 1 ]] && ! command -v cpy >/dev/null 2>&1; then
+  printf '%s: cpy not found (required for --copy)\n' "$self" >&2
+  exit 1
+fi
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  printf '%s: not inside a git repository\n' "$self" >&2
+  exit 1
+fi
+
+patch="$(mktemp)"
+trap 'rm -f "$patch"' EXIT
+
+git diff --cached >"$patch"
+if [[ ! -s $patch ]]; then
+  printf '%s: nothing staged to commit\n' "$self" >&2
+  exit 1
+fi
+
+prompt='You write git commit messages. Analyse the attached diff and write a commit message for it.
+
+Rules:
+- Output ONLY the commit message: no markdown, no code fences, no preamble, no explanation.
+- The first line is a Conventional Commit header: type(scope): subject
+- type must be one of: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+- scope is optional, lowercase, and names the main area that changed
+- subject is lowercase and imperative, with no trailing period; keep the whole header at most 100 characters
+- For anything beyond a trivial change, add a blank line and then a body explaining what changed and why, wrapped at 100 characters per line
+- Do not add footers or co-author lines'
+
+model_args=()
+[[ -n $model ]] && model_args=(--model "$model")
+
+message="$(
+  opencode run --format json -f "$patch" "${model_args[@]}" "$prompt" \
+    | jq -j 'select(.type == "text") | .part.text'
+)"
+
+if [[ -z ${message//[[:space:]]/} ]]; then
+  printf '%s: failed to generate a commit message\n' "$self" >&2
+  exit 1
+fi
+
+if [[ $copy -eq 1 ]]; then
+  printf '%s\n' "$message" | cpy
+fi
+
+printf '%s\n' "$message"
