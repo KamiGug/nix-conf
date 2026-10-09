@@ -597,7 +597,7 @@ on_force_close "quit"
 
 // Whether clicking a pane to focus it also sends the click into the pane
 // default is false
-// mouse_click_through false
+mouse_click_through true
 
 // Whether triple-clicking inside command output marked by the shell (OSC 133) selects
 // the command and its output instead of the logical line

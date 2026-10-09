@@ -66,25 +66,25 @@ swap_tiled_layout name="half-stacked" {
 }
 
 swap_tiled_layout name="matrix" {
-    ui max_panes=4 {
-        pane split_direction="vertical" { pane; pane; }
-        pane split_direction="vertical" { pane; pane; }
-    }
     ui max_panes=6 {
+        pane split_direction="vertical" { pane; pane; }
+        pane split_direction="vertical" { pane; pane; }
+    }
+    ui max_panes=8 {
         pane split_direction="vertical" { pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; }
     }
-    ui max_panes=9 {
+    ui max_panes=11 {
         pane split_direction="vertical" { pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; }
     }
-    ui max_panes=12 {
+    ui max_panes=14 {
         pane split_direction="vertical" { pane; pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; pane; }
     }
-    ui max_panes=16 {
+    ui max_panes=18 {
         pane split_direction="vertical" { pane; pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; pane; }
         pane split_direction="vertical" { pane; pane; pane; pane; }

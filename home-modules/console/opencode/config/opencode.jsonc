@@ -32,6 +32,18 @@
     "grep": "allow",
 
     // ─────────────────────────────────────────────
+    // Skills checked into the repo are trusted
+    // ─────────────────────────────────────────────
+
+    "skill": "allow",
+
+    // ─────────────────────────────────────────────
+    // Web access
+    // ─────────────────────────────────────────────
+
+    "webfetch": "allow",
+
+    // ─────────────────────────────────────────────
     // Every modification requires approval
     // edit covers edit/write/patch
     // ─────────────────────────────────────────────
@@ -46,6 +58,101 @@
 
     "bash": {
       "*": "ask",
+
+      // ─────────────────────────────────────────────
+      // Read-only inspection runs without approval.
+      // Convenience allowlist, not a hard security
+      // boundary: a few of these can still write or
+      // exec (e.g. `find -exec`, `sort -o`).
+      // ─────────────────────────────────────────────
+
+      // listing / metadata
+      "ls *": "allow",
+      "tree *": "allow",
+      "eza *": "allow",
+      "fd *": "allow",
+      "find *": "allow",
+      "file *": "allow",
+      "stat *": "allow",
+      "realpath *": "allow",
+      "readlink *": "allow",
+      "dirname *": "allow",
+      "basename *": "allow",
+
+      // viewing text
+      "cat *": "allow",
+      "bat *": "allow",
+      "batcat *": "allow",
+      "tac *": "allow",
+      "nl *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "less *": "allow",
+      "more *": "allow",
+      "wc *": "allow",
+
+      // searching
+      "grep *": "allow",
+      "rg *": "allow",
+      "ag *": "allow",
+
+      // comparing
+      "diff *": "allow",
+      "cmp *": "allow",
+      "comm *": "allow",
+
+      // data / binary / hashing
+      "jq *": "allow",
+      "xxd *": "allow",
+      "hexdump *": "allow",
+      "od *": "allow",
+      "strings *": "allow",
+      "md5sum *": "allow",
+      "sha1sum *": "allow",
+      "sha256sum *": "allow",
+      "sha512sum *": "allow",
+      "b2sum *": "allow",
+      "cksum *": "allow",
+      "base64 *": "allow",
+      "base32 *": "allow",
+
+      // text transforms
+      "sort *": "allow",
+      "uniq *": "allow",
+      "cut *": "allow",
+      "tr *": "allow",
+      "rev *": "allow",
+      "column *": "allow",
+      "fold *": "allow",
+      "fmt *": "allow",
+      "seq *": "allow",
+      "expr *": "allow",
+
+      // system / environment info
+      "pwd *": "allow",
+      "whoami *": "allow",
+      "id *": "allow",
+      "groups *": "allow",
+      "hostname *": "allow",
+      "uname *": "allow",
+      "uptime *": "allow",
+      "date *": "allow",
+      "cal *": "allow",
+      "printenv *": "allow",
+      "locale *": "allow",
+      "tty *": "allow",
+      "du *": "allow",
+      "df *": "allow",
+      "lsblk *": "allow",
+      "lsof *": "allow",
+      "which *": "allow",
+      "whereis *": "allow",
+      "type *": "allow",
+
+      // misc read-only
+      "echo *": "allow",
+      "printf *": "allow",
+      "test *": "allow",
 
       // Don't allow arbitrary writes through git commands
       "git *": "deny",
