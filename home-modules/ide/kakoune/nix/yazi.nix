@@ -1,0 +1,3 @@
+{
+  apps.yazi.enable = true;
+}

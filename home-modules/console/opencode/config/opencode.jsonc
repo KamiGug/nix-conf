@@ -51,7 +51,25 @@
 
     "skill": "allow",
 
+    // ─────────────────────────────────────────────
+    // In-session bookkeeping and read-only helpers:
+    // no filesystem or state changes.
+    // ─────────────────────────────────────────────
+
     "todowrite": "allow",
+    "question": "allow",
+    "lsp": "allow",
+
+    // ─────────────────────────────────────────────
+    // Subagents: the read-only `explore` agent may be
+    // launched without approval. Everything else asks
+    // (the subagent's own tool calls are still gated).
+    // ─────────────────────────────────────────────
+
+    "task": {
+      "explore": "allow",
+      "*": "ask"
+    },
 
     // ─────────────────────────────────────────────
     // Web access

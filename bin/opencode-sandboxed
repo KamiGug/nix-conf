@@ -1,0 +1,372 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE="opencode-sandboxed:latest"
+SUBCOMMAND="run"
+ID=""
+HAS_ID=0
+REPO=""
+ENGINE_MODE="auto"
+FORCE_BUILD=0
+PASSTHROUGH=()
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+opencode-sandboxed — run the opencode agent inside an isolated container
+
+usage:
+  opencode-sandboxed [run|build|clean] [options] [--] [extra engine flags...]
+
+subcommands:
+  run     (default) launch opencode in the sandboxed container
+  build   build the sandboxed image from the embedded Dockerfile
+  clean   remove cached per-session workspaces (all by default)
+
+options:
+  --id <label>      human label scoping the session and changes/<label>
+                    (default: timestamp)
+  --repo <path>     repo root to mount read-only at /workspace-host
+                    (default: git root of the current directory)
+  --docker          force docker (fails if not installed)
+  --podman          force podman (fails if not installed)
+  --auto            pick podman, then docker (default)
+  --build           (re)build the image before running
+
+everything after -- (or any unrecognised argument) is passed through to
+the container engine's run command, e.g. -v /data:/data:ro --env FOO=bar
+
+examples:
+  opencode-sandboxed
+  opencode-sandboxed run --id dns-fix -v /data:/data:ro
+  opencode-sandboxed build
+  opencode-sandboxed clean
+EOF
+}
+
+sudorun() {
+  if [ -z "${SUDO_AVAILABLE:-}" ]; then
+    command -v sudo >/dev/null 2>&1 && SUDO_AVAILABLE=1 || SUDO_AVAILABLE=0
+  fi
+  [ "$SUDO_AVAILABLE" = 1 ] || die "need write permission on: $(dirname "$1") (no sudo available)"
+  sudo "$@"
+}
+
+detect_engine() {
+  case "$ENGINE_MODE" in
+    docker)
+      command -v docker >/dev/null 2>&1 || die "docker requested but not available"
+      ENGINE=docker
+      ;;
+    podman)
+      command -v podman >/dev/null 2>&1 || die "podman requested but not available"
+      ENGINE=podman
+      ;;
+    auto)
+      if command -v podman >/dev/null 2>&1; then
+        ENGINE=podman
+      elif command -v docker >/dev/null 2>&1; then
+        ENGINE=docker
+      else
+        die "neither docker nor podman is available"
+      fi
+      ;;
+  esac
+  printf 'using engine: %s\n' "$ENGINE"
+}
+
+dockerfile() {
+  cat <<'DF'
+FROM ghcr.io/anomalyco/opencode:latest
+RUN apk add --no-cache git rsync sudo bash
+RUN adduser -D -u 1000 dev \
+ && mkdir -p /home/dev/.config/opencode \
+            /home/dev/.local/share/opencode/storage \
+            /home/dev/.local/share/opencode/log \
+ && chown -R dev:dev /home/dev
+RUN printf 'dev ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/dev \
+ && chmod 440 /etc/sudoers.d/dev
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+USER dev
+WORKDIR /workspace
+ENTRYPOINT ["/entrypoint.sh"]
+DF
+}
+
+build_image() {
+  detect_engine
+  local tmp
+  tmp="$(mktemp -d)"
+  cat > "$tmp/entrypoint.sh" <<'SH'
+#!/bin/sh
+set -eu
+rsync -a --no-owner --no-group --exclude '/changes' /workspace-host/ /workspace/ || true
+git -C /workspace config core.hooksPath /dev/null 2>/dev/null || true
+if [ ! -d /workspace/.git ]; then
+  echo "warning: /workspace is not a usable git repository" >&2
+fi
+git -C /workspace add -A || true
+git -C /workspace -c user.email=opencode-sandboxed@localhost -c user.name=opencode-sandboxed commit -q -m baseline --no-verify || true
+git -C /workspace rev-parse HEAD > /baseline || true
+cd /workspace
+exec opencode "$@"
+SH
+  (
+    cd "$tmp"
+    printf 'building image %s ...\n' "$IMAGE"
+    dockerfile | "$ENGINE" build -f - -t "$IMAGE" .
+  )
+  rm -rf "$tmp"
+}
+
+ensure_writable_dir() {
+  local d="$1"
+  if [ ! -d "$d" ]; then
+    if ! mkdir -p "$d" 2>/dev/null; then
+      sudorun mkdir -p "$d" || die "cannot create directory: $d"
+    fi
+  fi
+  if [ ! -w "$d" ]; then
+    sudorun chown "$(id -u):$(id -g)" "$d" || die "cannot make directory writable: $d"
+  fi
+}
+
+setup_changes_dir() {
+  local base="$REPO/changes"
+  local id_dir="$base/$ID"
+  ensure_writable_dir "$base"
+  if [ ! -f "$base/.gitignore" ]; then
+    printf '*\n' > "$base/.gitignore"
+  fi
+  ensure_writable_dir "$id_dir"
+}
+
+setup_runtime_dirs() {
+  CACHE="$HOME/.cache/opencode-sandboxed/$ID"
+  WS="$CACHE/workspace"
+  BASELINE_FILE="$CACHE/baseline"
+  DATA="$HOME/.local/share/opencode"
+  mkdir -p "$WS" "$HOME/.config/opencode" "$DATA" "$DATA/storage" "$DATA/log"
+  find "$WS" -mindepth 1 -delete 2>/dev/null || true
+  : > "$BASELINE_FILE"
+}
+
+write_file() {
+  local f="$1"
+  shift
+  printf '%s\n' "$@" > "$f"
+}
+
+jsonesc() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+session_uuid() {
+  local hit
+  hit="$(find "$DATA/storage/session" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' 2>/dev/null | sort -n | tail -n1 | cut -d' ' -f2-)"
+  printf '%s' "${hit:-n/a}"
+}
+
+gen_artifacts() {
+  local base=""
+  local uuid
+  local changes="$REPO/changes/$ID"
+  [ -s "$BASELINE_FILE" ] && base="$(cat "$BASELINE_FILE")" || true
+  if [ -n "$base" ] && [ -d "$WS/.git" ]; then
+    (cd "$WS" && git add -N . && git diff --binary "$base") > "$changes/diff.patch" || true
+    if [ -s "$changes/diff.patch" ]; then
+      write_file "$changes/apply.sh" \
+        '#!/usr/bin/env bash' \
+        'set -euo pipefail' \
+        'ROOT="${1:-$(git rev-parse --show-toplevel)}"' \
+        'cd "$ROOT"' \
+        'PATCH="$(cd "$(dirname "$0")" && pwd)/diff.patch"' \
+        'if [ -w . ]; then S=; else S=sudo; fi' \
+        '$S git apply --stat "$PATCH"' \
+        '$S git apply --check "$PATCH"' \
+        '$S git apply --3way "$PATCH"' \
+        'echo "applied: $PATCH"'
+    else
+      rm -f "$changes/diff.patch" "$changes/apply.sh"
+    fi
+  fi
+  uuid="$(session_uuid)"
+  write_file "$changes/manifest.json" \
+    '{' \
+    "  \"id\": \"$(jsonesc "$ID")\"," \
+    "  \"session\": \"$(jsonesc "$uuid")\"," \
+    "  \"repo\": \"$(jsonesc "$REPO")\"," \
+    "  \"baseline\": \"$(jsonesc "$base")\"," \
+    "  \"started\": \"$(jsonesc "$STARTED")\"," \
+    "  \"finished\": \"$(jsonesc "$(date -Iseconds)")\"," \
+    "  \"engine\": \"$(jsonesc "$ENGINE")\"" \
+    '}'
+}
+
+print_summary() {
+  local changes="$REPO/changes/$ID"
+  echo
+  echo "session $ID finished (exit $1)"
+  echo "container oc-$ID removed"
+  if [ -s "$changes/diff.patch" ]; then
+    echo "artifacts: $changes/"
+    echo "  diff:     git diff --stat changes/$ID/diff.patch"
+    echo "  apply:    bash changes/$ID/apply.sh [repo-root]"
+  else
+    echo "no changes to review; session facts: $changes/manifest.json"
+  fi
+  echo "cleanup:    opencode-sandboxed clean --id $ID"
+}
+
+cmd_run() {
+  detect_engine
+  if [ "$FORCE_BUILD" = 1 ]; then
+    build_image
+  elif ! "$ENGINE" image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "image $IMAGE missing; building it first"
+    build_image
+  fi
+
+  if [ -z "$REPO" ]; then
+    REPO="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  fi
+  [ -n "$REPO" ] && [ -d "$REPO" ] || die "cannot determine the repo root (run from the repo or pass --repo)"
+  REPO="$(cd "$REPO" && pwd)"
+
+  setup_changes_dir
+  STARTED="$(date -Iseconds)"
+  setup_runtime_dirs
+
+  local -a mounts
+  mounts=(
+    -v "$REPO:/workspace-host:ro"
+    -v "$WS:/workspace"
+    -v "$BASELINE_FILE:/baseline"
+    -v "$HOME/.config/opencode:/home/dev/.config/opencode:ro"
+    -v "$DATA:/home/dev/.local/share/opencode"
+  )
+  if [ -f "$DATA/auth.json" ]; then
+    mounts+=(-v "$DATA/auth.json:/home/dev/.local/share/opencode/auth.json:ro")
+  fi
+
+  local -a idopt
+  if [ "$ENGINE" = podman ]; then
+    idopt=(--userns=keep-id --group-add keep-groups)
+  else
+    idopt=(--user "$(id -u):$(id -g)")
+    local g
+    for g in $(id -Gn); do
+      idopt+=(--group-add "$g")
+    done
+  fi
+
+  local -a cmd
+  cmd=(
+    "$ENGINE" run --rm -it --pull=never --name "oc-$ID" --cap-drop all \
+      --env "TERM=${TERM:-xterm-256color}" \
+      "${idopt[@]}" \
+      "${mounts[@]}" \
+      "${PASSTHROUGH[@]}" \
+      "$IMAGE"
+  )
+
+  printf '> %s\n' "${cmd[*]}"
+  cleanup() { "$ENGINE" rm -f "oc-$ID" >/dev/null 2>&1 || true; }
+  trap cleanup EXIT
+
+  local rc
+  set +e
+  "${cmd[@]}"
+  rc=$?
+  set -e
+
+  gen_artifacts || true
+  print_summary "$rc"
+  exit "$rc"
+}
+
+cmd_clean() {
+  local cache="$HOME/.cache/opencode-sandboxed"
+  if [ "$HAS_ID" = 1 ]; then
+    rm -rf "$cache/$ID"
+    echo "removed $cache/$ID"
+  else
+    rm -rf "$cache"/*
+    echo "removed all cached workspaces under $cache"
+  fi
+}
+
+sanitize_id() {
+  printf '%s' "$1" | sed 's/[^A-Za-z0-9._-]/_/g'
+}
+
+main() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -h|--help|help)
+        usage
+        exit 0
+        ;;
+      run|build|clean)
+        SUBCOMMAND="$1"
+        shift
+        ;;
+      --id)
+        ID="${2:-}"
+        [ -n "$ID" ] || die "--id requires a value"
+        HAS_ID=1
+        shift 2
+        ;;
+      --repo)
+        REPO="${2:-}"
+        [ -n "$REPO" ] || die "--repo requires a value"
+        shift 2
+        ;;
+      --docker)
+        ENGINE_MODE=docker
+        shift
+        ;;
+      --podman)
+        ENGINE_MODE=podman
+        shift
+        ;;
+      --auto)
+        ENGINE_MODE=auto
+        shift
+        ;;
+      --build)
+        FORCE_BUILD=1
+        shift
+        ;;
+      --)
+        shift
+        PASSTHROUGH+=("$@")
+        break
+        ;;
+      *)
+        PASSTHROUGH+=("$1")
+        shift
+        ;;
+    esac
+  done
+  ID="$(sanitize_id "${ID:-$(date +%Y%m%d-%H%M%S)}")"
+  case "$SUBCOMMAND" in
+    run)
+      cmd_run
+      ;;
+    build)
+      build_image
+      printf 'image built: %s\n' "$IMAGE"
+      ;;
+    clean)
+      cmd_clean
+      ;;
+  esac
+}
+
+main "$@"

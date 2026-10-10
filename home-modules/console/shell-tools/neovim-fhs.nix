@@ -24,7 +24,7 @@
         tree-sitter
         luajit
         lua51Packages.luarocks
-        nodejs_20
+        nodejs_22
         python3
         cargo
         rustc
@@ -34,7 +34,7 @@
         pkg-config
         ghostscript
         tectonic
-        nodePackages.mermaid-cli
+        mermaid-cli
 
         # c++ stdlib headers for clangd
         clang-tools

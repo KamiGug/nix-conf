@@ -1,0 +1,100 @@
+# ─────────────────────────────────────────────
+# Editor
+# ─────────────────────────────────────────────
+
+add-highlighter global/ number-lines -relative
+
+set-option global scrolloff 5,5
+set-option global autocomplete insert|prompt
+set-option global autoinfo command|onkey|normal
+
+# ─────────────────────────────────────────────
+# LSP
+# ─────────────────────────────────────────────
+
+eval %sh{kak-lsp}
+
+{% for l in lsp.languages %}
+hook global BufSetOption filetype=({{ l.pattern }}) %{
+  set-option buffer lsp_servers %{
+{% for s in l.servers %}
+    [{{ s.command }}]
+{% if s.args is defined %}
+    args = {{ s.args | tojson }}
+{% endif %}
+    root_globs = {{ l.roots | tojson }}
+{% endfor %}
+  }
+}
+
+{% endfor %}
+# Automatically enable LSP for configured filetypes.
+hook global WinSetOption filetype=({{ lsp.filetypes }}) %{
+  lsp-enable-window
+}
+
+# Format on save.
+hook global BufWritePre .* %{
+  lsp-formatting-sync
+}
+
+# LSP status.
+set-option global modelinefmt "%opt{lsp_modeline} %opt{modelinefmt}"
+
+# LSP mode.
+map global code l ':enter-user-mode lsp<ret>' \
+  -docstring 'LSP mode'
+
+# Navigation.
+map global goto d '<esc>:lsp-definition<ret>' \
+  -docstring 'LSP definition'
+
+map global goto r '<esc>:lsp-references<ret>' \
+  -docstring 'LSP references'
+
+map global goto y '<esc>:lsp-type-definition<ret>' \
+  -docstring 'LSP type definition'
+
+# ─────────────────────────────────────────────
+# Tools
+# ─────────────────────────────────────────────
+
+define-command lazygit %{
+  execute-keys %{
+    :sh zellij action new-pane --floating -n lazygit -- env KAKOUNE_SESSION="$kak_session" lazygit<ret>
+  }
+}
+
+define-user-mode tools
+map global user c ':enter-user-mode code<ret>' -docstring 'code/tools'
+map global user f ':enter-user-mode files<ret>' -docstring 'files'
+
+define-user-mode code
+map global code g ':lazygit<ret>' -docstring 'lazygit'
+
+define-command yazi %{
+  execute-keys %{
+    :sh zellij action new-pane --direction left -n yazi -- env KAKOUNE_SESSION="$kak_session" yazi<ret>
+  }
+}
+
+define-user-mode files
+map global files y ':yazi<ret>' -docstring 'yazi'
+
+define-command kakoune-split-right %{
+  execute-keys %{
+    :sh zellij action new-pane --direction right -- kak -c "$kak_session"<ret>
+  }
+}
+
+define-command kakoune-split-down %{
+  execute-keys %{
+    :sh zellij action new-pane --direction down -- kak -c "$kak_session"<ret>
+  }
+}
+
+map global normal <a-h> ':kakoune-split-right<ret>' \
+  -docstring 'Open Kakoune split to the right'
+
+map global normal <a-j> ':kakoune-split-down<ret>' \
+  -docstring 'Open Kakoune split down'

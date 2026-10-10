@@ -55,7 +55,7 @@
       while IFS= read -r -d "" file; do
         rel="''${file#${dir}/}"
         mkdir -p "$out/$(dirname "$rel")"
-        jinja2 "$file" ctx.json > "$out/$rel"
+        jinja2 --strict "$file" ctx.json > "$out/$rel"
       done < <(find ${dir} -type f -print0)
     '';
 
@@ -73,9 +73,20 @@
     )
     (collectFiles dir);
 
-  # Files under `nix/` are plain config attrsets merged into the module.
-  nixConfig = dir:
-    lib.mkMerge (map import (lib.attrValues (collectFiles dir)));
+  # Files under `nix/` are config fragments merged into the module.
+  # A file that is a function is called with `args` (useful to pull in
+  # `config`/`lib`/`pkgs`/`myLib`); plain attrsets are merged as-is.
+  nixConfig = dir: args:
+    lib.mkMerge (
+      map (path: let
+        m = import path;
+      in
+        if lib.isFunction m
+        then m args
+        else m) (
+        lib.attrValues (collectFiles dir)
+      )
+    );
 
   # Build the home-manager config for a program directory laid out as:
   #
@@ -90,6 +101,7 @@
     context ? {},
     force ? false,
     name ? target,
+    args ? {},
   }: let
     entries =
       staticFiles {
@@ -108,7 +120,7 @@
           then lib.mapAttrs (_: lib.mkForce) entries
           else entries;
       }
-      (nixConfig (dir + "/nix"))
+      (nixConfig (dir + "/nix") args)
     ];
 in {
   inherit collectFiles staticFiles templateFiles render nixConfig mk;

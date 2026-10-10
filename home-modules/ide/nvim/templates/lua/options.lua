@@ -4,4 +4,4 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
 
--- Language servers come from nix: ${LSP_nil} is replaced by its binary path.
+-- Language server binaries are wired up by nix, see ~/.config/nvim.

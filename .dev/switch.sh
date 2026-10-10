@@ -7,6 +7,30 @@ TARGET_INPUT="${2:-""}"
 HOSTNAME=${HOSTNAME:-$(hostname)}
 USER_NAME=${USER:-$(whoami)}
 TRACE=${TRACE:-"true"}
+ADD_ALL=${ADD_ALL:-"true"}
+
+if [[ -n "${HELP:-}" ]]; then
+  cat <<'EOF'
+Usage: switch.sh [MESSAGE] [TARGET]
+
+Rebuild and switch the current NixOS/Darwin/nix-on-droid/home-manager config.
+
+Arguments:
+  MESSAGE   Commit message (default: "chore: build step")
+  TARGET    One of: nixos | darwin | droid | home
+            (default: auto-detected)
+
+Environment variables:
+  TRACE     Set to "true" to run the dry-run with --show-trace (default: true)
+  ADD_ALL   Set to "false" to skip staging everything (git add . / git add -A)
+  HELP      Set to any non-empty value to print this help and exit
+
+Examples:
+  switch.sh "feat: add thing" nixos
+  ADD_ALL=false switch.sh
+EOF
+  exit 0
+fi
 
 # --- detect target ---
 if [[ -n "$TARGET_INPUT" ]]; then
@@ -80,7 +104,9 @@ case "$TARGET" in
     ;;
 esac
 
-git add .
+if [[ "$ADD_ALL" == 'true' ]]; then
+    git add .
+fi
 if ! "${DRY_RUN_CMD[@]}"; then
     echo  "→ Failed to evaluate the configuration"
     exit 1
@@ -131,7 +157,9 @@ fi
 
 if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
-  git add -A
+  if [[ "$ADD_ALL" == 'true' ]]; then
+    git add -A
+  fi
   git commit --allow-empty -m "${MSG}
   ${HOSTNAME}:${LAST_GENERATION_NUMBER}"
 else

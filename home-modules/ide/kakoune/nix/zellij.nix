@@ -1,0 +1,3 @@
+{
+  apps.zellij.enable = true;
+}

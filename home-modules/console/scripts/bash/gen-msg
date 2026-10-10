@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: aicommit [options]
+Usage: gen-msg [options]
 
 Generate a Conventional Commits message for the staged changes using opencode.
 
@@ -14,7 +14,7 @@ Options:
 
 The message is written to stdout either way, so it can be piped:
 
-  aicommit | git commit -F -
+  gen-msg | git commit -F -
 EOF
 }
 
@@ -48,22 +48,28 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+SHOULD_DIE=false
 for tool in git opencode jq; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     printf '%s: required command not found: %s\n' "$self" "$tool" >&2
-    exit 1
+    SHOULD_DIE=true
   fi
 done
 
 if [[ $copy -eq 1 ]] && ! command -v cpy >/dev/null 2>&1; then
   printf '%s: cpy not found (required for --copy)\n' "$self" >&2
-  exit 1
+  SHOULD_DIE=true
 fi
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   printf '%s: not inside a git repository\n' "$self" >&2
+  SHOULD_DIE=true
+fi
+
+if $SHOULD_DIE; then
   exit 1
 fi
+
 
 patch="$(mktemp)"
 trap 'rm -f "$patch"' EXIT

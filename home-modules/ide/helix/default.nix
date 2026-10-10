@@ -9,30 +9,47 @@
 
   hxrPackage = pkgs.callPackage ../../../pkgs/hxr {};
 
-  moduleArgs = {
-    inherit config lib pkgs myLib;
-    lsp = config.apps.lsp;
-  };
+  selected =
+    if config.apps.lsp != null
+    then config.apps.lsp
+    else myLib.lsp.mkServers {};
 
-  files =
-    lib.filterAttrs
-    (name: type:
-      type
-      == "regular"
-      && lib.hasSuffix ".nix" name
-      && name != "default.nix")
-    (builtins.readDir ./.);
+  inherit (selected) langs globals;
 
-  modules =
-    map
-    (name: (import ./${name}) moduleArgs)
-    (lib.attrNames files);
+  allServers = lib.mergeAttrsList (
+    lib.mapAttrsToList (_: lang: lang.servers) langs ++ [globals]
+  );
 
-  nixConfig =
-    lib.mkMerge (map (module: module.nix) modules);
+  languageServersFor = lang:
+    lib.mapAttrsToList (id: _: id) lang.servers ++ lib.attrNames globals;
 
-  helixConfig =
-    lib.mkMerge (map (module: module.helix) modules);
+  languages = lib.concatLists (
+    lib.mapAttrsToList (
+      _: lang:
+        map
+        (name: {
+          inherit name;
+          inherit (lang) roots;
+          servers = languageServersFor lang;
+        })
+        lang.editors.helix
+    )
+    langs
+  );
+
+  servers =
+    lib.mapAttrsToList (
+      id: server:
+        {
+          inherit id;
+          bin = "${server.package}/bin/${server.command}";
+        }
+        // lib.optionalAttrs (server.args != []) {inherit (server) args;}
+        // lib.optionalAttrs (server ? initializationOptions) {
+          config = server.initializationOptions;
+        }
+    )
+    allServers;
 
   defaultEditors = lib.filter (enabled: enabled) [
     (cfg.enable && cfg.defaultEditor)
@@ -66,11 +83,14 @@ in {
 
     (lib.mkIf cfg.enable (
       lib.mkMerge [
-        nixConfig
+        (myLib.program.mk {
+          dir = ./.;
+          target = "helix";
+          context = {inherit languages servers;};
+          args = {inherit config lib pkgs myLib;};
+        })
 
         {
-          programs.helix.settings = helixConfig;
-
           home.packages = [hxrPackage];
         }
 

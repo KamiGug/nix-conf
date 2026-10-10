@@ -1,0 +1,14 @@
+[editor]
+line-number = "relative"
+cursorline = true
+color-modes = true
+scrolloff = 5
+auto-completion = true
+auto-pairs = true
+
+[editor.indent-guides]
+render = true
+
+[editor.lsp]
+auto-format = true
+display-messages = true

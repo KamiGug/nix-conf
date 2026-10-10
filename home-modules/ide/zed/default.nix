@@ -29,6 +29,35 @@
     )
     {}
     (lib.attrValues langs);
+
+  languages =
+    zedLanguages
+    // lib.optionalAttrs (langs ? nix) {
+      "Nix" =
+        (zedLanguages."Nix" or {})
+        // {
+          formatter.external = {
+            command = lib.getExe pkgs.alejandra;
+            arguments = ["-"];
+          };
+        };
+    };
+
+  lsp =
+    lib.mapAttrs (
+      _: server:
+        {
+          binary =
+            {
+              path = "${server.package}/bin/${server.command}";
+            }
+            // lib.optionalAttrs (server.args != []) {arguments = server.args;};
+        }
+        // lib.optionalAttrs (server ? initializationOptions) {
+          initialization_options = server.initializationOptions;
+        }
+    )
+    allServers;
 in {
   options.apps.zed = {
     enable = lib.mkEnableOption "Zed Editor (LSP + Vim motions + Typos)";
@@ -43,70 +72,26 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    {
-      programs.zed-editor.enable = true;
-      programs.zed-editor.extensions = ["nix" "toml" "kdl" "sops" "vue"];
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      (myLib.program.mk {
+        dir = ./.;
+        target = "zed";
+        context = {inherit lsp languages;};
+        args = {inherit config lib pkgs myLib;};
+      })
 
-      programs.zed-editor.userSettings = {
-        vim_mode = true;
-        ui_font_size = 16;
-        buffer_font_size = 13.5;
-        format_on_save = "off";
-        load_direnv = "shell_hook";
+      (lib.mkIf cfg.defaultEditor {
+        programs.zed-editor.defaultEditor = true;
+        apps.using.editor = "zed";
+      })
 
-        terminal = {
-          shell = "system";
-          working_directory = "current_project_directory";
+      (lib.mkIf (cfg.defaultEditor && pkgs.stdenv.hostPlatform.isLinux) {
+        xdg.mimeApps = {
+          enable = true;
+          defaultApplications."text/plain" = "dev.zed.Zed.desktop";
         };
-
-        lsp =
-          lib.mapAttrs (
-            _: server:
-              {
-                binary =
-                  {
-                    path = "${server.package}/bin/${server.command}";
-                  }
-                  // lib.optionalAttrs (server.args != []) {arguments = server.args;};
-              }
-              // lib.optionalAttrs (server ? initializationOptions) {
-                initialization_options = server.initializationOptions;
-              }
-          )
-          allServers;
-
-        languages =
-          zedLanguages
-          // lib.optionalAttrs (langs ? nix) {
-            "Nix" =
-              (zedLanguages."Nix" or {})
-              // {
-                formatter.external = {
-                  command = lib.getExe pkgs.alejandra;
-                  arguments = ["-"];
-                };
-              };
-          };
-      };
-
-      home.packages =
-        lib.mapAttrsToList (_: server: server.package) allServers
-        ++ [
-          pkgs.alejandra
-        ];
-    }
-
-    (lib.mkIf cfg.defaultEditor {
-      programs.zed-editor.defaultEditor = true;
-      apps.using.editor = "zed";
-    })
-
-    (lib.mkIf (cfg.defaultEditor && pkgs.stdenv.hostPlatform.isLinux) {
-      xdg.mimeApps = {
-        enable = true;
-        defaultApplications."text/plain" = "dev.zed.Zed.desktop";
-      };
-    })
-  ]);
+      })
+    ]
+  );
 }

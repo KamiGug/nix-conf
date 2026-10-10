@@ -60,6 +60,16 @@ in {
                 command = "delta --paging=never";
               }
             ];
+
+          customCommands = lib.optionals config.apps.opencode.enable [
+            {
+              key = "<alt+c>";
+              context = "files";
+              command = "gen-msg -c";
+              description = "Copy AI-generated commit message";
+              output = "popup";
+            }
+          ];
         }
         cfg.extraSettings;
     };

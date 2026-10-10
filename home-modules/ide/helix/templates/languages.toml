@@ -1,0 +1,17 @@
+{% for s in servers %}
+[language-server.{{ s.id }}]
+command = "{{ s.bin }}"
+{% if s.args is defined %}
+args = {{ s.args | tojson }}
+{% endif %}
+{% if s.config is defined %}
+config = {{ s.config | tojson }}
+{% endif %}
+{% endfor %}
+
+{% for l in languages %}
+[[language]]
+name = "{{ l.name }}"
+roots = {{ l.roots | tojson }}
+language-servers = {{ l.servers | tojson }}
+{% endfor %}

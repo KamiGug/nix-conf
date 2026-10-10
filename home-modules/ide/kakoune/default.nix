@@ -7,30 +7,36 @@
 }: let
   cfg = config.apps.kakoune;
 
-  moduleArgs = {
-    inherit config lib pkgs myLib;
-    lsp = config.apps.lsp;
-  };
+  selected =
+    if config.apps.lsp != null
+    then config.apps.lsp
+    else myLib.lsp.mkServers {};
 
-  files =
-    lib.filterAttrs
-    (name: type:
-      type
-      == "regular"
-      && lib.hasSuffix ".nix" name
-      && name != "default.nix")
-    (builtins.readDir ./.);
+  languages =
+    lib.mapAttrsToList (
+      _: lang: {
+        pattern = lib.concatStringsSep "|" lang.filetypes;
+        inherit (lang) roots;
+        servers =
+          lib.mapAttrsToList (
+            _: server:
+              {
+                inherit (server) command;
+              }
+              // lib.optionalAttrs (server.args != []) {inherit (server) args;}
+          )
+          lang.servers;
+      }
+    )
+    selected.langs;
 
-  modules =
-    map
-    (name: (import ./${name}) moduleArgs)
-    (lib.attrNames files);
-
-  nixConfig =
-    lib.mkMerge (map (module: module.nix) modules);
-
-  kakouneConfig =
-    lib.concatStringsSep "\n" (map (module: module.kakoune) modules);
+  filetypes = lib.concatStringsSep "|" (
+    lib.unique (
+      lib.concatLists (
+        lib.mapAttrsToList (_: lang: lang.filetypes) selected.langs
+      )
+    )
+  );
 
   kakouneDesktopFile = ''
     [Desktop Entry]
@@ -62,14 +68,22 @@ in {
 
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
-      nixConfig
-
-      {
-        programs.kakoune.extraConfig = kakouneConfig;
-      }
+      (myLib.program.mk {
+        dir = ./.;
+        target = "kak";
+        context = {
+          lsp = {inherit languages filetypes;};
+        };
+        args = {inherit config lib pkgs myLib;};
+      })
 
       (lib.mkIf cfg.defaultEditor {
         apps.using.editor = "kakoune";
+
+        home.sessionVariables = {
+          EDITOR = "kak";
+          VISUAL = "kak";
+        };
       })
 
       (lib.mkIf (cfg.defaultEditor && pkgs.stdenv.hostPlatform.isLinux) {
