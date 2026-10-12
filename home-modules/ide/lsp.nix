@@ -1,7 +1,4 @@
-{
-  lib,
-  ...
-}: {
+{lib, ...}: {
   options.apps.lsp = lib.mkOption {
     type = lib.types.nullOr lib.types.attrs;
     default = null;

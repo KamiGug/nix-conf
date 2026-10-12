@@ -1,4 +1,4 @@
-{pkgs, ...} @ args: {
+{pkgs, ...}: {
   path,
   parentServiceName ? null,
   owner ? null,

@@ -1,5 +1,5 @@
 debug {
     // Noctalia req
     // Allows notification actions and window activation from Noctalia.
-  honor-xdg-activation-with-invalid-serial
+    honor-xdg-activation-with-invalid-serial
 }

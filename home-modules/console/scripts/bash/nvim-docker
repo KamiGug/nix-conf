@@ -3,9 +3,9 @@ set -euo pipefail
 
 # --- determine git root (fallback to pwd) ---
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
-    WORKDIR="$(git rev-parse --show-toplevel)"
+  WORKDIR="$(git rev-parse --show-toplevel)"
 else
-    WORKDIR="$PWD"
+  WORKDIR="$PWD"
 fi
 
 WORKDIR_NAME="$(basename "$WORKDIR")"

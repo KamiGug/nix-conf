@@ -27,7 +27,12 @@ in {
   security.sudo.extraRules = [
     {
       users = ["peasant"];
-      commands = [{command = "ALL"; options = ["NOPASSWD"];}];
+      commands = [
+        {
+          command = "ALL";
+          options = ["NOPASSWD"];
+        }
+      ];
     }
   ];
 

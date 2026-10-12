@@ -12,22 +12,34 @@ SERVICES_DIR="$RESULT_DIR/services"
 FAIL=0
 WARN=0
 
-fail() { printf '  \033[31mFAIL\033[0m %s\n' "$1"; FAIL=$((FAIL + 1)); }
-warn() { printf '  \033[33mWARN\033[0m %s\n' "$1"; WARN=$((WARN + 1)); }
+fail() {
+  printf '  \033[31mFAIL\033[0m %s\n' "$1"
+  FAIL=$((FAIL + 1))
+}
+warn() {
+  printf '  \033[33mWARN\033[0m %s\n' "$1"
+  WARN=$((WARN + 1))
+}
 ok() { printf '  \033[32mok\033[0m   %s\n' "$1"; }
 head1() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 for BIN in yq jinja2 python3; do
-  command -v "$BIN" > /dev/null 2>&1 || { echo "missing required tool: $BIN" >&2; exit 1; }
+  command -v "$BIN" >/dev/null 2>&1 || {
+    echo "missing required tool: $BIN" >&2
+    exit 1
+  }
 done
 
 CONTAINER_BIN=""
 for BIN in podman docker; do
-  if command -v "$BIN" > /dev/null 2>&1; then CONTAINER_BIN="$BIN"; break; fi
+  if command -v "$BIN" >/dev/null 2>&1; then
+    CONTAINER_BIN="$BIN"
+    break
+  fi
 done
 
 head1 "environment.yml"
-yq -e '.' "$ENV_FILE" > /dev/null || fail "environment.yml is not valid YAML"
+yq -e '.' "$ENV_FILE" >/dev/null || fail "environment.yml is not valid YAML"
 
 # Duplicate keys silently take the last value, so they are always a mistake.
 python3 - "$ENV_FILE" <<'PY'
@@ -55,7 +67,7 @@ for svc in $(yq -r '.services | keys | .[]' "$ENV_FILE" 2>/dev/null || true); do
   TAG_TYPE="$(yq -r ".services.$svc.tag | type" "$ENV_FILE" 2>/dev/null || echo "null")"
   if [ "$TAG_TYPE" = "object" ]; then
     for part in $(yq -r ".services.$svc.tag | keys | .[]" "$ENV_FILE"); do
-      yq -e ".services.$svc.tag.$part | type == \"string\"" "$ENV_FILE" > /dev/null ||
+      yq -e ".services.$svc.tag.$part | type == \"string\"" "$ENV_FILE" >/dev/null ||
         fail "$svc.tag.$part must be a quoted string"
     done
     continue
@@ -89,7 +101,7 @@ ok "tags checked"
 # image:/tag from a previous wiki engine therefore does not render wrong, it
 # renders a Dockerfile that cannot build at all, and only fails once
 # `podman compose up` tries. Catch it here instead.
-if yq -e '.services.wiki.enable == true' "$ENV_FILE" > /dev/null 2>&1; then
+if yq -e '.services.wiki.enable == true' "$ENV_FILE" >/dev/null 2>&1; then
   WIKI_IMAGE="$(yq -r '.services.wiki.image // ""' "$ENV_FILE")"
   WIKI_TAG="$(yq -r '.services.wiki.tag // ""' "$ENV_FILE")"
   case "$WIKI_IMAGE" in
@@ -117,14 +129,14 @@ head1 "environment.sample.yml"
 if [ -f "$SELF_DIR/environment.sample.yml" ]; then
   for template in $(find "$SELF_DIR/templates" -type f -name '*.jinja' | sort); do
     name="$(basename "$template")"
-    if out="$(jinja2 --strict "$template" "$SELF_DIR/environment.sample.yml" 2>&1 > /dev/null)"; then
+    if out="$(jinja2 --strict "$template" "$SELF_DIR/environment.sample.yml" 2>&1 >/dev/null)"; then
       ok "$name renders"
     else
       fail "$name does not render against the sample:"
       printf '%s\n' "$out" | tail -3 | sed 's/^/        /'
     fi
   done
-  if out="$(yq -e '.' "$SELF_DIR/environment.sample.yml" > /dev/null 2>&1)"; then
+  if yq -e '.' "$SELF_DIR/environment.sample.yml" >/dev/null 2>&1; then
     ok "sample is valid YAML"
   else
     fail "sample is not valid YAML"
@@ -138,7 +150,11 @@ if [ -z "$(ls -A "$RESULT_DIR/services" 2>/dev/null)" ]; then
   fail "no generated output in $RESULT_DIR, run 'task generate'"
 else
   for f in "$SERVICES_DIR/compose.yml" "$SERVICES_DIR/.env" "$RESULT_DIR/nginx/nginx.conf" "$RESULT_DIR/sql/postgres.sql"; do
-    [ -s "$f" ] && ok "$(basename "$f") rendered" || fail "missing or empty: $f"
+    if [ -s "$f" ]; then
+      ok "$(basename "$f") rendered"
+    else
+      fail "missing or empty: $f"
+    fi
   done
 
   python3 - "$RESULT_DIR" <<'PY'
@@ -179,7 +195,7 @@ if [ -f "$SERVICES_DIR/compose.yml" ]; then
     # "Executing external compose provider" banner to stderr.
     COMPOSE_ERR="$(mktemp)"
     if COMPOSE_YAML="$($CONTAINER_BIN compose --env-file=.env config 2>"$COMPOSE_ERR" | sed $'s/\x1b\\[[0-9;]*m//g')"; then
-      if printf '%s' "$COMPOSE_YAML" | yq -e '.services' > /dev/null 2>&1; then
+      if printf '%s' "$COMPOSE_YAML" | yq -e '.services' >/dev/null 2>&1; then
         ok "compose config parses"
       else
         fail "compose config is not valid YAML"
@@ -225,8 +241,7 @@ for name, svc in (c.get('services') or {}).items():
     #
     # The variable form (proxy_pass http://$upstream_x, used when dns_resolver
     # is set) has no literal target and is filtered out below.
-    for target in $(grep -oE 'proxy_pass https?://[A-Za-z0-9_.:-]+' "$RESULT_DIR/nginx/nginx.conf" 2>/dev/null |
-      sed -E 's|proxy_pass https?://||' | grep -E '[A-Za-z0-9]' | sort -u); do
+    while IFS= read -r target; do
       host="${target%%:*}"
       port=""
       case "$target" in *:*) port="${target##*:}" ;; esac
@@ -244,7 +259,8 @@ for name, svc in (c.get('services') or {}).items():
       else
         fail "upstream $target: service '$host' serves port(s) [$(printf '%s' "$allowed" | tr '\n' ' ')], nginx uses $port. Fix proxy.port in environment.yml."
       fi
-    done
+    done < <(grep -oE 'proxy_pass https?://[A-Za-z0-9_.:-]+' "$RESULT_DIR/nginx/nginx.conf" 2>/dev/null |
+      sed -E 's|proxy_pass https?://||' | grep -E '[A-Za-z0-9]' | sort -u)
 
     # depends_on targets must exist too.
     for dep in $(printf '%s' "$COMPOSE_YAML" | python3 -c "
@@ -268,12 +284,12 @@ if [ -s "$RESULT_DIR/nginx/nginx.conf" ] && [ -n "$CONTAINER_BIN" ]; then
   # cannot resolve them unless it joins the running network. Stub them instead
   # to keep this check working with the stack down.
   HOST_ARGS=()
-  for host in $(grep -oE 'proxy_pass https?://[A-Za-z0-9_.-]+' "$RESULT_DIR/nginx/nginx.conf" 2>/dev/null |
-    sed -E 's|proxy_pass https?://||' | sort -u); do
+  while IFS= read -r host; do
     HOST_ARGS+=(--add-host "$host:127.0.0.1")
-  done
+  done < <(grep -oE 'proxy_pass https?://[A-Za-z0-9_.-]+' "$RESULT_DIR/nginx/nginx.conf" 2>/dev/null |
+    sed -E 's|proxy_pass https?://||' | sort -u)
   if $CONTAINER_BIN run --rm "${HOST_ARGS[@]}" \
-    -v "$RESULT_DIR/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" "$IMAGE" nginx -t > /tmp/nginx-t.$$ 2>&1; then
+    -v "$RESULT_DIR/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" "$IMAGE" nginx -t >/tmp/nginx-t.$$ 2>&1; then
     ok "nginx -t passes"
   else
     fail "nginx -t failed:"
@@ -285,10 +301,10 @@ else
 fi
 
 head1 "optional hardening not enabled"
-yq -e '.dns_resolver' "$ENV_FILE" > /dev/null 2>&1 ||
+yq -e '.dns_resolver' "$ENV_FILE" >/dev/null 2>&1 ||
   warn "dns_resolver unset: nginx keeps resolving upstreams only at startup (see 'task resolver')"
-if yq -e '.services.nextcloud.enable == true' "$ENV_FILE" > /dev/null 2>&1; then
-  yq -e '.services.nextcloud.proxy.trusted_proxies' "$ENV_FILE" > /dev/null 2>&1 ||
+if yq -e '.services.nextcloud.enable == true' "$ENV_FILE" >/dev/null 2>&1; then
+  yq -e '.services.nextcloud.proxy.trusted_proxies' "$ENV_FILE" >/dev/null 2>&1 ||
     warn "nextcloud.proxy.trusted_proxies unset: client IPs are lost behind the proxy"
 fi
 PROTO="$(yq -r '.protocol' "$ENV_FILE")"

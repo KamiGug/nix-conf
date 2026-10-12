@@ -122,13 +122,15 @@ tasks:
 
         # shellcheck cannot auto-fix, so it runs in both modes. Force the
         # bash dialect for shebang-less scripts (under scripts/bash/) that
-        # shellcheck would otherwise reject with SC2148.
+        # shellcheck would otherwise reject with SC2148. Run each file from
+        # its own directory so `# shellcheck source=` hints (which shellcheck
+        # resolves relative to the CWD) point at sibling files.
         printf '%s\n' "$FILES" | while IFS= read -r f; do
           [ -n "$f" ] || continue
           if head -n1 "$f" | grep -q '^#!'; then
-            shellcheck "$f"
+            (cd "$(dirname "$f")" && shellcheck -x "$(basename "$f")")
           else
-            shellcheck -s bash "$f"
+            (cd "$(dirname "$f")" && shellcheck -s bash -x "$(basename "$f")")
           fi
         done
 

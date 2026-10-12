@@ -17,5 +17,5 @@ spoon.SpoonInstall:andUse("PaperWM", {
     fn = function(spoon_instance)
         -- Wire up your keymaps safely inside the post-load callback
         spoon_instance:bindHotkeys(keymaps.bindings)
-    end
+    end,
 })

@@ -70,7 +70,6 @@ if $SHOULD_DIE; then
   exit 1
 fi
 
-
 patch="$(mktemp)"
 trap 'rm -f "$patch"' EXIT
 
@@ -95,8 +94,8 @@ model_args=()
 [[ -n $model ]] && model_args=(--model "$model")
 
 message="$(
-  opencode run --format json -f "$patch" "${model_args[@]}" "$prompt" \
-    | jq -j 'select(.type == "text") | .part.text'
+  opencode run --format json -f "$patch" "${model_args[@]}" "$prompt" |
+    jq -j 'select(.type == "text") | .part.text'
 )"
 
 if [[ -z ${message//[[:space:]]/} ]]; then

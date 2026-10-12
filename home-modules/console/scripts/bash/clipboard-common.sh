@@ -114,7 +114,10 @@ sys.stdout.buffer.write(d[:-1] if d.endswith(b"\n") else d)'
     # Text-only fallback: command substitution drops the sentinel instead of
     # the trailing newline we actually want to remove.
     local data
-    data="$(cat; printf x)"
+    data="$(
+      cat
+      printf x
+    )"
     data="${data%x}"
     printf '%s' "${data%$'\n'}"
   fi

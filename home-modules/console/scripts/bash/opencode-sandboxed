@@ -112,7 +112,7 @@ build_image() {
   detect_engine
   local tmp
   tmp="$(mktemp -d)"
-  cat > "$tmp/entrypoint.sh" <<'SH'
+  cat >"$tmp/entrypoint.sh" <<'SH'
 #!/bin/sh
 set -eu
 rsync -a --no-owner --no-group --exclude '/changes' /workspace-host/ /workspace/ || true
@@ -159,7 +159,7 @@ setup_changes_dir() {
   local id_dir="$base/$ID"
   ensure_writable_dir "$base"
   if [ ! -f "$base/.gitignore" ]; then
-    printf '*\n' > "$base/.gitignore"
+    printf '*\n' >"$base/.gitignore"
   fi
   ensure_writable_dir "$id_dir"
 }
@@ -171,13 +171,13 @@ setup_runtime_dirs() {
   DATA="$HOME/.local/share/opencode"
   mkdir -p "$WS" "$HOME/.config/opencode"
   find "$WS" -mindepth 1 -delete 2>/dev/null || true
-  : > "$BASELINE_FILE"
+  : >"$BASELINE_FILE"
 }
 
 write_file() {
   local f="$1"
   shift
-  printf '%s\n' "$@" > "$f"
+  printf '%s\n' "$@" >"$f"
 }
 
 jsonesc() {
@@ -195,8 +195,11 @@ gen_artifacts() {
   local changes="$REPO/changes/$ID"
   [ -s "$BASELINE_FILE" ] && base="$(cat "$BASELINE_FILE")" || true
   if [ -n "$base" ] && [ -d "$WS/.git" ]; then
-    (cd "$WS" && git add -N . && git diff --no-ext-diff --binary "$base") > "$changes/diff.patch" || true
+    (cd "$WS" && git add -N . && git diff --no-ext-diff --binary "$base") >"$changes/diff.patch" || true
     if [ -s "$changes/diff.patch" ]; then
+      # The single-quoted strings below are written verbatim to
+      # apply.sh, where $ROOT/$PATCH/$S expand at apply time.
+      # shellcheck disable=SC2016
       write_file "$changes/apply.sh" \
         '#!/usr/bin/env bash' \
         'set -euo pipefail' \
@@ -292,14 +295,14 @@ cmd_run() {
 
   local -a cmd
   cmd=(
-    "$ENGINE" run --pull=never --name "oc-$ID" --cap-drop all \
-      "${tty[@]}" \
-      --env "TERM=${TERM:-xterm-256color}" \
-      "${idopt[@]}" \
-      "${mounts[@]}" \
-      "${PASSTHROUGH[@]}" \
-      "$IMAGE" \
-      "${CONTAINER_ARGS[@]}"
+    "$ENGINE" run --pull=never --name "oc-$ID" --cap-drop all
+    "${tty[@]}"
+    --env "TERM=${TERM:-xterm-256color}"
+    "${idopt[@]}"
+    "${mounts[@]}"
+    "${PASSTHROUGH[@]}"
+    "$IMAGE"
+    "${CONTAINER_ARGS[@]}"
   )
 
   printf '> %s\n' "${cmd[*]}"
@@ -325,12 +328,12 @@ cmd_clean() {
   local cache="$HOME/.cache/opencode-sandboxed"
   if [ "$HAS_ID" = 1 ]; then
     "$ENGINE" rm -f "oc-$ID" >/dev/null 2>&1 || true
-    rm -rf "$cache/$ID"
+    rm -rf "${cache:?}/${ID:?}"
     echo "removed container oc-$ID and $cache/$ID"
   else
     "$ENGINE" ps -aq --filter 'name=^oc-' 2>/dev/null | xargs -r "$ENGINE" rm -f >/dev/null 2>&1 || true
     "$ENGINE" rmi -f "$IMAGE" >/dev/null 2>&1 || true
-    rm -rf "$cache"/*
+    rm -rf "${cache:?}"/*
     echo "removed all oc-* containers, image $IMAGE and cache under $cache"
   fi
 }
@@ -342,11 +345,11 @@ sanitize_id() {
 main() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -h|--help|help)
+      -h | --help | help)
         usage
         exit 0
         ;;
-      run|build|clean)
+      run | build | clean)
         SUBCOMMAND="$1"
         shift
         ;;
@@ -381,7 +384,7 @@ main() {
         CLEAN=1
         shift
         ;;
-      -c|--command)
+      -c | --command)
         shift
         while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
           CONTAINER_ARGS+=("$1")

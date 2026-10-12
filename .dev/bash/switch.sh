@@ -60,9 +60,9 @@ case "$TARGET" in
     SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(nixos-rebuild list-generations | head -n2 | tail -n1 | cut -d ' ' -f1)
     if [[ "$TRACE" == 'true' ]]; then
-        DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
     else
-        DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
     fi
     ;;
   darwin)
@@ -70,9 +70,9 @@ case "$TARGET" in
     SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
     LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
     if [[ "$TRACE" == 'true' ]]; then
-        DRY_RUN_CMD=(darwin-rebuild check --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(darwin-rebuild check --show-trace --flake ".#${HOSTNAME}")
     else
-        DRY_RUN_CMD=(darwin-rebuild check --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(darwin-rebuild check --flake ".#${HOSTNAME}")
     fi
     ;;
   droid)
@@ -81,9 +81,9 @@ case "$TARGET" in
     # NOTE: NOT CHECKED
     LAST_GENERATION_NUMBER=$(nix-on-droid generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f1)
     if [[ "$TRACE" == 'true' ]]; then
-        DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
     else
-        DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
     fi
     ;;
   home)
@@ -93,9 +93,9 @@ case "$TARGET" in
     # NOTE: NOT CHECKED!
     LAST_GENERATION_NUMBER=$(home-manager generations | head -n1 | sed -E 's/.*id ([0-9]+).*/\1/')
     if [[ "$TRACE" == 'true' ]]; then
-        DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
+      DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
     else
-        DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
+      DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
     fi
     ;;
   *)
@@ -105,11 +105,11 @@ case "$TARGET" in
 esac
 
 if [[ "$ADD_ALL" == 'true' ]]; then
-    git add .
+  git add .
 fi
 if ! "${DRY_RUN_CMD[@]}"; then
-    echo  "→ Failed to evaluate the configuration"
-    exit 1
+  echo "→ Failed to evaluate the configuration"
+  exit 1
 fi
 
 echo "→ Checking flake attr: $ATTR_PATH"
@@ -119,7 +119,7 @@ if ! nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
   echo "   .#${ATTR_PATH}"
   echo ""
   echo "→ Try:"
-   echo "   task build:switch TARGET=<nixos|darwin|droid|home>"
+  echo "   task build:switch TARGET=<nixos|darwin|droid|home>"
   exit 1
 fi
 
@@ -149,11 +149,9 @@ if [[ "$HAS_CHANGES" == true ]]; then
 
 else
   if git log --oneline --all --grep="${HOSTNAME}:${LAST_GENERATION_NUMBER}" --fixed-strings | grep -q .; then
-      HAS_COMMIT=true
+    HAS_COMMIT=true
   fi
 fi
-
-
 
 if [[ "$HAS_CHANGES" == true || "$HAS_COMMIT" == false ]]; then
   echo "→ Committing changes"
@@ -169,7 +167,7 @@ fi
 echo "Starting one off services"
 
 if [[ "$TARGET" == "nixos" ]]; then
-    for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret' | cut -d ' ' -f1); do
-        systemctl restart ${SERVICE}
-    done
+  for SERVICE in $(systemctl list-unit-files | grep -E 'EnsureDir|GenerateRandomSecret' | cut -d ' ' -f1); do
+    systemctl restart "${SERVICE}"
+  done
 fi
