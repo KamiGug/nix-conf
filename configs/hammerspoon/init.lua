@@ -1,1 +1,2 @@
-require("paper-wm.config")
+require("config")
+require("paper-wm")

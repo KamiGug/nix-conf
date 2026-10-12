@@ -1,0 +1,75 @@
+root = true
+
+# ────────────────────────────────────────────────────────────────
+# Defaults. Per-format sections below mirror the formatters wired
+# into `task lint` (see .dev/taskfiles/taskfile.lint.yml).
+# ────────────────────────────────────────────────────────────────
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Nix — `task lint:nix` (alejandra)
+[*.nix]
+indent_style = space
+indent_size = 2
+
+# Lua — `task lint:lua` (stylua, see stylua.toml)
+[*.lua]
+indent_style = space
+indent_size = 4
+
+# KDL — `task lint:kdl` (kdlfmt, see kdlfmt.kdl)
+[*.kdl]
+indent_style = space
+indent_size = 4
+
+# Shell — `task lint:sh` (shfmt + shellcheck). Covers *.sh, the
+# extensionless scripts under scripts/bash/, and direnv's .envrc.
+[*.sh]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+
+[**/scripts/bash/*]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+
+[.envrc]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+
+# YAML — `task lint:yml` (yamlfmt, see .yamlfmt)
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+
+# JSON — `task lint:json` (jsonfmt)
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 2
+
+# TOML — no formatter yet, keep the repo-wide 2-space convention.
+[*.toml]
+indent_style = space
+indent_size = 2
+
+# CSS (waybar) — no formatter yet.
+[*.css]
+indent_style = space
+indent_size = 2
+
+# Markdown — trailing whitespace is meaningful (line breaks).
+[*.md]
+trim_trailing_whitespace = false
+
+# Jinja templates are generated sources: `task lint` skips anything
+# under templates/ or using the `${...}` placeholder syntax.
+[*.jinja]
+indent_style = space
+indent_size = 2

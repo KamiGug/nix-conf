@@ -8,6 +8,9 @@
     "shell": "system",
     "working_directory": "current_project_directory"
   },
+  "project_panel": {
+    "dock": "left"
+  },
   "auto_install_extensions": {
     "nix": true,
     "toml": true,

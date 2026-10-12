@@ -26,7 +26,7 @@ keybinds clear-defaults=true {
         bind "right" { MoveFocus "right"; }
         bind ";" { FocusLastPane; }
         bind "c" { SwitchToMode "renamepane"; PaneNameInput 0; }
-        bind "d" { NewPane "down"; }
+        bind "d" { NewPane "down"; SwitchToMode "normal"; }
         bind "e" { TogglePaneEmbedOrFloating; }
         bind "f" { ToggleFocusFullscreen; }
         bind "Shift f" { ToggleFocusNoUiFullscreen; }
@@ -35,10 +35,10 @@ keybinds clear-defaults=true {
         bind "j" { MoveFocus "down"; }
         bind "k" { MoveFocus "up"; }
         bind "l" { MoveFocus "right"; }
-        bind "n" { NewPane; }
+        bind "n" { NewPane; SwitchToMode "normal"; }
         bind "p" { SwitchToMode "normal"; }
-        bind "r" { NewPane "right"; }
-        bind "s" { NewPane "stacked"; }
+        bind "r" { NewPane "right"; SwitchToMode "normal"; }
+        bind "s" { NewPane "stacked"; SwitchToMode "normal"; }
         bind "w" { ToggleFloatingPanes; }
         bind "x" { CloseFocus; }
         bind "z" { TogglePaneFrames; }

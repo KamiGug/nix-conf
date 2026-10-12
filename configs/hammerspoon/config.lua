@@ -1,2 +1,2 @@
-PREFIX = { ${prefixMods} }
+PREFIX = "${prefixMods}"
 TERMINAL = "${terminal}"

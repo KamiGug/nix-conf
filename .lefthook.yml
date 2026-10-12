@@ -10,8 +10,8 @@ pre-commit:
 pre-push:
   parallel: false
   commands:
-    check:
-      run: task check -- --all
+    lint:
+      run: task lint
 
 commit-msg:
   commands:

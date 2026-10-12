@@ -75,6 +75,12 @@
             alejandra
             statix
             deadnix
+            shellcheck
+            shfmt
+            stylua
+            kdlfmt
+            yamlfmt
+            jsonfmt
             lefthook
             go-task
             commitlint-rs
@@ -125,5 +131,11 @@
             )
         )
         darwinHosts;
+
+      isoConfigurations.installer = flakeLib.mkIsoHost {
+        inherit inputs;
+        name = "installer";
+        users = ["peasant"];
+      };
     };
 }

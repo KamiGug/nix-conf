@@ -1,0 +1,88 @@
+version: "3"
+
+# Miscellaneous helper tasks. Included from the root taskfile with
+# `flatten: true`, so these are plain top-level tasks (e.g. `task todos`).
+
+vars:
+  DEFAULT_MSG: "chore: build step"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  perm-fix:
+    desc: Fix repo permissions (tracked files only)
+    cmds:
+      - |
+        set -euo pipefail
+
+        GROUP="config-editor"
+
+        getent group "$GROUP" >/dev/null || { echo "Missing group"; exit 1; }
+
+        echo "→ Fixing dirs"
+        find . -path ./.git -prune -o -type d -exec chgrp "$GROUP" {} + -exec chmod 770 {} +
+
+        echo "→ Fixing files"
+        git ls-files | while read -r f; do
+          if [ -L "$f" ] || [ ! -f "$f" ]; then
+            continue
+          fi
+
+          chgrp "$GROUP" "$f"
+          if [ -x "$f" ]; then
+            chmod ug=rwx,o= "$f"
+          else
+            chmod ug=rw,o= "$f"
+          fi
+        done
+
+        echo "→ Done"
+
+  ai:
+    desc: run opencode
+    cmds:
+      - opencode
+
+  todos:
+    desc: Generate TODO list grouped by file
+    cmds:
+      - |
+        tmpfile=$(mktemp)
+
+        # Choose search tool
+        if command -v rg >/dev/null 2>&1; then
+          SEARCH_CMD='rg --line-number --no-heading -e "\b(TODO|FIXME|FIX)\b"'
+        else
+          SEARCH_CMD='grep -nE "\b(TODO|FIXME|FIX)\b"'
+        fi
+
+        git ls-files | \
+        grep -vE '^([tT]askfile.yml|todos.txt)$' | \
+        while read -r file; do
+          eval $SEARCH_CMD "$file" 2>/dev/null | \
+          sed "s|^|$file:|"
+        done > "$tmpfile"
+
+        # Sort + group by file
+        sort "$tmpfile" | \
+        awk -F: '
+          {
+            file=$1
+            line=$2
+            text=$0
+
+            if (file != current_file) {
+              if (NR > 1) print ""
+              print file
+              current_file = file
+            }
+
+            sub(/^[^:]+:/, "", text)
+            print "  " text
+          }
+        ' > todos.txt
+
+        rm "$tmpfile"

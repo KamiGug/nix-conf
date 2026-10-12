@@ -374,6 +374,98 @@
     },
 
     // ─────────────────────────────────────────────
+    // auto: like yolo, but never prompts. Secret reads
+    // are denied outright (never); everything else —
+    // including access outside the repo — is allowed.
+    // ─────────────────────────────────────────────
+
+    "auto": {
+      "description": "No prompts: everything allowed, secret reads denied, out-of-repo access allowed.",
+      "mode": "primary",
+      "permission": {
+        // Override the global `*: ask`; nothing prompts.
+        "*": "allow",
+
+        "edit": "allow",
+
+        // Secrets can never be read through the read tool.
+        "read": {
+          "*": "allow",
+
+          "*.env": "deny",
+          "*.env.*": "deny",
+          "*.env.example": "allow",
+          "*.envrc": "deny",
+          "*.envrc.*": "deny",
+
+          "*.pem": "deny",
+          "*.key": "deny",
+          "*.p12": "deny",
+          "*.pfx": "deny",
+          "*.kdbx": "deny",
+
+          "*id_rsa*": "deny",
+          "*id_ed25519*": "deny",
+          "*id_ecdsa*": "deny",
+          "*id_dsa*": "deny",
+          "*.netrc": "deny",
+          "*.pgpass": "deny",
+          "*.npmrc": "deny",
+          "*.pypirc": "deny",
+
+          "*secrets*": "deny",
+          "*sops*": "deny"
+        },
+
+        // ...or through the shell.
+        "bash": {
+          "*": "allow",
+
+          "*.env": "deny",
+          "*.env.*": "deny",
+          "*.env.example": "allow",
+          "*.envrc*": "deny",
+          "*.pem*": "deny",
+          "*.key*": "deny",
+          "*.p12*": "deny",
+          "*.pfx*": "deny",
+          "*.kdbx*": "deny",
+          "*id_rsa*": "deny",
+          "*id_ed25519*": "deny",
+          "*id_ecdsa*": "deny",
+          "*id_dsa*": "deny",
+          "*.netrc*": "deny",
+          "*.pgpass*": "deny",
+          "*.npmrc*": "deny",
+          "*.pypirc*": "deny",
+          "*secrets*": "deny",
+          "*sops*": "deny"
+        },
+
+        // Leave the repo freely.
+        "external_directory": "allow"
+      }
+    },
+
+    // ─────────────────────────────────────────────
+    // full-yolo: like auto, but secrets are fair game.
+    // Nothing prompts and nothing is denied.
+    // ─────────────────────────────────────────────
+
+    "full-yolo": {
+      "description": "Total full-send: everything allowed including secrets, no prompts, no denials.",
+      "mode": "primary",
+      "permission": {
+        "*": "allow",
+
+        "edit": "allow",
+        "read": "allow",
+        "bash": "allow",
+        "external_directory": "allow"
+      }
+    },
+
+    // ─────────────────────────────────────────────
     // build: edits allowed, read-only commands allowed,
     // everything else asks. Secrets denied, repo-only.
     // ─────────────────────────────────────────────

@@ -1,4 +1,5 @@
 keys/
 /result
+result-vm-*
 *.qcow*
 .direnv

@@ -119,7 +119,7 @@ if ! nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
   echo "   .#${ATTR_PATH}"
   echo ""
   echo "→ Try:"
-  echo "   task switch TARGET=<nixos|darwin|droid|home>"
+   echo "   task build:switch TARGET=<nixos|darwin|droid|home>"
   exit 1
 fi
 

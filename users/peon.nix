@@ -78,6 +78,10 @@
         };
       };
     };
+    apps.terminal.kitty = {
+      enable = true;
+      default = true;
+    };
     apps.terminal.wezterm.enable = true;
 
     apps.ssh = {

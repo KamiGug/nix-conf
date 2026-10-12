@@ -1,0 +1,221 @@
+version: "3"
+
+# Code checks and formatting. Included from the root taskfile as `lint`,
+# so every task below is reachable as `lint:*`.
+#
+#   task lint        # check everything (default, read-only)
+#   task lint:fix    # auto-fix everything possible
+#   task lint:nix    # only Nix
+#   task lint:sh     # only shell
+#   task lint:lua    # only Lua
+#   task lint:kdl    # only KDL
+#   task lint:yml    # only YAML
+#   task lint:json   # only JSON
+#
+# Passing ALL=true widens every task from staged files to every tracked file.
+#
+# Generated sources are always skipped: Jinja templates (anything under a
+# templates/ dir), any file using the `${...}` placeholder syntax, and
+# sops-encrypted YAML.
+
+vars:
+  ALL: '{{.ALL | default "false"}}'
+  FIX: '{{.FIX | default "false"}}'
+
+tasks:
+  # Shared helper: list the files to operate on. Staged files by default,
+  # all tracked files when none are staged (or when ALL=true).
+  _staged_files:
+    silent: true
+    cmds:
+      - |
+        if [ "{{.ALL}}" = "true" ]; then
+          git ls-files
+        else
+          FILES=$(git diff --name-only --cached)
+          if [ -z "$FILES" ]; then
+            git ls-files
+          else
+            echo "$FILES"
+          fi
+        fi
+
+  default:
+    desc: Check formatting and lint (read-only)
+    deps:
+      - task: nix
+        vars: {FIX: "false"}
+      - task: sh
+        vars: {FIX: "false"}
+      - task: lua
+        vars: {FIX: "false"}
+      - task: kdl
+        vars: {FIX: "false"}
+      - task: yml
+        vars: {FIX: "false"}
+      - task: json
+        vars: {FIX: "false"}
+
+  fix:
+    desc: Auto-fix formatting and lint issues
+    deps:
+      - task: nix
+        vars: {FIX: "true"}
+      - task: sh
+        vars: {FIX: "true"}
+      - task: lua
+        vars: {FIX: "true"}
+      - task: kdl
+        vars: {FIX: "true"}
+      - task: yml
+        vars: {FIX: "true"}
+      - task: json
+        vars: {FIX: "true"}
+
+  nix:
+    desc: "Nix: alejandra + deadnix + statix"
+    cmds:
+      - |
+        set -euo pipefail
+
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep '\.nix$' || true)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r alejandra
+          printf '%s\n' "$FILES" | xargs -r deadnix --edit
+          printf '%s\n' "$FILES" | xargs -r -n1 statix fix --
+        else
+          printf '%s\n' "$FILES" | xargs -r alejandra --check
+          printf '%s\n' "$FILES" | xargs -r deadnix --fail
+          printf '%s\n' "$FILES" | xargs -r -n1 statix check --
+        fi
+
+  sh:
+    desc: "Shell: shfmt + shellcheck"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Shell scripts are .sh files, anything under a scripts/bash/ dir,
+        # or any other file carrying a shell shebang.
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | while IFS= read -r f; do
+          [ -f "$f" ] || continue
+          case "$f" in
+            *.sh) printf '%s\n' "$f" ;;
+            *)
+              if head -n1 "$f" 2>/dev/null | grep -qE '^#!.*\b(bash|sh|dash|ksh|zsh)\b'; then
+                printf '%s\n' "$f"
+              elif printf '%s\n' "$f" | grep -qE '(^|/)scripts/bash/'; then
+                printf '%s\n' "$f"
+              fi
+              ;;
+          esac
+        done)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r shfmt -w
+        else
+          printf '%s\n' "$FILES" | xargs -r shfmt -d
+        fi
+
+        # shellcheck cannot auto-fix, so it runs in both modes. Force the
+        # bash dialect for shebang-less scripts (under scripts/bash/) that
+        # shellcheck would otherwise reject with SC2148.
+        printf '%s\n' "$FILES" | while IFS= read -r f; do
+          [ -n "$f" ] || continue
+          if head -n1 "$f" | grep -q '^#!'; then
+            shellcheck "$f"
+          else
+            shellcheck -s bash "$f"
+          fi
+        done
+
+  lua:
+    desc: "Lua: stylua"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Skip generated sources: templates/ dirs and any file using the
+        # `${...}` placeholder syntax (invalid Lua before rendering).
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep -E '\.lua$' | grep -vE '(^|/)templates/' | while IFS= read -r f; do
+          if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
+            printf '%s\n' "$f"
+          fi
+        done || true)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r stylua
+        else
+          printf '%s\n' "$FILES" | xargs -r stylua --check
+        fi
+
+  kdl:
+    desc: "KDL: kdlfmt"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Skip generated sources: templates/ dirs and any file using the
+        # `${...}` placeholder syntax.
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep -E '\.kdl$' | grep -vE '(^|/)templates/' | while IFS= read -r f; do
+          if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
+            printf '%s\n' "$f"
+          fi
+        done || true)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r kdlfmt format
+        else
+          printf '%s\n' "$FILES" | xargs -r kdlfmt check
+        fi
+
+  yml:
+    desc: "YAML: yamlfmt"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Skip generated sources: templates/ dirs, sops-encrypted files, and
+        # any file using the `${...}` placeholder syntax.
+        FILES=$(task lint:_staged_files ALL={{.ALL}} \
+          | grep -E '\.ya?ml$' \
+          | grep -vE '(^|/)templates/' \
+          | grep -vE '(^|/)secrets/|^secrets\.ya?ml$' \
+          | while IFS= read -r f; do
+              if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
+                printf '%s\n' "$f"
+              fi
+            done || true)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r yamlfmt
+        else
+          printf '%s\n' "$FILES" | xargs -r yamlfmt -lint
+        fi
+
+  json:
+    desc: "JSON: jsonfmt"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # Skip generated sources: templates/ dirs and any file using the
+        # `${...}` placeholder syntax.
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep -E '\.json$' | grep -vE '(^|/)templates/' | while IFS= read -r f; do
+          if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
+            printf '%s\n' "$f"
+          fi
+        done || true)
+        [ -n "$FILES" ] || exit 0
+
+        if [ "{{.FIX}}" = "true" ]; then
+          printf '%s\n' "$FILES" | xargs -r jsonfmt -w
+        else
+          printf '%s\n' "$FILES" | xargs -r jsonfmt
+        fi

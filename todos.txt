@@ -1,6 +1,32 @@
-.dev/switch.sh
+.dev/bash/switch.sh
   129:# TODO: move commiting here
   131:# TODO: use to get generation number -
+
+.dev/taskfiles/taskfile.lint.yml
+  117:        if [ "{{.FIX}}" = "true" ]; then
+  150:        if [ "{{.FIX}}" = "true" ]; then
+  171:        if [ "{{.FIX}}" = "true" ]; then
+  196:        if [ "{{.FIX}}" = "true" ]; then
+  217:        if [ "{{.FIX}}" = "true" ]; then
+  23:  FIX: '{{.FIX | default "false"}}'
+  47:        vars: {FIX: "false"}
+  49:        vars: {FIX: "false"}
+  51:        vars: {FIX: "false"}
+  53:        vars: {FIX: "false"}
+  55:        vars: {FIX: "false"}
+  57:        vars: {FIX: "false"}
+  63:        vars: {FIX: "true"}
+  65:        vars: {FIX: "true"}
+  67:        vars: {FIX: "true"}
+  69:        vars: {FIX: "true"}
+  71:        vars: {FIX: "true"}
+  73:        vars: {FIX: "true"}
+  84:        if [ "{{.FIX}}" = "true" ]; then
+
+.dev/taskfiles/taskfile.utils.yml
+  50:    desc: Generate TODO list grouped by file
+  57:          SEARCH_CMD='rg --line-number --no-heading -e "\b(TODO|FIXME|FIX)\b"'
+  59:          SEARCH_CMD='grep -nE "\b(TODO|FIXME|FIX)\b"'
 
 flake.nix
   65:    # TODO: split shells to seperate file

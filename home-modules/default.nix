@@ -1,6 +1,5 @@
 {
   common = [
-
     ./console/scripts
     ./console/shell/fish
     ./console/shell/elvish
@@ -20,6 +19,7 @@
     ./creative/blender.nix
     ./kando.nix
     ./ide/lsp.nix
+    ./ide/default-editor.nix
     ./ide/kakoune
     ./ide/helix
     ./ide/nvim

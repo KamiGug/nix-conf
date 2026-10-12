@@ -9,6 +9,9 @@ REPO=""
 ENGINE_MODE="auto"
 FORCE_BUILD=0
 PASSTHROUGH=()
+CONTAINER_MODE=0
+CONTAINER_ARGS=()
+CLEAN=0
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -20,18 +23,23 @@ usage() {
 opencode-sandboxed — run the opencode agent inside an isolated container
 
 usage:
-  opencode-sandboxed [run|build|clean] [options] [--] [extra engine flags...]
+  opencode-sandboxed [run|build|clean] [options] [--command CMD [args...]] [-- engine flags...]
 
 subcommands:
   run     (default) launch opencode in the sandboxed container
   build   build the sandboxed image from the embedded Dockerfile
-  clean   remove cached per-session workspaces (all by default)
+  clean   remove cached workspaces, sandbox containers and the image
 
 options:
   --id <label>      human label scoping the session and changes/<label>
                     (default: timestamp)
   --repo <path>     repo root to mount read-only at /workspace-host
                     (default: git root of the current directory)
+  --command <cmd...>
+                    run this opencode command non-interactively (the terminal
+                    is not attached) instead of launching the TUI; must be the
+                    last option, everything after it is passed to opencode
+  --clean           after the session, remove the container and the image
   --docker          force docker (fails if not installed)
   --podman          force podman (fails if not installed)
   --auto            pick podman, then docker (default)
@@ -39,10 +47,12 @@ options:
 
 everything after -- (or any unrecognised argument) is passed through to
 the container engine's run command, e.g. -v /data:/data:ro --env FOO=bar
+the container is not removed automatically; pass --clean to remove it
 
 examples:
   opencode-sandboxed
   opencode-sandboxed run --id dns-fix -v /data:/data:ro
+  opencode-sandboxed --clean --command run "explain the flake"
   opencode-sandboxed build
   opencode-sandboxed clean
 EOF
@@ -82,7 +92,7 @@ detect_engine() {
 dockerfile() {
   cat <<'DF'
 FROM ghcr.io/anomalyco/opencode:latest
-RUN apk add --no-cache git rsync sudo bash
+RUN apk add --no-cache git rsync sudo bash ripgrep fd jq
 RUN adduser -D -u 1000 dev \
  && mkdir -p /home/dev/.config/opencode \
             /home/dev/.local/share/opencode/storage \
@@ -113,14 +123,22 @@ fi
 git -C /workspace add -A || true
 git -C /workspace -c user.email=opencode-sandboxed@localhost -c user.name=opencode-sandboxed commit -q -m baseline --no-verify || true
 git -C /workspace rev-parse HEAD > /baseline || true
+d=/home/dev/.local/share/opencode
+mkdir -p "$d"
+for f in /host-data/auth.json /host-data/*.db /host-data/*.db-wal /host-data/*.db-shm; do
+  [ -e "$f" ] && cp -a "$f" "$d"/ 2>/dev/null || true
+done
 cd /workspace
 exec opencode "$@"
 SH
-  (
+  if ! (
     cd "$tmp"
     printf 'building image %s ...\n' "$IMAGE"
     dockerfile | "$ENGINE" build -f - -t "$IMAGE" .
-  )
+  ); then
+    rm -rf "$tmp"
+    die "image build failed"
+  fi
   rm -rf "$tmp"
 }
 
@@ -151,7 +169,7 @@ setup_runtime_dirs() {
   WS="$CACHE/workspace"
   BASELINE_FILE="$CACHE/baseline"
   DATA="$HOME/.local/share/opencode"
-  mkdir -p "$WS" "$HOME/.config/opencode" "$DATA" "$DATA/storage" "$DATA/log"
+  mkdir -p "$WS" "$HOME/.config/opencode"
   find "$WS" -mindepth 1 -delete 2>/dev/null || true
   : > "$BASELINE_FILE"
 }
@@ -163,22 +181,21 @@ write_file() {
 }
 
 jsonesc() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
-}
-
-session_uuid() {
-  local hit
-  hit="$(find "$DATA/storage/session" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' 2>/dev/null | sort -n | tail -n1 | cut -d' ' -f2-)"
-  printf '%s' "${hit:-n/a}"
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
 }
 
 gen_artifacts() {
   local base=""
-  local uuid
   local changes="$REPO/changes/$ID"
   [ -s "$BASELINE_FILE" ] && base="$(cat "$BASELINE_FILE")" || true
   if [ -n "$base" ] && [ -d "$WS/.git" ]; then
-    (cd "$WS" && git add -N . && git diff --binary "$base") > "$changes/diff.patch" || true
+    (cd "$WS" && git add -N . && git diff --no-ext-diff --binary "$base") > "$changes/diff.patch" || true
     if [ -s "$changes/diff.patch" ]; then
       write_file "$changes/apply.sh" \
         '#!/usr/bin/env bash' \
@@ -194,12 +211,12 @@ gen_artifacts() {
     else
       rm -f "$changes/diff.patch" "$changes/apply.sh"
     fi
+  elif [ -d "$WS/.git" ]; then
+    printf 'warning: no baseline recorded; diff not generated\n' >&2
   fi
-  uuid="$(session_uuid)"
   write_file "$changes/manifest.json" \
     '{' \
     "  \"id\": \"$(jsonesc "$ID")\"," \
-    "  \"session\": \"$(jsonesc "$uuid")\"," \
     "  \"repo\": \"$(jsonesc "$REPO")\"," \
     "  \"baseline\": \"$(jsonesc "$base")\"," \
     "  \"started\": \"$(jsonesc "$STARTED")\"," \
@@ -212,7 +229,7 @@ print_summary() {
   local changes="$REPO/changes/$ID"
   echo
   echo "session $ID finished (exit $1)"
-  echo "container oc-$ID removed"
+  echo "container:  $ENGINE rm -f oc-$ID   (or pass --clean)"
   if [ -s "$changes/diff.patch" ]; then
     echo "artifacts: $changes/"
     echo "  diff:     git diff --stat changes/$ID/diff.patch"
@@ -248,10 +265,11 @@ cmd_run() {
     -v "$WS:/workspace"
     -v "$BASELINE_FILE:/baseline"
     -v "$HOME/.config/opencode:/home/dev/.config/opencode:ro"
-    -v "$DATA:/home/dev/.local/share/opencode"
+    -v "$DATA:/host-data:ro"
   )
-  if [ -f "$DATA/auth.json" ]; then
-    mounts+=(-v "$DATA/auth.json:/home/dev/.local/share/opencode/auth.json:ro")
+  local cfg="$HOME/.config/opencode/opencode.jsonc"
+  if [ -e "$cfg" ]; then
+    mounts+=(-v "$(readlink -f "$cfg"):/home/dev/.config/opencode/opencode.jsonc:ro")
   fi
 
   local -a idopt
@@ -265,19 +283,26 @@ cmd_run() {
     done
   fi
 
+  local -a tty
+  if [ "$CONTAINER_MODE" = 1 ]; then
+    tty=()
+  else
+    tty=(-it)
+  fi
+
   local -a cmd
   cmd=(
-    "$ENGINE" run --rm -it --pull=never --name "oc-$ID" --cap-drop all \
+    "$ENGINE" run --pull=never --name "oc-$ID" --cap-drop all \
+      "${tty[@]}" \
       --env "TERM=${TERM:-xterm-256color}" \
       "${idopt[@]}" \
       "${mounts[@]}" \
       "${PASSTHROUGH[@]}" \
-      "$IMAGE"
+      "$IMAGE" \
+      "${CONTAINER_ARGS[@]}"
   )
 
   printf '> %s\n' "${cmd[*]}"
-  cleanup() { "$ENGINE" rm -f "oc-$ID" >/dev/null 2>&1 || true; }
-  trap cleanup EXIT
 
   local rc
   set +e
@@ -287,17 +312,26 @@ cmd_run() {
 
   gen_artifacts || true
   print_summary "$rc"
+  if [ "$CLEAN" = 1 ]; then
+    "$ENGINE" rm -f "oc-$ID" >/dev/null 2>&1 || true
+    "$ENGINE" rmi -f "$IMAGE" >/dev/null 2>&1 || true
+    printf 'cleaned container oc-%s and image %s\n' "$ID" "$IMAGE"
+  fi
   exit "$rc"
 }
 
 cmd_clean() {
+  detect_engine
   local cache="$HOME/.cache/opencode-sandboxed"
   if [ "$HAS_ID" = 1 ]; then
+    "$ENGINE" rm -f "oc-$ID" >/dev/null 2>&1 || true
     rm -rf "$cache/$ID"
-    echo "removed $cache/$ID"
+    echo "removed container oc-$ID and $cache/$ID"
   else
+    "$ENGINE" ps -aq --filter 'name=^oc-' 2>/dev/null | xargs -r "$ENGINE" rm -f >/dev/null 2>&1 || true
+    "$ENGINE" rmi -f "$IMAGE" >/dev/null 2>&1 || true
     rm -rf "$cache"/*
-    echo "removed all cached workspaces under $cache"
+    echo "removed all oc-* containers, image $IMAGE and cache under $cache"
   fi
 }
 
@@ -342,6 +376,19 @@ main() {
       --build)
         FORCE_BUILD=1
         shift
+        ;;
+      --clean)
+        CLEAN=1
+        shift
+        ;;
+      -c|--command)
+        shift
+        while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
+          CONTAINER_ARGS+=("$1")
+          shift
+        done
+        [ "${#CONTAINER_ARGS[@]}" -gt 0 ] || die "--command requires a value"
+        CONTAINER_MODE=1
         ;;
       --)
         shift

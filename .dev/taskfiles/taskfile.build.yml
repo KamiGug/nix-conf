@@ -1,0 +1,45 @@
+version: "3"
+
+vars:
+  DEFAULT_MSG: "chore: build step"
+
+tasks:
+  switch:
+    desc: Smart system switch
+    cmds:
+      - ./.dev/bash/switch.sh "{{.MSG}}" "{{.TARGET}}"
+    vars:
+      MSG: '{{.MSG | default .DEFAULT_MSG}}'
+      TARGET: '{{.TARGET | default ""}}'
+
+  iso:
+    desc: Build the installer ISO
+    cmds:
+      - nix build .#isoConfigurations.installer.config.system.build.isoImage
+      - |
+        echo "ISO image written to:"
+        ls -lh "$(readlink -f result)/iso/"*.iso
+
+  vm:
+    desc: Build a QEMU VM from a NixOS configuration (HOST=<name>)
+    cmds:
+      - |
+        HOST="{{.HOST}}"
+        if [ -z "$HOST" ]; then
+          echo "usage: task build:vm HOST=<nixosConfiguration>"
+          echo
+          echo "available nixosConfigurations:"
+          nix eval --json ".#nixosConfigurations" --apply 'builtins.attrNames' \
+            | tr -d '[]"' | tr ',' '\n' | sed 's/^/  /'
+          exit 1
+        fi
+        nix build ".#nixosConfigurations.$HOST.config.system.build.vm" \
+          --out-link "result-vm-$HOST"
+      - |
+        HOST="{{.HOST}}"
+        RUN=$(find -L "result-vm-$HOST/bin" -name 'run-*-vm' -print -quit)
+        echo
+        echo "VM for $HOST built. Run it with:"
+        echo "  $RUN"
+    vars:
+      HOST: '{{.HOST | default ""}}'

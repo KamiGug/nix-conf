@@ -49,3 +49,7 @@ templating for git and ssh
 diff tool and git pager
 
 add automatic pkg adding
+
+https://terminal-browser.com/
+https://github.com/H1rla/markdown-on-kitty/tree/main
+https://github.com/junosuarez/termtex
