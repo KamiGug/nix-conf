@@ -51,6 +51,8 @@ tasks:
         vars: {FIX: "false"}
       - task: kdl
         vars: {FIX: "false"}
+      - task: niri
+        vars: {FIX: "false"}
       - task: yml
         vars: {FIX: "false"}
       - task: json
@@ -66,6 +68,8 @@ tasks:
       - task: lua
         vars: {FIX: "true"}
       - task: kdl
+        vars: {FIX: "true"}
+      - task: niri
         vars: {FIX: "true"}
       - task: yml
         vars: {FIX: "true"}
@@ -163,17 +167,65 @@ tasks:
 
         # Skip generated sources: templates/ dirs and any file using the
         # `${...}` placeholder syntax.
-        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep -E '\.kdl$' | grep -vE '(^|/)templates/' | while IFS= read -r f; do
-          if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
-            printf '%s\n' "$f"
-          fi
-        done || true)
+        #
+        # Also skip niri configs: niri's KDL parser requires string arguments
+        # to stay quoted, but kdlfmt strips those quotes (removing them makes
+        # the config invalid, see `niri validate`). Niri configs are handled
+        # by the `niri` task below instead.
+        FILES=$(task lint:_staged_files ALL={{.ALL}} | grep -E '\.kdl$' \
+          | grep -vE '(^|/)templates/' \
+          | grep -vE 'configs/niri-[^/]*/' \
+          | while IFS= read -r f; do
+              if [ -n "$f" ] && ! grep -qF '${' "$f" 2>/dev/null; then
+                printf '%s\n' "$f"
+              fi
+            done || true)
         [ -n "$FILES" ] || exit 0
 
         if [ "{{.FIX}}" = "true" ]; then
           printf '%s\n' "$FILES" | xargs -r kdlfmt format
         else
           printf '%s\n' "$FILES" | xargs -r kdlfmt check
+        fi
+
+  niri:
+    desc: "Niri: validate niri configs (excluded from kdlfmt)"
+    cmds:
+      - |
+        set -euo pipefail
+
+        # kdlfmt is skipped for niri configs (see the `kdl` task), so make
+        # sure the configs still parse: resolve `${...}` template placeholders
+        # in a temp copy and run `niri validate`.
+        if ! command -v niri >/dev/null 2>&1; then
+          echo "niri not in PATH, skipping niri config validation" >&2
+          exit 0
+        fi
+
+        CFGS=$(task lint:_staged_files ALL={{.ALL}} \
+          | grep -E '^configs/niri-[^/]*/config\.kdl$' || true)
+        [ -n "$CFGS" ] || exit 0
+
+        TMP=$(mktemp -d)
+        trap 'rm -rf "$TMP"' EXIT
+
+        failed=false
+        while IFS= read -r cfg; do
+          [ -n "$cfg" ] || continue
+          name=$(printf '%s' "$cfg" | sed -E 's#^configs/(niri-[^/]+)/config\.kdl$#\1#')
+          dest="$TMP/$name"
+          mkdir -p "$dest"
+          cp -r "$(dirname "$cfg")/." "$dest"/
+          find "$dest" -name '*.kdl' -exec sed -i 's/\${[a-zA-Z_][a-zA-Z0-9_]*}/TEMPLATE_PLACEHOLDER/g' {} +
+          if ! out=$(niri validate -c "$dest/config.kdl" 2>&1); then
+            echo "niri config invalid: $cfg" >&2
+            printf '%s\n' "$out" >&2
+            failed=true
+          fi
+        done <<<"$CFGS"
+
+        if [ "$failed" = "true" ]; then
+          exit 1
         fi
 
   yml:

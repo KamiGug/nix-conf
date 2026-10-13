@@ -1,27 +1,29 @@
 .dev/bash/switch.sh
-  129:# TODO: move commiting here
-  131:# TODO: use to get generation number -
+  239:# TODO: move commiting here
+  241:# TODO: use to get generation number -
 
 .dev/taskfiles/taskfile.lint.yml
-  117:        if [ "{{.FIX}}" = "true" ]; then
-  152:        if [ "{{.FIX}}" = "true" ]; then
-  173:        if [ "{{.FIX}}" = "true" ]; then
-  198:        if [ "{{.FIX}}" = "true" ]; then
-  219:        if [ "{{.FIX}}" = "true" ]; then
+  121:        if [ "{{.FIX}}" = "true" ]; then
+  156:        if [ "{{.FIX}}" = "true" ]; then
+  185:        if [ "{{.FIX}}" = "true" ]; then
   23:  FIX: '{{.FIX | default "false"}}'
+  250:        if [ "{{.FIX}}" = "true" ]; then
+  271:        if [ "{{.FIX}}" = "true" ]; then
   47:        vars: {FIX: "false"}
   49:        vars: {FIX: "false"}
   51:        vars: {FIX: "false"}
   53:        vars: {FIX: "false"}
   55:        vars: {FIX: "false"}
   57:        vars: {FIX: "false"}
-  63:        vars: {FIX: "true"}
+  59:        vars: {FIX: "false"}
   65:        vars: {FIX: "true"}
   67:        vars: {FIX: "true"}
   69:        vars: {FIX: "true"}
   71:        vars: {FIX: "true"}
   73:        vars: {FIX: "true"}
-  84:        if [ "{{.FIX}}" = "true" ]; then
+  75:        vars: {FIX: "true"}
+  77:        vars: {FIX: "true"}
+  88:        if [ "{{.FIX}}" = "true" ]; then
 
 .dev/taskfiles/taskfile.utils.yml
   50:    desc: Generate TODO list grouped by file

@@ -22,7 +22,9 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 
-# KDL — `task lint:kdl` (kdlfmt, see kdlfmt.kdl)
+# KDL — `task lint:kdl` (kdlfmt, see kdlfmt.kdl). Niri configs under
+# configs/niri-*/ are excluded from kdlfmt (it strips quotes niri's
+# parser requires) and are validated by `task lint:niri` instead.
 [*.kdl]
 indent_style = space
 indent_size = 4
