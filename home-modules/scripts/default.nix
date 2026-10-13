@@ -6,7 +6,6 @@
 }: let
   cfg = config.homeModules.rustCrates;
   dir = ./rust;
-  entries = builtins.readDir dir;
   crates =
     builtins.filter
     (name: {
@@ -26,7 +25,7 @@ in {
           cargo = cratePath + "/cargo.toml";
         in
           if builtins.pathExists cargo
-          then (pkgs.cargoBuild.tryImport cratePath // {name = name;})
+          then (pkgs.cargoBuild.tryImport cratePath // {inherit name;})
           else null
       )
       crates;

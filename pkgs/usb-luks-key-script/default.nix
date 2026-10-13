@@ -1,4 +1,4 @@
-{ writeScriptBin, coreutils, cryptsetup, utillinux }:
+{writeScriptBin}:
 writeScriptBin "usb-luks-key" ''
   #!/bin/sh
   set -eu

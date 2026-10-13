@@ -1,11 +1,15 @@
-{ lib, pkgs, config, ... }:
-let
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}: let
   # Create a udev rules package for the initrd
-  usbLuksKeyUdevRules = pkgs.runCommand "usb-luks-key-udev-rules" { } ''
-    mkdir -p $out/lib/udev/rules.d
-    cat > $out/lib/udev/rules.d/99-usb-luks-key.rules <<'EOF'
-ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="${config.usbLuksKey.label}", RUN+="/run/initrd/bin/usb-luks-key"
-EOF
+  usbLuksKeyUdevRules = pkgs.runCommand "usb-luks-key-udev-rules" {} ''
+        mkdir -p $out/lib/udev/rules.d
+        cat > $out/lib/udev/rules.d/99-usb-luks-key.rules <<'EOF'
+    ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="${config.usbLuksKey.label}", RUN+="/run/initrd/bin/usb-luks-key"
+    EOF
   '';
 
   # Create a wrapper script that sets environment variables
@@ -17,8 +21,7 @@ EOF
     export USB_LUKS_TIMEOUT="${toString config.usbLuksKey.timeout}"
     exec ${pkgs.usb-luks-key-script}/bin/usb-luks-key
   '';
-in
-{
+in {
   options.usbLuksKey = {
     enable = lib.mkEnableOption "USB LUKS key fallback";
 
@@ -42,7 +45,7 @@ in
 
     devices = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
       description = "LUKS device names (keys in luksKey.devices) to apply USB key to. Empty = all devices from luksKey.devices.";
     };
 
@@ -56,22 +59,30 @@ in
   config = lib.mkIf config.usbLuksKey.enable {
     # Add required kernel modules for USB storage and filesystems
     boot.initrd.kernelModules = lib.mkMerge [
-      (config.boot.initrd.kernelModules or [ ])
-      [ "usb_storage" "sd_mod" "vfat" "ext4" "f2fs" ]
+      (config.boot.initrd.kernelModules or [])
+      ["usb_storage" "sd_mod" "vfat" "ext4" "f2fs"]
     ];
 
     # Install the script and udev rules into systemd initrd
     boot.initrd.systemd.extraBin.usb-luks-key = usbLuksKeyScript;
     boot.initrd.services.udev.packages = lib.mkMerge [
-      (config.boot.initrd.services.udev.packages or [ ])
-      [ usbLuksKeyUdevRules ]
+      (config.boot.initrd.services.udev.packages or [])
+      [usbLuksKeyUdevRules]
     ];
 
     # Add USB key as additional keyFile for selected devices
     boot.initrd.luks.devices = lib.mapAttrs (name: cfg: {
-      keyFile = (if lib.hasElement name (if config.usbLuksKey.devices != [ ] then config.usbLuksKey.devices else lib.attrNames config.luksKey.devices) then [ cfg.keyFile ] ++ [ config.usbLuksKey.targetPath ] else [ cfg.keyFile ]);
-      device = cfg.device;
-      fallbackToPassword = cfg.fallbackToPassword;
-    }) (config.boot.initrd.luks.devices or { });
+      keyFile =
+        if
+          lib.hasElement name (
+            if config.usbLuksKey.devices != []
+            then config.usbLuksKey.devices
+            else lib.attrNames config.luksKey.devices
+          )
+        then [cfg.keyFile] ++ [config.usbLuksKey.targetPath]
+        else [cfg.keyFile];
+      inherit (cfg) device;
+      inherit (cfg) fallbackToPassword;
+    }) (config.boot.initrd.luks.devices or {});
   };
 }

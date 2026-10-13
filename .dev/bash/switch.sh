@@ -147,7 +147,10 @@ if command -v niri >/dev/null 2>&1; then
       darwin) darwin-rebuild switch --rollback ;;
       droid) nix-on-droid switch --rollback ;;
       home) home-manager switch --rollback ;;
-      *) echo "${RED_BOLD}!!! No rollback for target: $TARGET${RESET}" >&2; return 1 ;;
+      *)
+        echo "${RED_BOLD}!!! No rollback for target: $TARGET${RESET}" >&2
+        return 1
+        ;;
     esac
   }
 
@@ -162,7 +165,7 @@ if command -v niri >/dev/null 2>&1; then
         [[ -n "$hm" ]] && hf=$(readlink -f "$hm/home-files" 2>/dev/null)
         [[ -n "$hf" ]] && echo "$hf/.config/niri/config.kdl"
         ;;
-      home|darwin)
+      home | darwin)
         hmgen="/nix/var/nix/profiles/per-user/${USER_NAME}/home-manager-generation-${g}-link"
         [[ -e "$hmgen" ]] && hf=$(readlink -f "$hmgen/home-files" 2>/dev/null)
         [[ -n "$hf" ]] && echo "$hf/.config/niri/config.kdl"

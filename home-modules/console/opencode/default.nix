@@ -14,7 +14,7 @@ in {
     (myLib.program.mk {
       dir = ./.;
       target = "opencode";
-      context = { };
+      context = {};
     })
     {
       home.packages = [pkgs.opencode pkgs.libnotify];
