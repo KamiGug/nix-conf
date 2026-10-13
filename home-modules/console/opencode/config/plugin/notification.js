@@ -1,85 +1,90 @@
 /**
- * Cross-platform notification plugin for OpenCode
- * Supports Linux (notify-send) and macOS (osascript)
- * Notifies on: session.idle (task complete), session.error, permission.asked (question/permission needed)
+ * Cross-platform desktop notification plugin for opencode.
+ *
+ * Notifies on:
+ *   - session.idle       the agent finished responding
+ *   - session.error      a session/provider error occurred
+ *   - permission.asked   a tool is waiting for approval
+ *   - permission.replied an approval was granted/rejected
+ *
+ * Uses the `$` (Bun shell) that opencode injects into every plugin, so it
+ * needs no extra npm dependencies.
  */
-
-const { $ } = require("zx");
 
 const isDarwin = process.platform === "darwin";
 const isLinux = process.platform === "linux";
 
-async function notify(title, message, options = {}) {
-  const { sound = false, urgency = "normal" } = options;
+// Freedesktop sound theme that ships with NixOS.
+const SOUND_DIR = "/run/current-system/sw/share/sounds/freedesktop/stereo";
 
-  if (isDarwin) {
-    const script = `
-      display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}
-      ${sound ? "sound name \"Glass\"" : ""}
-    `;
+export const NotificationPlugin = async ({ client, $ }) => {
+  const notify = async (title, message, { urgency = "normal" } = {}) => {
     try {
-      await $`osascript -e ${script}`;
-    } catch (e) {
-      console.error("Failed to send macOS notification:", e);
+      if (isDarwin) {
+        const script = `display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}`;
+        await $`osascript -e ${script}`.quiet();
+      } else if (isLinux) {
+        await $`notify-send -a opencode -u ${urgency} ${title} ${message}`.quiet();
+      }
+    } catch (error) {
+      console.error("opencode notification failed:", error);
     }
-  } else if (isLinux) {
-    const args = ["notify-send", "-u", urgency, title, message];
-    try {
-      await $`${args}`;
-    } catch (e) {
-      console.error("Failed to send Linux notification:", e);
-    }
-  }
-}
+  };
 
-async function playSound(soundName) {
-  if (isDarwin) {
+  const playSound = async (name) => {
     try {
-      await $`afplay /System/Library/Sounds/${soundName}.aiff`;
-    } catch (e) {
-      // Ignore sound errors
+      if (isDarwin) {
+        await $`afplay /System/Library/Sounds/${name}.aiff`.quiet();
+      } else if (isLinux) {
+        await $`pw-play ${SOUND_DIR}/${name}.oga`.quiet();
+      }
+    } catch {
+      // Sound is best-effort.
     }
-  } else if (isLinux) {
-    try {
-      await $`paplay /usr/share/sounds/freedesktop/stereo/${soundName}.oga`;
-    } catch (e) {
-      // Ignore sound errors
-    }
-  }
-}
+  };
 
-export const NotificationPlugin = async ({ project, client, $, directory, worktree }) => {
   return {
     event: async ({ event }) => {
+      // opencode hands plugins `{ id, type, properties }`, where `properties`
+      // is the event payload.
+      const props = event.properties ?? {};
+
       switch (event.type) {
         case "session.idle": {
-          const title = "OpenCode - Task Complete";
-          const message = event.payload?.session?.title || "Session completed";
-          await notify(title, message, { sound: true, urgency: "normal" });
+          let title = "Task complete";
+          try {
+            const session = await client.session.get({ path: { id: props.sessionID } });
+            if (session.data?.title) title = session.data.title;
+          } catch {
+            // Fall back to the generic title.
+          }
+          await notify(title, "opencode finished responding");
           await playSound("complete");
           break;
         }
+
         case "session.error": {
-          const title = "OpenCode - Error";
-          const message = event.payload?.error?.message || "An error occurred";
-          await notify(title, message, { sound: true, urgency: "critical" });
+          const message =
+            props.error?.data?.message ?? props.error?.message ?? "An error occurred";
+          await notify("opencode error", message, { urgency: "critical" });
           await playSound("dialog-error");
           break;
         }
+
         case "permission.asked": {
-          const title = "OpenCode - Permission Needed";
-          const tool = event.payload?.tool || "unknown";
-          const message = `Permission required for: ${tool}`;
-          await notify(title, message, { sound: true, urgency: "critical" });
+          const what = props.permission ?? props.type ?? "a tool";
+          await notify("opencode needs approval", `Permission required for: ${what}`, {
+            urgency: "critical",
+          });
           await playSound("dialog-warning");
           break;
         }
-        case "permission.updated": {
-          if (event.payload?.status === "granted") {
-            const title = "OpenCode - Permission Granted";
-            const message = `Permission granted for: ${event.payload?.tool || "unknown"}`;
-            await notify(title, message, { sound: false, urgency: "low" });
-          }
+
+        case "permission.replied": {
+          if (props.reply === "reject") break;
+          await notify("opencode approval granted", `Permission ${props.reply ?? "granted"}`, {
+            urgency: "low",
+          });
           break;
         }
       }
