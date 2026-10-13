@@ -12,5 +12,7 @@
     ./avahi.nix
     ./autologin.nix
     ./printing.nix
+    ./luks-key.nix
+    ./usb-luks-key.nix
   ];
 }

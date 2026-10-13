@@ -1,6 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
+  "plugin": ["./plugin/notification.js"],
+
   "permission": {
     // ─────────────────────────────────────────────
     // Default: require approval for everything

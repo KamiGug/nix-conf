@@ -2,24 +2,22 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }: let
   cfg = config.apps.opencode;
-  configDir = ./config;
-  configFiles =
-    lib.mapAttrs'
-    (file: _type:
-      lib.nameValuePair "opencode/${file}" {
-        source = configDir + "/${file}";
-      })
-    (builtins.readDir configDir);
 in {
   options.apps.opencode.enable =
     lib.mkEnableOption "OpenCode AI coding agent";
 
-  config = lib.mkIf cfg.enable {
-    home.packages = [pkgs.opencode];
-
-    xdg.configFile = configFiles;
-  };
+  config = lib.mkIf cfg.enable (lib.mkMerge [
+    (myLib.program.mk {
+      dir = ./.;
+      target = "opencode";
+      context = { };
+    })
+    {
+      home.packages = [pkgs.opencode pkgs.libnotify];
+    }
+  ]);
 }
