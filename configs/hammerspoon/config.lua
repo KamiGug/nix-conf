@@ -1,2 +1,0 @@
-PREFIX = "${prefixMods}"
-TERMINAL = "${terminal}"
