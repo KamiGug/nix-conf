@@ -5,7 +5,7 @@ hotkey-overlay {
       Mod+Shift+Slash { show-hotkey-overlay; }
       Mod+Grave hotkey-overlay-title="Show help" { show-hotkey-overlay; }
 
-      Mod+T hotkey-overlay-title="Open a Terminal: ${terminal}" { spawn-sh "${terminal}"; }
+      Mod+T hotkey-overlay-title="Open a Terminal: {{ terminal }}" { spawn-sh "{{ terminal }}"; }
       Mod+Space hotkey-overlay-title="Run an App launcher" { spawn-sh "noctalia msg panel-toggle launcher"; }
       Mod+Shift+Escape hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg panel-toggle session"; }
       Mod+Shift+Grave hotkey-overlay-title="Toggle session menu" { spawn-sh "noctalia msg panel-toggle control-center"; }
