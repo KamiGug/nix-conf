@@ -76,6 +76,10 @@
   # Files under `nix/` are config fragments merged into the module.
   # A file that is a function is called with `args` (useful to pull in
   # `config`/`lib`/`pkgs`/`myLib`); plain attrsets are merged as-is.
+  # `programFiles` is added to `args`: the `<target>`-relative file paths
+  # mapped to their sources, i.e. the same entries as `xdg.configFile`.
+  # This lets fragments reference the rendered config files directly, e.g.
+  # when overriding a home-manager module that writes the same path.
   nixConfig = dir: args:
     lib.mkMerge (
       map (path: let
@@ -120,7 +124,7 @@
           then lib.mapAttrs (_: lib.mkForce) entries
           else entries;
       }
-      (nixConfig (dir + "/nix") args)
+      (nixConfig (dir + "/nix") (args // {programFiles = entries;}))
     ];
 in {
   inherit collectFiles staticFiles templateFiles render nixConfig mk;
