@@ -29,7 +29,7 @@ in {
         };
         "hammerspoon/Spoons/PaperWM.spoon".source = pkgs.fetchzip {
           url = "https://github.com/mogenson/PaperWM.spoon/raw/release/Spoons/PaperWM.spoon.zip";
-          sha256 = "sha256-WcuP/Gmay/F79wdNcfWqfr0qOXdw/rtTg1Hpx0N+QIk=";
+          sha256 = "sha256-g70U7BBTQ3MTL1UyRrYoivI2uuh0SLeXNmiN5i387EE=";
         };
       };
   };
