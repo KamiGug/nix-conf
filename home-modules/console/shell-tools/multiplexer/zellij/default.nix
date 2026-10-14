@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  myLib,
   ...
 }: let
   cfg = config.apps.zellij;
@@ -120,11 +121,12 @@ in {
   };
 
   config = lib.mkIf cfg.enable (lib.mkMerge [
+    (myLib.program.mk {
+      dir = ./.;
+      target = "zellij";
+    })
+
     {
-      programs.zellij.enable = true;
-
-      xdg.configFile."zellij".source = ./config;
-
       home.packages = [
         cleanupScript
         lazygitScript
