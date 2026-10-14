@@ -1,0 +1,27 @@
+os:
+  edit: {{ file | tojson }}
+  editAtLine: {{ atLine | tojson }}
+  editAtLineAndWait: {{ atLine | tojson }}
+  open: {{ file | tojson }}
+  editInTerminal: true
+{% if difftastic or gitDelta %}
+git:
+  diffRenderers:
+  {% if difftastic %}
+  - type: extDiff
+    name: difftastic
+    command: difft --color=always --context={{ diffContext }}
+  {% endif %}
+  {% if gitDelta %}
+  - name: delta
+    command: delta --paging=never
+  {% endif %}
+{% endif %}
+{% if opencode %}
+customCommands:
+  - key: "<alt+c>"
+    context: files
+    command: gen-msg -c
+    description: Copy AI-generated commit message
+    output: popup
+{% endif %}
