@@ -100,6 +100,8 @@
 
     apps.karabiner.enable = true;
 
+    apps.opencode.enable = true;
+
     apps.hammerspoon = {enable = true;};
     apps.ssh = {
       enable = true;
