@@ -1,7 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
-  "plugin": ["./plugin/notification.js"],
+  // Custom desktop-notification plugin. Disabled in favour of opencode's
+  // built-in `attention` notifications (config/tui.json). Uncomment to use
+  // the plugin instead.
+  // "plugin": ["./plugin/notification.js"],
+
+
+
 
   "permission": {
     // ─────────────────────────────────────────────
@@ -276,14 +282,6 @@
 
     "external_directory": "deny"
   },
-
-  // ─────────────────────────────────────────────
-  // Primary-agent profiles. Agent rules are appended
-  // after the global `permission` block above and are
-  // evaluated last, so each profile overrides only what
-  // it needs. Switch between them with Tab.
-  // ─────────────────────────────────────────────
-
   "agent": {
     // ─────────────────────────────────────────────
     // yolo: allow almost anything. Only secret reads and
@@ -501,5 +499,20 @@
         }
       }
     }
-  }
+  },
+  "provider": {
+      "contina": {
+        "npm": "@ai-sdk/openai-compatible",
+        "name": "Contina spark",
+        "options": {
+          "baseURL": "http://192.168.6.70:10000/v1",
+          "apiKey": "dummy"
+        },
+        "models": {
+          "qwen3.8-27b": {
+            "name": "Qwen3.8 27B"
+          }
+        }
+      }
+    }
 }

@@ -38,8 +38,8 @@
   "custom/terminal": {
     "format": "",
     "tooltip": false,
-    "on-click": "${terminal}",
-    "on-click-right": "${launcher}"
+    "on-click": "{{ terminal }}",
+    "on-click-right": "{{ launcher }}"
   },
   "niri/workspaces": {
     "on-click": "activate",

@@ -30,14 +30,14 @@
   ];
   linux = [
     ./de/plasma.nix
-    ./de/niri-noctalia.nix
-    ./waybar.nix
+    ./de/niri-noctalia
+    ./waybar
     ./gaming/steam-alias.nix
     ./gaming/lutris-alias.nix
   ];
   darwin = [
     # ./de/paneru.nix
     ./mac/karabiner-elements.nix
-    ./mac/hammerspoon.nix
+    ./mac/hammerspoon
   ];
 }

@@ -1,7 +1,6 @@
 args: let
   parsedArgs = args // {lib = args.pkgs.lib;};
 in {
-  template = import ./template.nix;
   program = import ./program.nix parsedArgs;
   scanPkgs = import ./scan-pkgs.nix parsedArgs;
   editor = import ./editor.nix parsedArgs;

@@ -94,7 +94,7 @@ model_args=()
 [[ -n $model ]] && model_args=(--model "$model")
 
 message="$(
-  opencode run --format json -f "$patch" "${model_args[@]}" "$prompt" |
+  opencode run --format json --file="$patch" "${model_args[@]}" "$prompt" |
     jq -j 'select(.type == "text") | .part.text'
 )"
 
