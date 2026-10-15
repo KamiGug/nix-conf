@@ -61,7 +61,7 @@ map global goto y '<esc>:lsp-type-definition<ret>' \
 
 define-command lazygit %{
   execute-keys %{
-    :sh zellij action new-pane --floating -n lazygit -- env KAKOUNE_SESSION="$kak_session" lazygit<ret>
+    :sh zellij action new-pane --floating -n lazygit -- env KAKOUNE_SESSION="$kak_session" zellij-lazygit<ret>
   }
 }
 
