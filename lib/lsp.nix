@@ -131,8 +131,8 @@
       command = "typos-lsp";
       args = [];
       initializationOptions = {
-        config_path = "./typos.toml";
-        diagnostic_severity = "Warning";
+        config = "./typos.toml";
+        diagnosticSeverity = "Warning";
       };
     };
   };

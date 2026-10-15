@@ -5,10 +5,10 @@ color-modes = true
 scrolloff = 5
 auto-completion = true
 auto-pairs = true
+auto-format = true
 
 [editor.indent-guides]
 render = true
 
 [editor.lsp]
-auto-format = true
 display-messages = true

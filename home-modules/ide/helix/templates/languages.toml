@@ -5,7 +5,7 @@ command = "{{ s.bin }}"
 args = {{ s.args | tojson }}
 {% endif %}
 {% if s.config is defined %}
-config = {{ s.config | tojson }}
+config = {{ s.config }}
 {% endif %}
 {% endfor %}
 

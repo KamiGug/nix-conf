@@ -32,6 +32,27 @@
     ["@file@" "@line@"]
     [placeholders.file placeholders.line];
 
+  # Serialize a Nix value to an inline TOML value (attrsets become inline
+  # tables). Used for Helix `language-server.*.config`, which is TOML, whereas
+  # the jinja context is exchanged as JSON.
+  toTOML = value:
+    if builtins.isBool value
+    then
+      (
+        if value
+        then "true"
+        else "false"
+      )
+    else if builtins.isInt value || builtins.isFloat value
+    then builtins.toString value
+    else if builtins.isString value
+    then builtins.toJSON value
+    else if builtins.isList value
+    then "[" + lib.concatStringsSep ", " (map toTOML value) + "]"
+    else if builtins.isAttrs value
+    then "{ " + lib.concatStringsSep ", " (lib.mapAttrsToList (k: v: "${builtins.toJSON k} = ${toTOML v}") value) + " }"
+    else throw "editor.toTOML: unsupported value ${builtins.toJSON value}";
+
   # All servers referenced by a selection (`myLib.lsp.mkServers`), keyed by id.
   allServers = selected:
     lib.mergeAttrsList (
@@ -67,7 +88,7 @@
             }
             // lib.optionalAttrs (server.args != []) {inherit (server) args;}
             // lib.optionalAttrs (server ? initializationOptions) {
-              config = server.initializationOptions;
+              config = toTOML server.initializationOptions;
             }
         )
         (allServers selected);
