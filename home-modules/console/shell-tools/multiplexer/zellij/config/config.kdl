@@ -269,16 +269,16 @@ keybinds clear-defaults=true {
         }
     }
     scroll {
-        bind "Shift left" {
+        bind "Alt left" {
             MoveFocusOrTab "left"
         }
-        bind "Shift down" {
+        bind "Alt down" {
             MoveFocus "down"
         }
-        bind "Shift up" {
+        bind "Alt up" {
             MoveFocus "up"
         }
-        bind "Shift right" {
+        bind "Alt right" {
             MoveFocusOrTab "right"
         }
         bind "c" {
@@ -292,16 +292,16 @@ keybinds clear-defaults=true {
             SwitchToMode "entersearch"
             SearchInput 0
         }
-        bind "Shift h" {
+        bind "Alt h" {
             MoveFocusOrTab "left"
         }
-        bind "Shift j" {
+        bind "Alt j" {
             MoveFocus "down"
         }
-        bind "Shift k" {
+        bind "Alt k" {
             MoveFocus "up"
         }
-        bind "Shift l" {
+        bind "Alt l" {
             MoveFocusOrTab "right"
         }
         bind "s" {
@@ -385,58 +385,58 @@ keybinds clear-defaults=true {
         }
     }
     shared_among "normal" {
-        bind "Shift left" {
+        bind "Alt left" {
             MoveFocusOrTab "left"
         }
-        bind "Shift down" {
+        bind "Alt down" {
             MoveFocus "down"
         }
-        bind "Shift up" {
+        bind "Alt up" {
             MoveFocus "up"
         }
-        bind "Shift right" {
+        bind "Alt right" {
             MoveFocusOrTab "right"
         }
-        bind "Shift +" {
+        bind "Alt +" {
             Resize "Increase"
         }
-        bind "Shift -" {
+        bind "Alt -" {
             Resize "Decrease"
         }
-        bind "Shift =" {
+        bind "Alt =" {
             Resize "Increase"
         }
-        bind "Shift [" {
+        bind "Alt [" {
             PreviousSwapLayout
         }
-        bind "Shift ]" {
+        bind "Alt ]" {
             NextSwapLayout
         }
-        bind "Shift f" {
+        bind "Alt f" {
             ToggleFloatingPanes
         }
-        bind "Shift h" {
+        bind "Alt h" {
             MoveFocusOrTab "left"
         }
-        bind "Shift i" {
+        bind "Alt i" {
             MoveTab "left"
         }
-        bind "Shift j" {
+        bind "Alt j" {
             MoveFocus "down"
         }
-        bind "Shift k" {
+        bind "Alt k" {
             MoveFocus "up"
         }
-        bind "Shift l" {
+        bind "Alt l" {
             MoveFocusOrTab "right"
         }
-        bind "Shift n" {
+        bind "Alt n" {
             NewPane
         }
-        bind "Shift o" {
+        bind "Alt o" {
             MoveTab "right"
         }
-        bind "Shift p" {
+        bind "Alt p" {
             TogglePaneInGroup
         }
         bind "Alt Shift p" {
