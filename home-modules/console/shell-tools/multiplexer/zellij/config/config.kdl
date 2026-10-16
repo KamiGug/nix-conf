@@ -14,12 +14,6 @@ keybinds clear-defaults=true {
             }
             SwitchToMode "locked"
         }
-        bind "q" {
-            SwitchToMode "locked"
-        }
-        bind "ctrl c" {
-            SwitchToMode "locked"
-        }
     }
     locked {
         bind "Ctrl z" {
@@ -465,6 +459,12 @@ keybinds clear-defaults=true {
     }
     shared_except "locked" "entersearch" "renametab" "renamepane" {
         bind "esc" {
+            SwitchToMode "locked"
+        }
+        bind "q" {
+            SwitchToMode "locked"
+        }
+        bind "ctrl c" {
             SwitchToMode "locked"
         }
     }
