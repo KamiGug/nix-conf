@@ -99,6 +99,11 @@
   #     config/       copied as-is under ~/.config/<target>
   #     templates/    Jinja2 rendered using `context`
   #     nix/          merged into the module config
+  #
+  # `config`/`templates` output goes to `xdg.configFile` by default, i.e.
+  # `~/.config/<target>/<rel>`. Set `homeFile = true` to emit into `home.file`
+  # instead, so `<target>` is relative to `$HOME` (e.g. `target = ".ssh"` for
+  # `~/.ssh/config`).
   mk = {
     dir,
     target,
@@ -106,6 +111,7 @@
     force ? false,
     name ? target,
     args ? {},
+    homeFile ? false,
   }: let
     entries =
       staticFiles {
@@ -116,14 +122,18 @@
         dir = dir + "/templates";
         inherit target context name;
       };
+
+    mapped =
+      if force
+      then lib.mapAttrs (_: lib.mkForce) entries
+      else entries;
   in
     lib.mkMerge [
-      {
-        xdg.configFile =
-          if force
-          then lib.mapAttrs (_: lib.mkForce) entries
-          else entries;
-      }
+      (
+        if homeFile
+        then {home.file = mapped;}
+        else {xdg.configFile = mapped;}
+      )
       (nixConfig (dir + "/nix") (args // {programFiles = entries;}))
     ];
 in {

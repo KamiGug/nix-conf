@@ -23,24 +23,13 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
-    (myLib.program.mk {
-      dir = ./.;
-      target = "waybar";
-      context = {
-        inherit (cfg) font launcher;
-        terminal = config.apps.using.terminal;
-      };
-    })
-
-    {
-      home.packages = with pkgs; [
-        # nerd-fonts.geist-mono
-        # font-awesome
-        networkmanagerapplet
-        blueman
-        pavucontrol
-      ];
-    }
-  ]);
+  config = mkIf cfg.enable (myLib.program.mk {
+    dir = ./.;
+    target = "waybar";
+    context = {
+      inherit (cfg) font launcher;
+      terminal = config.apps.using.terminal;
+    };
+    args = {inherit config lib pkgs myLib;};
+  });
 }

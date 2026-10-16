@@ -5,16 +5,16 @@
     ./console/shell/elvish
     ./console/shell/zsh
 
-    ./console/shell-tools/neovim-fhs.nix
+    ./console/shell-tools/neovim-fhs
     ./console/shell-tools/lazygit
     ./console/shell-tools/difftastic.nix
     ./console/shell-tools/git-delta.nix
     ./console/shell-tools/multiplexer/tmux
-    ./console/git.nix
+    ./console/git
     ./console/terminal
     ./console/terminal/kitty
     ./console/terminal/wezterm
-    ./console/shell-tools/ssh.nix
+    ./console/shell-tools/ssh
     ./console/shell-tools/starship.nix
     ./creative/blender.nix
     ./kando.nix
@@ -29,8 +29,9 @@
     ./console/opencode
   ];
   linux = [
-    ./de/plasma.nix
+    ./de/plasma
     ./de/niri-noctalia
+    ./de/noctalia
     ./waybar
     ./gaming/steam-alias.nix
     ./gaming/lutris-alias.nix

@@ -26,35 +26,18 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    (myLib.program.mk {
-      dir = ./.;
-      target = "kitty";
+  config = lib.mkIf cfg.enable (myLib.program.mk {
+    dir = ./.;
+    target = "kitty";
 
-      # programs.kitty always emits kitty.conf, force our rendered one over it.
-      force = true;
+    # programs.kitty always emits kitty.conf, force our rendered one over it.
+    force = true;
 
-      context = {
-        font = config.apps.using.terminalFont;
-        inherit (cfg) kittyMod;
-      };
-    })
+    context = {
+      font = config.apps.using.terminalFont;
+      inherit (cfg) kittyMod;
+    };
 
-    (lib.mkIf cfg.default {
-      home.sessionVariables.TERMINAL = "kitty";
-
-      apps.using.terminal = "kitty";
-    })
-
-    (lib.mkIf (cfg.default && pkgs.stdenv.hostPlatform.isLinux) {
-      xdg.mimeApps = {
-        enable = true;
-
-        defaultApplications = {
-          "x-scheme-handler/terminal" = "kitty.desktop";
-          "application/x-terminal-emulator" = "kitty.desktop";
-        };
-      };
-    })
-  ]);
+    args = {inherit config lib pkgs myLib;};
+  });
 }

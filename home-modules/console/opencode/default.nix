@@ -10,14 +10,10 @@ in {
   options.apps.opencode.enable =
     lib.mkEnableOption "OpenCode AI coding agent";
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    (myLib.program.mk {
-      dir = ./.;
-      target = "opencode";
-      context = {};
-    })
-    {
-      home.packages = [pkgs.opencode pkgs.libnotify];
-    }
-  ]);
+  config = lib.mkIf cfg.enable (myLib.program.mk {
+    dir = ./.;
+    target = "opencode";
+    context = {};
+    args = {inherit config lib pkgs myLib;};
+  });
 }

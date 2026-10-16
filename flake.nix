@@ -56,6 +56,10 @@
       kkserv = {};
       kknas = {};
       kkworker = {};
+
+      # TEMP: sops-managed-password POC VM, remove together with hosts/pocvm
+      # and users/pocuser.nix
+      pocvm = {users = ["pocuser"];};
     };
 
     darwinHosts = {
@@ -71,6 +75,8 @@
           SOPS_AGE_KEY_FILE = "/etc/sops/age.key";
           packages = with pkgs; [
             sops
+            age
+            openssl
             openssh
             alejandra
             statix

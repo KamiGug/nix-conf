@@ -1,14 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-
-  // Custom desktop-notification plugin. Disabled in favour of opencode's
-  // built-in `attention` notifications (config/tui.json). Uncomment to use
-  // the plugin instead.
-  // "plugin": ["./plugin/notification.js"],
-
-
-
-
   "permission": {
     // ─────────────────────────────────────────────
     // Default: require approval for everything
@@ -282,6 +273,7 @@
 
     "external_directory": "deny"
   },
+
   "agent": {
     // ─────────────────────────────────────────────
     // yolo: allow almost anything. Only secret reads and
@@ -500,6 +492,7 @@
       }
     }
   },
+
   "provider": {
       "contina": {
         "npm": "@ai-sdk/openai-compatible",

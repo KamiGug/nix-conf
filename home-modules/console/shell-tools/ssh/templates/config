@@ -1,0 +1,14 @@
+Host *
+ServerAliveInterval 60
+ServerAliveCountMax 3
+ForwardAgent no
+AddKeysToAgent no
+
+{% for _, h in hosts.items() %}
+Host {{ h.host }}
+HostName {{ h.hostname }}
+User {{ h.user }}
+{% if h.port is not none %}Port {{ h.port }}{% endif %}
+IdentityFile {{ h.identityFile }}
+IdentitiesOnly yes
+{% endfor %}

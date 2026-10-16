@@ -43,3 +43,23 @@ tasks:
         echo "  $RUN"
     vars:
       HOST: '{{.HOST | default ""}}'
+
+  # `task build:vm:<host>` -> builds nixosConfigurations.<host>. The exact
+  # `task build:vm` above stays available for HOST=<host> usage.
+  "vm:*":
+    desc: Build a QEMU VM, e.g. task build:vm:kkbook
+    cmds:
+      - |
+        HOST="{{index .MATCH 0}}"
+        if [ -z "$HOST" ]; then
+          echo "usage: task build:vm:<nixosConfiguration>"
+          exit 1
+        fi
+        nix build ".#nixosConfigurations.$HOST.config.system.build.vm" \
+          --out-link "result-vm-$HOST"
+      - |
+        HOST="{{index .MATCH 0}}"
+        RUN=$(find -L "result-vm-$HOST/bin" -name 'run-*-vm' -print -quit)
+        echo
+        echo "VM for $HOST built. Run it with:"
+        echo "  $RUN"

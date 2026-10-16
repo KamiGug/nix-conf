@@ -112,6 +112,7 @@
     # apps.lutris.gamescope.enable = true;
 
     apps.niri.enable = true;
+    apps.noctalia.enable = true;
     apps.plasma.enable = true;
 
     apps.blender.enable = true;
