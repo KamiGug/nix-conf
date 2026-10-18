@@ -32,14 +32,15 @@ preset's `parentServiceName` uses `EnsureDirExists-` while
 ## Decision
 
 - **This plan supersedes `lib/services/` entirely.** After step 0 below,
-  `mkContainerService`, `mkVolume`, `mkNetwork`, `mkSecret`,
-  `mkHealthcheck` and the old `mk*`-style `apps/` presets are **deleted**,
-  not kept as aliases — their option vocabulary and the
-  oci-containers/podman target are absorbed into `myLib.services.mk` /
-  `container.nix`, and every naming inconsistency listed in the Problem is
-  fixed in the process. The only surviving public names are
-  `myLib.services.{mk,mkEnv,render,presets}` + the network/healthcheck
-  helpers re-exported from the new files.
+  `mkContainerService`, `mkSecret` and the old `mk*`-style `apps/`
+  presets are **deleted**, not kept as aliases — their option vocabulary
+  and the oci-containers/podman target are absorbed into
+  `myLib.services.mk` / `container.nix`, and every naming inconsistency
+  listed in the Problem is fixed in the process. `mkVolume`, `mkNetwork`,
+  `mkHealthcheck` and `ensureNetwork` **survive** (fixed: one network
+  prefix convention) and stay exported. The only surviving public names
+  are `myLib.services.{mk,mkEnv,render,presets}` + the
+  volume/network/healthcheck helpers.
 - **One new public entry point**, `myLib.services.mk` (options-attrset
   entrypoint, matching the `myLib.program.mk` style — see migration.md's
   rationale for one-vs-many functions). Given a **service directory** it
@@ -131,13 +132,13 @@ preset's `parentServiceName` uses `EnsureDirExists-` while
   `Dockerfile.jinja` currently relies on its entrypoint for exactly this
   and migrates cleanly.
 - **Absorption caveat** (see the supersession bullet): while folding
-  `mkContainerService` into `container.nix`, note the latent-bug claim in
-  migration.md:106-109 (`mkContainerService.nix:178` calling a nonexistent
-  `myLib.ensureDirExists`) is **inaccurate as the file stands** — the file
-  redefines `myLib = import ../file` locally so the call resolves. It does
-  become real if that local binding is removed during autoload
-  normalization: change the call to `myLib.file.ensureDirExists` in the
-  same commit that touches the file.
+  `mkContainerService` into `container.nix`, note that migration.md's
+  earlier latent-bug claim about `mkContainerService.nix:178` (calling
+  `myLib.ensureDirExists`) was **corrected after verification** — the
+  file binds `myLib = import ../file` locally at line 25, so the call
+  resolves as the file stands. It becomes real only if that binding is
+  dropped during autoload normalization: change the call to
+  `myLib.file.ensureDirExists` in the same commit that touches the file.
 
 ## Prerequisites
 
@@ -152,21 +153,28 @@ preset's `parentServiceName` uses `EnsureDirExists-` while
      live under `src/lib/services/`;
    - hosts are wired through `_resolveHostSet` with
      `specialArgs = { inputs, systemModules, homeModules, myLib; }`.
-2. **sops-nix set up on the machines** (not done today):
-   - an age key at `/etc/sops/age.key` on each host (devShell already sets
-     `SOPS_AGE_KEY_FILE` and ships `sops` + `age`);
-   - `sops.age.keyFile = "/etc/sops/age.key"` on hosts (today only pocvm
-     sets a keyFile, and only inside its VM config);
+2. **sops-nix set up on the machines** (partially done):
+   - `helpers/secrets.nix` **already provides the base wiring for every
+     host** (helpers is appended to all system and HM module lists):
+     `sops.age.keyFile = lib.mkDefault "/etc/sops/age.key"` (line 30) and
+     three live test `sops.secrets` (`peon-password`, `nixos-secret-test`,
+     `hm-secret-test`) against `../secrets.yml`. The file is readable via
+     directory-scoped grep (`rg -n "" helpers/` — direct path access is
+     blocked by the `*secrets*` rule, directory scans are not); its shape
+     is known (verified 2026-10-16), so this plan builds on it instead of
+     inventing a second convention. Only pocvm overrides the keyFile
+     (inside its VM config).
+   - Still missing: the age **key material** at `/etc/sops/age.key` on
+     each host, and real (non-test) secrets in `sops.yml` — both
+     user-executed steps; `sops.yml` / `secrets.yml` contents remain
+     agent-unreadable.
    - a per-host or shared `sopsFile` whose keys are known in advance — the
      naming scheme below reserves `"<name><postfix>-<VAR>"` and
-     `"<name><postfix>-shared"` keys;
-   - `src/helpers/secrets.nix` **must be read and understood by the user
-     first** — it is unreadable to agents (permission rule denies
-     `*secrets*`, see migration.md:386-390) and migration.md already flags
-     that moving `helpers/` → `src/helpers/` can silently break relative
-     `sopsFile` paths. This plan must not proceed until that file's shape is
-     known; if it already centralizes `sopsFile`/`age.keyFile`, reuse it
-     instead of inventing a second convention.
+     `"<name><postfix>-shared"` keys.
+   - migration.md already flags that moving `helpers/` → `src/helpers/`
+     breaks `secrets.nix`'s relative `../secrets.yml` path (step 2 there
+     fixes it to `../../secrets.yml`). Any additional `sopsFile` paths
+     introduced here must follow the same root-relative discipline.
 
 ## Current state (facts verified 2026-10-16)
 
@@ -191,20 +199,26 @@ preset's `parentServiceName` uses `EnsureDirExists-` while
   network, gpu/secret/privileged/hostname/user/health/shm extraOptions,
   `create = true` volumes merged with `ensureDirExists` oneshots.
 - Naming inconsistencies to fix while absorbing the lib:
-  `mkNetwork` returns `"app-service-" + name` but `ensureNetwork` takes the
-  raw name; `mkSecret` returns `mountPath/mode/owner/group` which nothing
-  consumes; `apps/authentik/default.nix` passes
+  `mkNetwork` returns `"app-service-" + name` but `ensureNetwork` takes
+  the raw name; `mkSecret` returns `mountPath/mode/owner/group` which nothing
+  consumes; `apps/authentik/default.nix:68` passes
   `parentServiceName = "EnsureDirExists-@etc@authentik"` while
-  `ensureDirExists.nix` emits `EnsureDir-@etc@authentik`; `mariadb` preset
-  and `onlyoffice` preset are empty stubs; `mkImmutableFile.nix` is dead
-  (not exported).
+  `ensureDirExists.nix` emits `EnsureDir-@etc@authentik`; the `mariadb`
+  preset is an empty stub (`{}: {}`); the onlyoffice "preset" does not
+  exist at all — only commented remnants inside
+  `apps/nextcloud/default.nix` referencing a nonexistent `./onlyoffice.nix`;
+  `mkImmutableFile.nix` is dead (not exported by any `default.nix`).
 - sops-nix is a flake input and is added to nixos/darwin/home-manager
-  modules, but no `sops.secrets` entry is live anywhere (only commented
-  code in users/ and system-modules); root artifacts `sops.yml`,
-  `secrets.yml`, `secrets/homelab.yml`, `keys/age.key` exist but are
+  modules; `helpers/secrets.nix` (appended to **every** host and HM) already
+  declares three **live** test `sops.secrets` (`peon-password`,
+  `nixos-secret-test`, `hm-secret-test`) plus the `mkDefault` age keyFile;
+  no *service* secret is live yet (only commented code in users/ and
+  system-modules). Root artifacts `sops.yml`, `secrets.yml`,
+  `secrets/homelab.yml`, `keys/age.key` exist but their contents are
   agent-unreadable (`*sops*`/`*secrets*`/`*.key` permission rules) — only
   `sops.yml:7` (`sops_key: /etc/sops/age.key`) and `secrets.yml:6`
-  (`sops:`) are known from grep.
+  (`sops:`) are known from grep. Key **material** at `/etc/sops/age.key`
+  is not provisioned on the machines yet.
 - `hosts/kkbook` is the only host with podman + the (commented) service
   call sites; it already pre-seeds `*.lab.hm` in `networking.hosts`.
 
@@ -216,7 +230,8 @@ src/lib/services/
   mk.nix               # myLib.services.mk          — the new entry point
   mkEnv.nix            # myLib.services.mkEnv       — multi-service envs
   container.nix        # shared mkContainerService core (absorbed internals)
-  mkVolume.nix mkNetwork.nix mkSecret.nix mkHealthcheck.nix
+  buildImage.nix       # Dockerfile -> image drv (+ stripSecretEnvs)
+  mkVolume.nix mkNetwork.nix mkHealthcheck.nix   # survive, fixed
   ensureNetwork.nix    # fixed: same "app-service-" prefix as mkNetwork
   render.nix           # myLib.services.render      — renders ONE template
                        # file to ONE single-file derivation
@@ -224,6 +239,8 @@ src/lib/services/
     postgres.nix forgejo.nix nextcloud.nix authentik.nix
     wiki.nix nginx.nix netbird.nix euroOffice.nix
     proxy/default.nix  # proxy-snippet registry consumed by nginx preset
+  # mkSecret.nix and apps/ are deleted in step 0 (superseded by mk's
+  # secrets handling and presets/)
 ```
 
 Every file is a function of `args` (migration.md's autoload rule); a
@@ -330,8 +347,10 @@ let
   # a single file at $out/<basename>, so every rendered config can be
   # bind-mounted (or referenced) on its own.
   configFiles =
-    lib.genAttrs templateFiles (f: import ../render.nix {
-      inherit pkgs;
+    lib.genAttrs templateFiles (f: myLib.services.render {
+      # render is curried ({pkgs, ...}: {name, file, vars}: drv); through
+      # myLib the pkgs stage is already applied — a single attrset call
+      # is the whole application.
       file = f;
       name = "${fullName}-${baseNameOf (toString f)}";
       vars = templateVars // composeVars // { inherit name postfix fullName; };
@@ -343,12 +362,23 @@ let
   secretFileMounts = lib.mapAttrsToList (var: _:
     lib.nameValuePair var {
       type = "bind"; readOnly = true; create = false;
-      hostMount = config.sops.secrets."${fullName}-${var}".path;
+      # sops-nix's default layout; `config` is not in scope in this plain
+      # function — callers needing a custom path pass it via `volumes`
+      # themselves (mkSecret's path-return is superseded).
+      hostMount = "/run/secrets/${fullName}-${var}";
       containerMount = "/run/secrets/${var}";
       owner = null; group = null; mode = null;
     }) secrets;
 
   needsEntrypointWrap = secrets != {} && !(fileEnvSupport or false);
+  # What the wrapper exec's after exporting secrets: the caller's
+  # `entrypoint` override if given, else the image's original
+  # ENTRYPOINT+CMD (parsed from the Dockerfile by buildImage.nix, which
+  # exposes it as `imageEntrypoint`); fail loudly if neither exists.
+  originalEntrypoint =
+    if entrypoint != null then entrypoint
+    else imageEntrypoint or (throw
+      "${fullName}: entrypoint wrap needs `entrypoint` or a parseable Dockerfile ENTRYPOINT/CMD");
   wrappedEntrypoint = pkgs.writeScript "${fullName}-entrypoint.sh" ''
     #!/bin/sh
     set -eu
@@ -357,7 +387,7 @@ let
         export ${var}="$(cat /run/secrets/${var})"
       fi
     '') (builtins.attrNames secrets)}
-    exec ${lib.escapeShellArgs (args.entrypoint or originalEntrypoint)} "$@"
+    exec ${lib.escapeShellArgs originalEntrypoint} "$@"
   '';
 
   imageDrv =
@@ -431,12 +461,32 @@ uniformly by string concatenation on `fullName` and on derived paths:
 | network (with `app-service-` prefix) | `app-service-nextcloud` | `app-service-nextcloud-test` |
 | data dir | `${root}/forgejo/data` | `${root}/forgejo-test/data` |
 | `EnsureDir` unit | `EnsureDir-@mnt@nas@forgejo@data` | `EnsureDir-@mnt@nas@forgejo-test@data` |
-| sops secret | `FORGEJO_DB_PASSWORD` | `FORGEJO_DB_PASSWORD_TEST` |
+| sops secret (`<fullName>-<VAR>`) | `forgejo-FORGEJO_DB_PASSWORD` | `forgejo-test-FORGEJO_DB_PASSWORD` |
 | build/init units | `build-forgejo` | `build-forgejo-test` |
 
 Port collisions between two instances are the caller's job (compose-derived
 ports are identical by default; `mkEnv` presets expose `ports` overrides —
 see Risks).
+
+### Sketch errata (verified 2026-10-16)
+
+Corrections applied to the `mk`/render sketches above after checking them
+against the real code and the migration plan:
+
+- **`config` is not in scope** in `mk` (a plain function, not a module) —
+  the secret bind mount uses sops-nix's default path
+  `/run/secrets/<fullName>-<VAR>` instead of
+  `config.sops.secrets.<n>.path`. Callers with a custom secret path pass
+  their own `volumes` entry.
+- **`originalEntrypoint` was undefined** in the entrypoint wrapper — now a
+  let-binding: caller `entrypoint` override, else `imageEntrypoint`
+  (parsed from the Dockerfile by `buildImage.nix`), else a loud throw.
+- **`render.nix` is curried** (`{pkgs, ...}: {name, file, vars}: drv`) —
+  the sketch's single `import ../render.nix {...}` application returned the
+  inner function, not a derivation. The call goes through
+  `myLib.services.render`, the already-partially-applied first stage.
+- **`pkgs.jinja2` has no `bin/jinja2`** — `render.nix` uses
+  `pkgs.jinja2-cli` (what the devShell and `lib/program.nix` already use).
 
 ## Networks & isolation
 
@@ -478,11 +528,11 @@ secrets = {
 
   systemd.services."GenerateRandomSecret-${fullName}-${VAR}" =
     # only when secret.random = true; via fileLib.mkRandomSecret
-    # path: /run/secrets/homelab/${fullName}-${VAR};
+    # path: /run/secrets/${fullName}-${VAR};   # sops-nix default layout
 
   # container wiring (the whole point — files, not env values):
   #   volumes ++ [{
-  #     hostMount    = config.sops.secrets."${fullName}-${VAR}".path;  # host, 0400
+  #     hostMount    = "/run/secrets/${fullName}-${VAR}";  # host, 0400
   #     containerMount = "/run/secrets/${VAR}"; readOnly = true;
   #   }]
   #   environment."${VAR}_FILE" = "/run/secrets/${VAR}";   # for images with
@@ -493,10 +543,11 @@ secrets = {
 }
 ```
 
-- Secret names are postfix-scoped (`FORGEJO_DB_PASSWORD_TEST`) so two envs
-  on one machine can have different values from one `sops.yml`.
-  `mkEnv` also accepts `sharedSecrets = [ "AUTHENTIK_SECRET_KEY" ]` which
-  are registered once without postfix — open question below.
+- Secret names are name-scoped (`<fullName>-<VAR>`, with postfix part of
+  `fullName`, e.g. `forgejo-test-FORGEJO_DB_PASSWORD`) so two envs on one
+  machine can have different values from one `sops.yml`. `mkEnv` also
+  accepts `sharedSecrets = [ "AUTHENTIK_SECRET_KEY" ]` which are
+  registered once without the `<fullName>-` prefix — open question below.
 - **Why not the runtimes' own secret mechanisms** (correction of an earlier
   draft of this plan that used a podman-secret-store bridge oneshot —
   rejected): plain `docker run` has no `--secret` at all (swarm-only), and
@@ -528,10 +579,10 @@ derivation, so every rendered config file is independently mountable:
 }: let
   varsFile = pkgs.writeText "${name}-vars.json" (builtins.toJSON vars);
 in pkgs.runCommand name {
-  nativeBuildInputs = [ pkgs.jinja2 ];
+  nativeBuildInputs = [ pkgs.jinja2-cli ];
 } ''
   mkdir -p $out
-  ${pkgs.jinja2}/bin/jinja2 --strict --format=json \
+  ${pkgs.jinja2-cli}/bin/jinja2 --strict --format=json \
     ${varsFile} ${file} > $out/${baseNameOf (toString file)}
 ''
 ```
@@ -544,9 +595,11 @@ in pkgs.runCommand name {
   `environment.etc."x".source = cfg.config."x"` — all per-file, no
   packaging indirection. A change to one template rebuilds only its drv
   (image drv and sibling configs unaffected).
-- One renderer (jinja2, same engine docker-services already uses) keeps the
-  migration mechanical: existing `templates/**/*.jinja` files move over
-  nearly unchanged, with `environment.yml` fields becoming `templateVars`.
+- One renderer (jinja2-cli — the same attr and `jinja2` binary the devShell
+  (flake.nix:97) and `lib/program.nix:50` already use; `pkgs.jinja2` has no
+  `bin/jinja2`) keeps the migration mechanical: existing
+  `templates/**/*.jinja` files move over nearly unchanged, with
+  `environment.yml` fields becoming `templateVars`.
 - Built-in vars always available: `name`, `fullName`, `postfix`, `domain`,
   `root`, plus the service's compose block.
 
@@ -624,7 +677,7 @@ lib.foldl' lib.recursiveUpdate {} (
 ## docker-services migration
 
 Ordered so every step is independently eval-able; commit per step. Assume
-migration.md steps 1-5 are done and sops is set up.
+migration.md steps 1-6 are done and sops is set up.
 
 0. **Tooling + supersession.** Add `task compose-json` (dasel-based
    `compose.yml` → `compose.json`) to the root `taskfile.yml`; add a
@@ -634,8 +687,8 @@ migration.md steps 1-5 are done and sops is set up.
    `mkSecret.nix` and the old `apps/` preset wrappers (superseded — see
    Decision), folding their option vocabulary into `mk`. No consumers
    exist today (all call sites commented), so this is eval-safe. Verify:
-   `nix eval` of `myLib.services.mk` on a throwaway dir under
-   `hosts/pocvm` or an `--impure` expr.
+   `nix eval` of `myLib.services.mk` on a throwaway dir under `/tmp` (or
+   an `--impure` expr) — not under `hosts/`, pocvm is a real TEMP host.
 1. **postgres** (simplest; no proxy, no templates beyond init SQL).
    Move `templates/services/service/postgres.yml.jinja` →
    `src/services/postgres/compose.yml` (rendered once, Jinja conditionals
@@ -715,7 +768,8 @@ migration.md steps 1-5 are done and sops is set up.
 ## Verification
 
 - `nix eval` of every host's `config.system.build.toplevel.drvPath` after
-  each migration step (all 5 nixos + iso + darwin, per migration.md).
+  each migration step (all 6 nixos incl. TEMP pocvm + iso + darwin, per
+  migration.md).
 - `nix eval --impure --expr` smoke tests: `mk` autoload on a dir with/without
   Dockerfile/templates/compose.json; postfix appears in container name,
   unit name, network name, EnsureDir name, secret name; `cfg.config` is an

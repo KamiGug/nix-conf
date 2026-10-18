@@ -41,6 +41,9 @@ hook global BufWritePre .* %{
 # LSP status.
 set-option global modelinefmt "%opt{lsp_modeline} %opt{modelinefmt}"
 
+define-user-mode code
+define-user-mode files
+
 # LSP mode.
 map global code l ':enter-user-mode lsp<ret>' \
   -docstring 'LSP mode'
@@ -69,7 +72,6 @@ define-user-mode tools
 map global user c ':enter-user-mode code<ret>' -docstring 'code/tools'
 map global user f ':enter-user-mode files<ret>' -docstring 'files'
 
-define-user-mode code
 map global code g ':lazygit<ret>' -docstring 'lazygit'
 
 define-command yazi %{
@@ -78,7 +80,6 @@ define-command yazi %{
   }
 }
 
-define-user-mode files
 map global files y ':yazi<ret>' -docstring 'yazi'
 
 define-command kakoune-split-right %{
@@ -98,3 +99,6 @@ map global normal <a-h> ':kakoune-split-right<ret>' \
 
 map global normal <a-j> ':kakoune-split-down<ret>' \
   -docstring 'Open Kakoune split down'
+
+map global normal <space>g ':lazygit<ret>' \
+  -docstring 'lazygit'

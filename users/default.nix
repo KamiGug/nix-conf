@@ -4,5 +4,4 @@
   wisp = import ./wisp.nix inputs;
   kg = import ./kg.nix inputs;
   peasant = import ./peasant.nix inputs;
-  pocuser = import ./pocuser.nix inputs;
 }

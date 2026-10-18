@@ -1,11 +1,11 @@
-# Migration: src/ layout, filesystem-as-registry, auto-loading modules & lib
+# Migration: src/ layout, filesystem-as-registry, auto-loading modules, lib, hosts & users
 
 Status: **proposed** — not started.
 Date: 2026-10-16
 
 ## Problem
 
-Module discovery is hand-maintained in three registries that duplicate (and
+Module discovery is hand-maintained in five registries that duplicate (and
 drift from) the filesystem:
 
 - `home-modules/default.nix` — hand-written `{common, linux, darwin}` lists
@@ -15,13 +15,21 @@ drift from) the filesystem:
   `lib/flake/_resolveHostSet.nix:54-68` instead.
 - `lib/default.nix` — hand-written attrset mirroring the `lib/` directory
   tree, with naming shims (`scanPkgs`, `validate`, `serv`).
+- `flake.nix` — the `nixosHosts` / `darwinHosts` attrsets declare hosts (and
+  per-host args) by hand, then map them through `mk*Host`; the host modules
+  themselves live in `hosts/<name>/` with no filesystem link to the
+  registry. (`isoConfigurations.installer` is a third, separate mapping.)
+- `users/default.nix` — hand-written `{root, peon, wisp, kg, peasant}`
+  attrset, each entry imported with `inputs`; **already drifted**
+  (`users/pocuser.nix` is not listed — see Current state).
 
-Consequences: adding a module means editing a registry by hand; modules that
-are not in a registry are invisible (two orphans existed — one is merged
-away during this migration, the other becomes auto-loaded; see below);
-the lib attrset must be kept in sync with the directory tree by hand; and
-`_resolveHostSet.nix` carries a dangling `import (root + "/services")` that
-only survives because nothing forces the specialArg.
+Consequences: adding a module, host or user means editing a registry by
+hand;
+modules that are not in a registry are invisible (two orphans existed — one
+is merged away during this migration, the other becomes auto-loaded; see
+below); the lib attrset must be kept in sync with the directory tree by
+hand; and `_resolveHostSet.nix` carries a dangling `import (root +
+"/services")` that only survives because nothing forces the specialArg.
 
 ## Decision
 
@@ -58,6 +66,32 @@ only survives because nothing forces the specialArg.
   path strings, `readModules` instead of registry imports, gui-tier
   wiring, removal of the dangling `services` import; `mkIsoHost` is
   deduplicated by routing through `_resolveHostSet` (see below).
+- **Hosts are auto-loaded from the filesystem**, with the same
+  disambiguation discipline as the module tiers: `src/hosts/linux/` =
+  NixOS systems (`mkLinuxHost` → `nixosConfigurations`), `src/hosts/darwin/`
+  = macOS systems (`mkDarwinHost` → `darwinConfigurations`). The flake's
+  hand-written `nixosHosts` / `darwinHosts` attrsets are deleted. The ISO
+  is a linux system (`src/hosts/linux/installer/`) selected by
+  `iso = true` in its `host.nix` → `mkIsoHost` → `isoConfigurations`
+  (decision: keep the ISO inside the `linux/` tier — filesystem
+  disambiguation is exactly linux-vs-darwin; the ISO-specific behavior is
+  host data, not a third platform).
+- **Per-host args live next to the host module**: an optional
+  `<host>/host.nix` = `{inputs}: { gui ? false; users ? null;
+  extraModules ? []; iso ? false; }` (absent = `mk*Host` defaults). The
+  existing flake-level data moves there: kkbook/kktab `gui = true`,
+  kktab's nixos-hardware `extraModules`, pocvm's and kg-continabook's
+  `users`, installer's `users` + `iso = true`. Enumeration is done by a
+  new unapplied lib member `readHosts` (`src/lib/flake/readHosts.nix`);
+  a hosts-tier directory without a `default.nix` is a hard error — no
+  silently dropped hosts.
+- **Users are auto-loaded the same way**: `src/users/` is scanned by a new
+  unapplied lib member `readUsers` (`src/lib/flake/readUsers.nix`); the
+  hand-written `users/default.nix` registry (root/peon/wisp/kg/peasant) is
+  deleted. A user is a `*.nix` file returning `{system, home}` module
+  functions, imported with `inputs`; per-host selection is unchanged
+  (`users = [...]` in `host.nix`; `mkLinuxHost` defaults gui→`["peon"]`,
+  else `["wisp"]`).
 - **Rules that fall out of `stopOnDefault`:**
   - a directory with a `default.nix` is one module and is never descended
     into (this is exactly the program-dir pattern: `default.nix` +
@@ -90,18 +124,33 @@ only survives because nothing forces the specialArg.
   `default.nix`.
 - **Not autoloaded (kept hand-written):** `src/helpers/` (deliberate
   explicit list of the two cross-cutting modules `secrets.nix` +
-  `using.nix`) and `src/users/` (name → `{system, home}` shape requires
-  per-file import with `inputs`, not plain module paths). Possible future
-  work, out of scope here.
+  `using.nix`). Possible future work, out of scope here.
 
 ## Current state (facts verified 2026-10-16)
 
-- `flake.nix:48` — `flakeLib = import ./lib/flake;`. Hosts declared as data
-  (`nixosHosts`, `darwinHosts`) and mapped through
-  `flakeLib.mkLinuxHost` / `mkDarwinHost`; `isoConfigurations.installer`
-  via `mkIsoHost`.
+- `flake.nix:48` — `flakeLib = import ./lib/flake;`. Hosts declared as
+  data attrsets in flake.nix and mapped through `flakeLib.mkLinuxHost` /
+  `mkDarwinHost` / `mkIsoHost`: `nixosHosts` = kkbook `{gui}`,
+  kktab `{gui, extraModules = [nixos-hardware surface]}`, kkserv, kknas,
+  kkworker, **pocvm** `{users = ["pocuser"]}` (TEMP sops POC,
+  `flake.nix:60-62`, slated for removal with `users/pocuser.nix`);
+  `darwinHosts` = kg-continabook `{users = ["kg"]}`;
+  `isoConfigurations.installer` via `mkIsoHost {users = ["peasant"];}`.
+  Total: 8 configurations (6 nixos + 1 iso + 1 darwin).
 - `lib/flake/{mkLinuxHost,mkDarwinHost,mkIsoHost}.nix` — `root ? ../..`
   (3 occurrences; becomes `../../..` after the move).
+- `users/default.nix` — `{...} @ inputs: { root, peon, wisp, kg, peasant =
+  import ./<name>.nix inputs; }`: the hand-written user registry, already
+  drifted — `users/pocuser.nix` exists but is not listed (the commented-out
+  `users = ["pocuser"]` in `flake.nix:60-62` is its only would-be
+  reference). Consumed in `_resolveHostSet.nix:37,44-53` (`myUsers` →
+  `userSystemModules` = `.system` per host-selected user;
+  `homeManagerUsers` = `.home` under `home-manager.users.<name>`) and
+  duplicated in `mkIsoHost.nix:15,22,27` (dies with mkIsoHost's dedup).
+  User files are functions returning
+  `{system = {...}: {...}; home = {...}: {...};}` — each half is a module
+  function taking `pkgs`/`config`. `mkLinuxHost.nix:16-24`: `users ? null`
+  defaults gui→`["peon"]`, else `["wisp"]`.
 - `lib/flake/_resolveHostSet.nix` — imports registries by path
   (`system-modules`, `home-modules`, `users`, `helpers`, `lib`) and the
   four `common*.nix` files by explicit path; line 41 has the dangling
@@ -118,10 +167,13 @@ only survives because nothing forces the specialArg.
   `serv` ×8, `lsp` ×8, `file` ×3, `apps` ×3, `ensureDirExists` ×1.
   All `serv`/`apps` uses are in `hosts/kkbook/default.nix`.
   `myLib.validate` and `myLib.scanPkgs` have **zero** consumers.
-- Latent bug: `lib/services/mkContainerService.nix:178` calls
-  `myLib.ensureDirExists` — that attr does not exist (it is
-  `myLib.file.ensureDirExists`); fires only for volumes with
-  `create = true`. Drive-by fix during migration.
+- Correction to an earlier draft of this plan (verified 2026-10-16, caught
+  by plans/homelab.md): `lib/services/mkContainerService.nix:178` calls
+  `myLib.ensureDirExists`, and that **resolves today** — the file binds
+  `myLib = import ../file {inherit pkgs;};` locally at line 25. It becomes
+  a real bug only if that binding is dropped during autoload
+  normalization: rewrite the call to `myLib.file.ensureDirExists` in the
+  same commit that touches the file.
 - Relative cross-references that must be updated on move (complete list):
   - `flake.nix:48` (`./lib/flake`), `flake.nix:107` (`./overlays`);
   - `hosts/installer/default.nix:7-8` (`../../pkgs/{nix-conf-clone,nix-conf-install}`),
@@ -129,7 +181,17 @@ only survives because nothing forces the specialArg.
   - `home-modules/ide/helix/nix/hxr.nix:2` (`../../../../pkgs/hxr`);
   - path strings inside `lib/flake/{_resolveHostSet,mkIsoHost}.nix`
     (`"/users"`, `"/system-modules"`, `"/home-modules"`, `"/helpers"`,
-    `"/lib"`, `"hosts/${name}"`).
+    `"/lib"`, `"hosts/${name}"` — the latter becomes
+    `hosts/<os>/${name}` with the hosts-tier disambiguation).
+- `helpers/secrets.nix` — **readable via directory-scoped grep**
+  (`rg -n "" helpers/`; direct path access is blocked by the `*secrets*`
+  rule, directory scans are not). Verified contents (2026-10-16):
+  `secretsFile = ../secrets.yml;` (relative — **breaks** when helpers
+  moves to `src/helpers/`, must become `../../secrets.yml` or absolute);
+  `sops.age.keyFile = lib.mkDefault "/etc/sops/age.key"` (already set for
+  every host — helpers is appended everywhere; pocvm overrides it); three
+  live test `sops.secrets` entries (`peon-password`, `nixos-secret-test`,
+  `hm-secret-test`). `secrets.yml` contents remain user-only.
 - `console/terminal/` is the only directory registered both as itself and
   via separately-registered children (`kitty/`, `wezterm/`); its
   `default.nix` is a real module (options + assertion + config). All other
@@ -178,7 +240,18 @@ src/
                               # usb-luks-key sshd(.nix)
       darwin/base.nix         # was common-darwin.nix
       gui/base.nix            # was common-gui-linux.nix; NOT auto-included
-  hosts/ users/ helpers/ overlays/ pkgs/   # pure moves
+  hosts/
+    linux/                    # NixOS systems + the ISO
+      kkbook/ kktab/ kkserv/ kknas/ kkworker/
+      installer/              # ISO: host.nix carries iso = true
+      pocvm/                  # TEMP sops POC (with users/pocuser.nix)
+      # each host dir: default.nix (module) [+ hardware-configuration.nix]
+      #                [+ optional host.nix = {inputs}: {gui, users,
+      #                   extraModules, iso} — absent = mk*Host defaults]
+    darwin/
+      kg-continabook/         # host.nix = {inputs}: {users = ["kg"];}
+  users/                      # pure move; default.nix deleted (scan-derived)
+  helpers/ overlays/ pkgs/    # pure moves
 plans/ changes/ docker-services/ ...       # stay at root
 ```
 
@@ -294,11 +367,120 @@ Attr-name fallout (all cheap, grep-verified):
 - `serv` → `services` and top-level `apps` → `services.apps` (nested under
   `services/`, no longer a top-level child): 9 call sites, all in
   `hosts/kkbook/default.nix` — mechanical rename.
-- `ensureDirExists` stays under `myLib.file`; fix the one bad call in
-  `mkContainerService.nix:178`.
+- `ensureDirExists` stays under `myLib.file`; the one call in
+  `mkContainerService.nix:178` resolves today via that file's local
+  `myLib = import ../file` binding — rewrite it to
+  `myLib.file.ensureDirExists` when the file is touched (see Current
+  state).
 - `flake/` becomes `myLib.flake` — but `flake.nix` keeps its own direct
   import: `flakeLib = import ./src/lib/flake {};` (called with empty args,
-  which the normalized `flake/default.nix` ignores).
+  which the normalized `flake/default.nix` ignores). The normalized
+  `flake/default.nix` additionally exports `readHosts` **unapplied**
+  (like the `mk*Host` functions): `readHosts = import ./readHosts.nix;`.
+
+### `readHosts` — filesystem host enumeration
+
+New file `src/lib/flake/readHosts.nix`, exported as
+`flakeLib.readHosts` (unapplied; takes `inputs` at call time because
+`host.nix` files may need them; needs no `pkgs`):
+
+```nix
+# src/lib/flake/readHosts.nix
+{inputs}: {
+  dir,   # e.g. ./src/hosts/linux
+}: let
+  entries = builtins.readDir dir;             # sorted by name
+  dirs = builtins.filter (n: entries.${n} == "directory")
+    (builtins.attrNames entries);
+  isHost = n: builtins.pathExists (dir + "/${n}/default.nix");
+  hostDirs = builtins.filter isHost dirs;
+  strays = builtins.filter (n: !isHost n) dirs;
+in
+  assert builtins.isPath dir || throw "dir must be a path";
+  assert strays == [] || throw
+    "readHosts ${toString dir}: directories without default.nix: ${toString strays}";
+  builtins.listToAttrs (map (name: {
+      inherit name;
+      value = {
+        path = dir + "/${name}";
+        args =
+          if builtins.pathExists (dir + "/${name}/host.nix")
+          then import (dir + "/${name}/host.nix") {inherit inputs;}
+          else {};
+      };
+    })
+    hostDirs)
+```
+
+- Returns `{ <dirname> = { path; args; }; }` — name = directory name =
+  flake attr name = `networking.hostName` (unchanged convention).
+- `args` is the raw `host.nix` result; `flake.nix` consumes `gui`,
+  `users`, `extraModules` and strips `iso` before calling `mk*Host`
+  (whose parameter lists are closed — an unexpected attr is an eval
+  error, which is what we want).
+- Stray host-looking directories (no `default.nix`) throw instead of
+  being silently dropped; regular files (READMEs, `.gitignore`) are
+  ignored.
+- Host enumeration is per tier — call it twice (`linux/`, `darwin/`);
+  cross-tier drift (a `kk*` dir landing in `darwin/`) is visible as a
+  missing `nixosConfigurations` attr, same as any misnamed dir today.
+- `readHosts` is deliberately **not** `readModules`: hosts are
+  one-dir-per-entity with per-host args, not module lists. It shares the
+  "filesystem is the registry" discipline, not the walker.
+
+### `readUsers` — filesystem user enumeration
+
+New file `src/lib/flake/readUsers.nix`, exported as
+`flakeLib.readUsers` (unapplied; `{inputs}: {dir}:` — takes `inputs`
+because user files are functions of it; needs no `pkgs`):
+
+```nix
+# src/lib/flake/readUsers.nix
+{inputs}: {
+  dir,                    # e.g. ./src/users
+}: let
+  entries = builtins.readDir dir;             # sorted by name
+  names = builtins.attrNames entries;
+  isUserFile =
+    n: n != "default.nix"
+    && entries.${n} == "regular"
+    && builtins.hasSuffix ".nix" n;
+in
+  assert builtins.isPath dir || throw "dir must be a path";
+  assert ! builtins.elem "default.nix" names
+    || throw "readUsers ${toString dir}: users/default.nix registry still present — delete it (users are scanned now)";
+  assert (builtins.all (n: entries.${n} == "regular") names)
+    || throw "readUsers ${toString dir}: only regular .nix files allowed (directories are not users): ${toString (builtins.filter (n: entries.${n} != "regular") names)}";
+  builtins.listToAttrs
+    (map
+      (file:
+        let
+          name = builtins.baseNameOf file;
+          user = import (dir + "/${file}") {inherit inputs;};
+        in
+          assert user ? system && user ? home
+            || throw "readUsers ${toString dir}/${file}: user must provide {system, home}";
+          {inherit name; value = user;})
+      (builtins.filter isUserFile names))
+```
+
+- Returns `{ <name> = {system, home}; }` — name = filename stem = user
+  name = the `users.users.<name>` / `home-manager.users.<name>` key
+  (unchanged convention; matches today's filenames: `peon.nix` → `peon`).
+- Users are **imported results, not paths** — the file bodies are
+  functions of `inputs` (exactly what the registry did per entry), so
+  `readUsers` imports each with `inputs`. This is why it is a sibling of
+  `readHosts`, not a mode of `readModules`.
+- Hard errors, same discipline as `readHosts`: leftover `default.nix`
+  registry, any subdirectory, or a user missing the `{system, home}` shape
+  throw at eval instead of failing silently. Non-`.nix` regular files
+  (README, `.gitignore`) are ignored, as in `readHosts`. Directories are
+  rejected (not skipped) so a future dir-based user layout
+  (`users/<name>/default.nix` + args, host-style) is a deliberate
+  follow-up, not an accident.
+- Per-host **selection is unchanged**: hosts pick users by name
+  (`users = [...]` in `host.nix`; `mkLinuxHost` defaults gui→`["peon"]`,
+  else `["wisp"]`). Autoloading removes the registry, not the selection.
 
 ## mk*Host / flake wiring changes
 
@@ -306,8 +488,9 @@ Attr-name fallout (all cheap, grep-verified):
   `root ? ../..` → `root ? ../../..`; path strings
   `"/system-modules"` → `"/src/modules/system"`, `"/home-modules"` →
   `"/src/modules/home"`, `"/users"` → `"/src/users"`, `"/helpers"` →
-  `"/src/helpers"`, `"/lib"` → `"/src/lib"`, `"hosts/${name}"` →
-  `"src/hosts/${name}"`.
+  `"/src/helpers"`, `"/lib"` → `"/src/lib"`, host module
+  `"hosts/${name}"` → `"hosts/<os>/${name}"` (see below — the tier is
+  the disambiguation directory).
 - `lib/flake/_resolveHostSet.nix`:
   - load the scanner directly (before `myLib` exists):
     `fs = import (lib.path.append root "src/lib/fs.nix") {lib = inputs.nixpkgs.lib;}`;
@@ -322,13 +505,24 @@ Attr-name fallout (all cheap, grep-verified):
     same `{common, linux, darwin}` shape as before;
   - gui wiring:
     `++ lib.optionals (gui && os == "linux") (fs.readModules { dir = lib.path.append root "src/modules/system/gui"; mode = "array"; })`;
+  - host module path becomes
+    `(lib.path.append root "hosts/${os}/${name}")` — `_resolveHostSet`
+    already receives `os` ("linux"/"darwin"), so the filesystem
+    disambiguation and the wiring use the same two names;
   - `myLib = import (lib.path.append root "src/lib") {inherit pkgs;};`
     (same call shape — `src/lib/default.nix` is now the autoloader);
+  - users: `myUsers` moves **below** the `myLib` binding (it currently
+    sits at the top of the `let`, before `myLib` exists) and becomes
+    `myUsers = myLib.flake.readUsers {inherit inputs; dir = lib.path.append root "src/users";};`
+    — `userSystemModules` / `homeManagerUsers` are untouched (the
+    `{name = {system, home};}` shape is the contract);
   - `home-manager.sharedModules` logic unchanged
     (`homeModules.common ++ homeModules.${os}` + noctalia when gui).
 - `mkIsoHost.nix` — **decision:** route through `_resolveHostSet.nix`
-  (`os = "linux"`, `arch = "x86"`, `gui = false`, `users = ["peasant"]`)
-  and delete its duplicated wiring; delete
+  (`os = "linux"`, `arch = "x86"`, `gui = false`; `users` comes from the
+  installer's `host.nix`, defaulting to `["peasant"]` as today) and
+  delete its duplicated wiring; its host module path becomes
+  `hosts/linux/${name}`; delete
   `hosts/installer/default.nix`'s manual imports of
   `system-modules/{common,common-linux}.nix` (the linux tier already
   contains `base.nix`). Cost: the installer gains the full linux system
@@ -337,7 +531,32 @@ Attr-name fallout (all cheap, grep-verified):
   proves unacceptable: keep `mkIsoHost` separate, just switch its two
   registry imports to `readModules` array mode on the `common` + `linux`
   `base.nix` files.
-- `flake.nix`: `import ./lib/flake` → `import ./src/lib/flake {}`;
+- `flake.nix` — replace the hand-written host attrsets with
+  `readHosts`-driven enumeration (host args now come from the filesystem):
+
+  ```nix
+  flakeLib = import ./src/lib/flake {};
+  linuxHosts = flakeLib.readHosts {inherit inputs; dir = ./src/hosts/linux;};
+  darwinHosts = flakeLib.readHosts {inherit inputs; dir = ./src/hosts/darwin;};
+
+  isoHosts = lib.filterAttrs (_: h: h.args.iso or false) linuxHosts;
+  nixosHosts = lib.filterAttrs (_: h: !(h.args.iso or false)) linuxHosts;
+
+  nixosConfigurations = builtins.mapAttrs (name: host:
+    flakeLib.mkLinuxHost (host.args // {inherit inputs name;}))
+    nixosHosts;
+  isoConfigurations = builtins.mapAttrs (name: host:
+    flakeLib.mkIsoHost (builtins.removeAttrs host.args ["iso"]
+      // {inherit inputs name;}))
+    isoHosts;
+  darwinConfigurations = builtins.mapAttrs (name: host:
+    flakeLib.mkDarwinHost (host.args // {inherit inputs name;}))
+    darwinHosts;
+  ```
+
+  (`lib` here is `nixpkgs.lib`; `host.args // {inherit inputs name;}` —
+  inputs/name win over anything a `host.nix` might set, same as today's
+  `hostArgs // {inherit inputs name;}`.) Also
   `import ./overlays` → `import ./src/overlays`.
 - `hosts/installer/default.nix`: `../../pkgs/...` → `../../../src/pkgs/...`;
   `home-modules/ide/helix/nix/hxr.nix`: `../../../../pkgs/hxr` →
@@ -367,9 +586,12 @@ Ordered so every step is independently eval-able; commit per step.
 2. **Relocate (pure move, no semantics).** `git mv lib hosts users helpers
    overlays pkgs home-modules system-modules src/` (create `src/` first).
    Update the path list under "Current state" (flake.nix, mk*Host root
-   defaults + path strings, installer, hxr.nix). Verify:
+   defaults + path strings, installer, hxr.nix) and fix
+   `src/helpers/secrets.nix:6` (`../secrets.yml` → `../../secrets.yml`,
+   verified 2026-10-16 — the file is readable via `rg -n "" helpers/`).
+   Verify:
    `nix eval .#nixosConfigurations.kkbook.config.system.build.toplevel.drvPath`
-   and the same for `kktab kkserv kknas kkworker installer`,
+   and the same for `kktab kkserv kknas kkworker pocvm installer`,
    `darwinConfigurations.kg-continabook`, plus `nix flake show`.
 3. **Add the scanner.** Create `src/lib/fs.nix`; temporarily add
    `fs = import ./fs.nix parsedArgs;` to the old `src/lib/default.nix`.
@@ -377,13 +599,51 @@ Ordered so every step is independently eval-able; commit per step.
    at this point — smoke-test on `src/lib` instead) returns the expected
    shape.
 4. **Autoload the lib.** Normalize `validators/default.nix` and
-   `flake/default.nix` to `args:` functions; `git mv scan-pkgs.nix
-   scanPkgs.nix`; replace `src/lib/default.nix` with the autoloader;
-   rename in `hosts/kkbook/default.nix`: `myLib.serv.*` → `myLib.services.*`,
-   `myLib.apps.*` → `myLib.services.apps.*`; fix
-   `mkContainerService.nix:178` → `myLib.file.ensureDirExists`. Verify:
+   `flake/default.nix` to `args:` functions (the latter re-exports
+    `mkLinuxHost`/`mkDarwinHost`/`mkIsoHost`/`readHosts`/`readUsers`
+    **unapplied**); create `src/lib/flake/{readHosts,readUsers}.nix` per
+    the specs; `git mv scan-pkgs.nix scanPkgs.nix`; replace
+    `src/lib/default.nix` with the
+   autoloader; rename in `hosts/kkbook/default.nix`: `myLib.serv.*` →
+   `myLib.services.*`, `myLib.apps.*` → `myLib.services.apps.*`; rewrite
+   `mkContainerService.nix:178`'s `myLib.ensureDirExists` →
+   `myLib.file.ensureDirExists` (resolves today only via the file's
+   local binding — see Current state). Verify:
    rebuild `kkbook` (the only host exercising `serv`/`apps`).
-5. **Filesystem-as-registry for modules.**
+5. **Auto-load the hosts (filesystem disambiguation).**
+   - Move each host into its platform tier:
+     `git mv src/hosts/kkbook src/hosts/linux/kkbook` (same for kktab,
+     kkserv, kknas, kkworker, installer, pocvm);
+     `git mv src/hosts/kg-continabook src/hosts/darwin/kg-continabook`
+     (create the tier dirs first).
+   - Write the `host.nix` files carrying today's flake-level data:
+     `linux/kkbook` `{inputs}: {gui = true;}`; `linux/kktab`
+     `{inputs}: {gui = true; extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel];}`;
+     `linux/pocvm` `{inputs}: {users = ["pocuser"];}` (TEMP);
+     `linux/installer` `{inputs}: {iso = true; users = ["peasant"];}`;
+     `darwin/kg-continabook` `{inputs}: {users = ["kg"];}`;
+     kkserv/kknas/kkworker get no `host.nix` (defaults).
+   - Update `_resolveHostSet.nix` host path to
+     `hosts/${os}/${name}` and `mkIsoHost.nix` to `hosts/linux/${name}`
+     (step 4's root/path updates otherwise unchanged).
+    - Rewrite `flake.nix` enumeration per the `readHosts` sketch above;
+      delete the `nixosHosts`/`darwinHosts` attrsets.
+    - Delete the `users/default.nix` registry and rewire
+      `_resolveHostSet.nix`: `myUsers = myLib.flake.readUsers {inherit inputs;
+      dir = lib.path.append root "src/users";};` (below the `myLib`
+      binding; downstream selection unchanged). Fixes the current drift —
+      `users/pocuser.nix` is unlisted today and becomes reachable by name
+      like any other user (still inert — no host selects it).
+   - Verify: `nix flake show` (8 configurations, same names as before);
+     eval every configuration; smoke-test `readHosts` —
+     `kktab.args.extraModules` non-empty, `installer.args.iso == true`,
+     installer absent from `nixosConfigurations`, pocvm present, and a
+      throwaway dir without `default.nix` under `src/hosts/linux/` makes
+      `readHosts` throw. Smoke-test `readUsers` too: the scanned set is
+      `{root, peon, wisp, kg, peasant, pocuser}` (pocuser included — it was
+      missing from the hand-written registry), each value has `system` +
+      `home`, and a leftover `src/users/default.nix` makes eval throw.
+6. **Filesystem-as-registry for modules.**
    - `git mv src/home-modules src/modules/home` (rename to
      `src/modules/home` in one step); same
      `src/system-modules` → `src/modules/system`.
@@ -406,13 +666,13 @@ Ordered so every step is independently eval-able; commit per step.
      `src/modules/system/default.nix`.
    - Rewire `_resolveHostSet.nix` and `mkIsoHost.nix` as specified above;
      delete installer's manual imports.
-   - Verify: eval **all** configurations (step 2 list) and additionally
+   - Verify: eval **all** configurations (step 2/5 lists) and additionally
      compare resolved module lists before/after for one host
      (`nix eval .#nixosConfigurations.kkbook.options.home-manager.sharedModules`-style
      diff, or `nixos-option`-free: diff the
      `config.system.build.toplevel.drvPath` closure counts) to catch a
      silently dropped module.
-6. **Cleanup & lint.** Grep for stale paths
+7. **Cleanup & lint.** Grep for stale paths
    (`home-modules|system-modules|myLib\.serv\b|myLib\.apps\b|scan-pkgs`);
    run `alejandra .`, `statix check`, `deadnix`; `lefthook run pre-commit`
    (commitlint/`todos` hooks).
@@ -425,20 +685,36 @@ build the ISO.
 
 - **Module order becomes alphabetical** (was hand-ordered in the
   registries). Equal-priority conflicting definitions that previously
-  "won" by order will now error loudly. Full-host rebuilds in step 5 are
+  "won" by order will now error loudly. Full-host rebuilds in step 6 are
   the detector; fix by adjusting priorities, not by re-adding lists.
-- **`src/helpers/secrets.nix` is unreadable** (permission rule denies
-  `*secrets*`). If it references secrets by path relative to the repo root
-  (e.g. `../secrets/...`), moving `helpers/` → `src/helpers/` silently
-  breaks those paths at eval. Inspect it during step 2 (as the user) and
-  update references, or switch to absolute `/etc/nixos/secrets/...` paths.
+- **`src/helpers/secrets.nix` relative path** (verified 2026-10-16 via
+  `rg -n "" helpers/` — directory grep bypasses the `*secrets*` access
+  rule): line 6 `secretsFile = ../secrets.yml;` resolves to the repo-root
+  `secrets.yml` today and silently breaks when `helpers/` moves to
+  `src/helpers/` in step 2 — rewrite it to `../../secrets.yml` (or an
+  absolute path) **in the same commit as the move**. The file already
+  sets `sops.age.keyFile = lib.mkDefault "/etc/sops/age.key"` and three
+  live test `sops.secrets`; `secrets.yml` contents remain user-only and
+  must be reviewed by the user.
 - **ISO scope creep**: routing `mkIsoHost` through `_resolveHostSet` gives
   the installer the full linux tiers + `homeModules.linux`. All gated
   modules must be confirmed `mkIf`-gated with default-false enables;
   anything unconditional leaks into the ISO (and into eval time).
-- **Dropped-module risk in step 5** is highest for
+- **Dropped-module risk in step 6** is highest for
   `console/terminal` (+kitty +wezterm) — mitigated by the `base.nix`
   rename and the before/after module-list comparison.
+- **Host tiers**: a host dir misplaced in the wrong tier
+  (`kk*` under `darwin/`, `kg-*` under `linux/`) is not auto-corrected —
+  it shows up as the host missing from the expected flake output (or
+  failing eval on the wrong platform). `readHosts` throws on directories
+  lacking `default.nix`, so the failure mode is loud; the tier choice
+  itself is by-convention, like the module tiers.
+- **Users scan is file-shape-strict**: `readUsers` throws on a leftover
+  `users/default.nix`, on any subdirectory, and on a user file not
+  returning `{system, home}` — a half-migrated user fails eval loudly, but
+  the `default.nix` assert means deleting the registry must land **in the
+  same commit** that switches the import (same discipline as
+  `src/helpers/secrets.nix` in step 2).
 - **Rust seed crate is live everywhere scripts are** (fish/zsh/elvish
   enable `apps.my.scripts`): `hello-world-rs` will build and land on PATH
   for those users. Intentional; set `apps.my.scripts.rust.enable = false`
@@ -453,14 +729,20 @@ build the ISO.
 
 ## Verification
 
-- `nix flake show` lists all 8 configurations (5 nixos + 1 iso + 1 darwin +
-  devShells/formatter).
+- `nix flake show` lists all 8 configurations — 6 nixos (kkbook, kktab,
+  kkserv, kknas, kkworker, pocvm) + 1 iso (installer) + 1 darwin
+  (kg-continabook) — plus devShells/formatter; the same names as before
+  the migration, just derived from `src/hosts/{linux,darwin}/`.
 - `nix eval` of `config.system.build.toplevel.drvPath` for every linux
   host + iso; `nix eval` of `darwinConfigurations.kg-continabook.system`
   drvPath.
 - `nix eval --impure --expr` smoke tests of `readModules` (array + set
   mode, `stopOnDefault` on a program dir like `src/modules/home/common/console/git`
-  returns the dir, not its `nix/` children).
+  returns the dir, not its `nix/` children) and of `readHosts` (attrs =
+  tier dir names; `installer` only in `isoHosts`; `kktab.args.extraModules`
+  non-empty; stray dir without `default.nix` throws) and of `readUsers`
+  (scanned set = filename stems incl. `pocuser`; each value has `system` +
+  `home`; leftover `default.nix` or a `home`-less user throws).
 - Before/after module-list diff for `kkbook` (the host using the most
   feature paths: gui, serv/apps, extraModules).
 - Scripts/rust merge: `nix eval` that `apps.my.scripts.rust.enable`
@@ -475,12 +757,10 @@ build the ISO.
 
 ## Open questions
 
-- Keep `isoConfigurations` as a bespoke output, or fold the installer into
-  `nixosConfigurations` now that `mkIsoHost` shares `_resolveHostSet`?
-- Autoload `src/users/` later? (`readModules` set mode + per-file
-  `import` with `inputs` would produce
-  `{peon = {system = ...; home = ...}; ...}` if each user file returns the
-  attrset directly — currently they are wrapped in `{...}@ inputs:`.)
+- Remove the TEMP `pocvm` host (and `users/pocuser.nix`) before or after
+  this migration? (`flake.nix:60` says "remove together with hosts/pocvm";
+  either way it just becomes `src/hosts/linux/pocvm/` + `host.nix` in
+  step 5 and can be deleted in a follow-up commit.)
 - `enableHm` in `_resolveHostSet.nix` is asserted but unused
   (`# TODO: handle enableHm == false`) — implement while touching the
   file, or leave?

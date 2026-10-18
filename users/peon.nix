@@ -46,7 +46,10 @@
       enable = true;
       defaultEditor = false;
     };
-    apps.kakoune.defaultEditor = false;
+    apps.kakoune = {
+        enable = true;
+        defaultEditor = true;
+    };
     apps.lazygit.enable = true;
     apps.opencode.enable = true;
     # apps.tmux = {
@@ -117,7 +120,6 @@
 
     apps.blender.enable = true;
     apps.kando.enable = false;
-    apps.kakoune.enable = true;
 
     home.packages = with pkgs; [
       # neovim
