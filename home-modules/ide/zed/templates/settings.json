@@ -16,7 +16,8 @@
     "toml": true,
     "kdl": true,
     "sops": true,
-    "vue": true
+    "vue": true,
+    "taskfile": true
   },
   "lsp": {{ lsp | tojson }},
   "languages": {{ languages | tojson }}
