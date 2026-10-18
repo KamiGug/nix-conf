@@ -1,9 +1,10 @@
 os:
-  edit: {{ file | tojson }}
-  editAtLine: {{ atLine | tojson }}
-  editAtLineAndWait: {{ atLine | tojson }}
-  open: {{ file | tojson }}
-  editInTerminal: true
+  # edit: {{ file | tojson }}
+  # editAtLine: {{ atLine | tojson }}
+  # editAtLineAndWait: {{ atLine | tojson }}
+  # open: {{ file | tojson }}
+  # editInTerminal: true
+  editPreset: zed
 {% if difftastic or gitDelta %}
 git:
   diffRenderers:

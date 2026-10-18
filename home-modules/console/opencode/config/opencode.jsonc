@@ -204,6 +204,14 @@
       "git clean *": "ask",
 
       // ─────────────────────────────────────────────
+      // Taskfile tasks run without approval (go-task is the
+      // project task runner). Must stay above the hardening
+      // rules: redirections and secret paths in a `task ...`
+      // command line still fall through to ask/deny below.
+      // ─────────────────────────────────────────────
+      "task *": "allow",
+
+      // ─────────────────────────────────────────────
       // Hardening. MUST stay last: last matching rule wins.
       // Anything that can change state asks (never auto-runs);
       // only secret reads are denied outright.
