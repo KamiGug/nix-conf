@@ -1,7 +1,7 @@
-{inputs, ...}: final: prev: let
+{...}: final: prev: let
   scanPkgs = import ../lib/scan-pkgs.nix {
     pkgs = final;
-    lib = prev.lib;
+    inherit (prev) lib;
   };
 in
   scanPkgs ../pkgs
