@@ -40,6 +40,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   helpers = import (lib.path.append root "helpers");
   services = import (lib.path.append root "services");
   myLib = import (lib.path.append root "lib") {inherit pkgs;};
+  localOverlay = import (lib.path.append root "overlays") {inherit inputs;};
 
   userSystemModules =
     map (name: myUsers.${name}.system) users;
@@ -119,6 +120,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
       sopsModule
       homeManagerModule
       homeManagerConfig
+      {nixpkgs.overlays = [localOverlay];}
     ]
     ++ userSystemModules
     ++ extraModules;

@@ -47,8 +47,8 @@
       defaultEditor = false;
     };
     apps.kakoune = {
-        enable = true;
-        defaultEditor = false;
+      enable = true;
+      defaultEditor = false;
     };
     apps.lazygit.enable = true;
     apps.opencode.enable = true;
@@ -131,6 +131,8 @@
       brave
       thunderbird
       cloc
+
+      mdv
 
       spotify
       discord

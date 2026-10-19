@@ -103,9 +103,9 @@
     // {
       # inherit services systemModules homeModules helpers myUsers;
 
-      overlays = [
-        (import ./overlays {inherit inputs;})
-      ];
+      overlays = {
+        default = import ./overlays {inherit inputs;};
+      };
 
       nixosConfigurations =
         builtins.mapAttrs

@@ -18,6 +18,7 @@ assert (builtins.isList extraModules) || throw "extraModules must be a list"; le
   helpers = import (root + "/helpers");
   services = import (root + "/services");
   myLib = import (root + "/lib") {inherit pkgs;};
+  localOverlay = import (root + "/overlays") {inherit inputs;};
 
   userSystemModules = map (user: myUsers.${user}.system) users;
 
@@ -48,6 +49,7 @@ in
         (root + "/hosts/${name}")
         inputs.home-manager.nixosModules.home-manager
         homeManagerConfig
+        {nixpkgs.overlays = [localOverlay];}
       ]
       ++ userSystemModules
       ++ extraModules;

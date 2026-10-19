@@ -4,8 +4,8 @@
   modulesPath,
   ...
 }: let
-  clone = pkgs.callPackage ../../pkgs/nix-conf-clone {};
-  install = pkgs.callPackage ../../pkgs/nix-conf-install {nix-conf-clone = clone;};
+  clone = pkgs.nix-conf-clone;
+  install = pkgs.nix-conf-install;
 in {
   imports = [
     (modulesPath + "/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix")

@@ -1,5 +1,7 @@
-{pkgs, ...}: let
-  inherit (pkgs) lib;
+{
+  pkgs,
+  lib ? pkgs.lib,
+}: let
   scan = rootPath: currentPath: let
     entries = builtins.readDir currentPath;
     isRoot = rootPath == currentPath;
@@ -11,15 +13,10 @@
         fullPath = currentPath + "/${name}";
       in
         if type == "directory"
-        then let
-          result = scan rootPath fullPath;
-        in
-          if result == {}
-          then null
-          else {
-            inherit name;
-            value = result;
-          }
+        then {
+          inherit name;
+          value = scan rootPath fullPath;
+        }
         else if type == "regular" && lib.hasSuffix ".nix" name && name != "default.nix"
         then {
           name = lib.removeSuffix ".nix" name;

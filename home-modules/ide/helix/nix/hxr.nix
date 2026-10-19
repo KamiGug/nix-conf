@@ -1,3 +1,3 @@
 {pkgs, ...}: {
-  home.packages = [(pkgs.callPackage ../../../../pkgs/hxr {})];
+  home.packages = [pkgs.hxr];
 }
