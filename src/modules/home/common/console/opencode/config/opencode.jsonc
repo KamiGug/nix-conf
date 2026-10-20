@@ -281,7 +281,7 @@
       "*secrets*": "deny",
 
       // secrets.nix: same treatment as any other file
-      "*secrets.nix*": "ask",
+      "*secrets.nix*": "allow",
       "cat *secrets.nix": "allow",
       "bat *secrets.nix": "allow",
       "batcat *secrets.nix": "allow",
@@ -454,7 +454,7 @@
         // ...or through the shell.
         "bash": {
           "*": "allow",
-          "*secrets.nix*": "ask",
+          "*secrets.nix*": "allow",
           "cat *secrets.nix": "allow",
           "bat *secrets.nix": "allow",
           "head *secrets.nix": "allow",
@@ -491,7 +491,7 @@
           "*secrets*": "deny",
 
           // secrets.nix: same treatment as any other file
-          "*secrets.nix*": "ask",
+          "*secrets.nix*": "allow",
           "cat *secrets.nix": "allow",
           "bat *secrets.nix": "allow",
           "head *secrets.nix": "allow",
@@ -756,7 +756,7 @@
           // secrets.nix: same treatment as any other file.
           // Reads run, writes are denied (this agent never writes),
           // redirection/exec flags below re-deny.
-          "*secrets.nix*": "deny",
+          "*secrets.nix*": "allow",
           "cat *secrets.nix": "allow",
           "bat *secrets.nix": "allow",
           "batcat *secrets.nix": "allow",
