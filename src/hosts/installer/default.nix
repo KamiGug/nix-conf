@@ -10,8 +10,8 @@ in {
   imports = [
     (modulesPath + "/installer/cd-dvd/installation-cd-graphical-calamares-plasma6.nix")
 
-    ../../system-modules/common.nix
-    ../../system-modules/common-linux.nix
+    ../../../src/system-modules/common.nix
+    ../../../src/system-modules/common-linux.nix
   ];
 
   # common-linux disables the X server, which the graphical installer needs.

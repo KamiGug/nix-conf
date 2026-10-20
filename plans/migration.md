@@ -1,6 +1,6 @@
 # Migration: src/ layout, filesystem-as-registry, auto-loading modules, lib, hosts & users
 
-Status: **proposed** — not started.
+Status: **in progress** — step 1 done; step 2 next.
 Date: 2026-10-16
 
 ## Problem
@@ -109,8 +109,10 @@ hand; and `_resolveHostSet.nix` carries a dangling `import (root +
 - **Rust CLI wrapper merged, not deleted:** the orphaned
   `home-modules/scripts/` (option `homeModules.rustCrates`) is merged into
   the bash-scripts module `home-modules/console/scripts/`. The merged
-  module keeps `apps.my.scripts.{enable}` and gains
-  `apps.my.scripts.rust.enable` (default `true`): every crate directory
+  module keeps `apps.my.scripts.{enable}` (decision: the separate
+  `apps.my.scripts.rust.enable` toggle was **dropped** — rust rides the
+  same `enable` as the bash scripts; opt out by disabling
+  `apps.my.scripts`): every crate directory
   under `console/scripts/rust/` that contains a `Cargo.toml` is built with
   `pkgs.rustPlatform.buildRustPackage` (repo precedent:
   `pkgs/hxr/default.nix`) against its checked-in `Cargo.lock`, and lands
@@ -568,14 +570,17 @@ in
 
 Ordered so every step is independently eval-able; commit per step.
 
-1. **Merge the rust CLI wrapper into the scripts module.** (Already
+1. **Merge the rust CLI wrapper into the scripts module.** ✅ **DONE**
+   (2026-10-20 — verified: crate in peon's `home.packages`, builds, runs).
+   (Already
    applied in the working tree on 2026-10-16 at the old paths; keep as its
    own commit.) Rewrite
    `home-modules/console/scripts/default.nix`: keep the `bash/` deployment
-   under `apps.my.scripts.enable`, add `apps.my.scripts.rust.enable`
-   (default `true`) that builds every `rust/*/` directory containing a
-   `Cargo.toml` via `pkgs.rustPlatform.buildRustPackage`
-   (`cargoLock.lockFile`, `lib.cleanSource`, `meta.mainProgram = name`).
+   under `apps.my.scripts.enable` and build every `rust/*/` directory
+   containing a `Cargo.toml` via `pkgs.rustPlatform.buildRustPackage`
+   (`cargoLock.lockFile`, `lib.cleanSource`, `meta.mainProgram = name`)
+   under the **same** `apps.my.scripts.enable` (the separate
+   `rust.enable` toggle was dropped by decision).
    Add the seed crate `rust/hello-world-rs/`
    (`Cargo.toml` edition 2021, hand-written dependency-free `Cargo.lock`
    v4, `src/main.rs`, plus `rust/.gitignore` containing `target/`).
@@ -717,8 +722,8 @@ build the ISO.
   `src/helpers/secrets.nix` in step 2).
 - **Rust seed crate is live everywhere scripts are** (fish/zsh/elvish
   enable `apps.my.scripts`): `hello-world-rs` will build and land on PATH
-  for those users. Intentional; set `apps.my.scripts.rust.enable = false`
-  per-user to opt out. Keep each crate's `Cargo.lock` in sync with its
+  for those users. Intentional; opt out by disabling `apps.my.scripts`
+  (there is no separate `rust.enable` — dropped by decision). Keep each crate's `Cargo.lock` in sync with its
   `Cargo.toml` — `buildRustPackage` fails on mismatch (a new dependency
   needs a regenerated lock via `cargo update`).
 - **Darwin**: `homeModules.darwin` and `systemModules.darwin` are small;
@@ -745,8 +750,8 @@ build the ISO.
   `home`; leftover `default.nix` or a `home`-less user throws).
 - Before/after module-list diff for `kkbook` (the host using the most
   feature paths: gui, serv/apps, extraModules).
-- Scripts/rust merge: `nix eval` that `apps.my.scripts.rust.enable`
-  defaults to `true` and that the crate set is `[ "hello-world-rs" ]`;
+- Scripts/rust merge: `nix eval` that the crate set is
+  `[ "hello-world-rs" ]`;
   `nix build` the `hello-world-rs` derivation and run the resulting
   binary; confirm `hello-world-rs` is in a shell user's `home.path`.
 - `alejandra .`, `statix check`, `deadnix` clean.

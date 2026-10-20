@@ -38,6 +38,7 @@
       "*.pypirc": "deny",
 
       "*secrets*": "deny",
+      "*secrets*.nix": "allow",
       "*sops*": "deny"
     },
 

@@ -4,7 +4,7 @@
   arch ? "arm",
   users ? null,
   extraModules ? [],
-  root ? ../..,
+  root ? ../../..,
 }:
 assert (builtins.isString name) || throw "name must be a string";
 assert (builtins.elem arch ["x86" "arm"]) || throw "arch must be one of the following 'x86', 'arm'";

@@ -2,7 +2,7 @@
   inputs,
   name ? "installer",
   users ? ["peasant"],
-  root ? ../..,
+  root ? ../../..,
   extraModules ? [],
 }:
 assert (builtins.isString name) || throw "name must be a string";
@@ -12,13 +12,13 @@ assert (builtins.isList extraModules) || throw "extraModules must be a list"; le
   system = "x86_64-linux";
   pkgs = inputs.nixpkgs.legacyPackages.${system};
 
-  myUsers = import (root + "/users") {inherit inputs;};
-  systemModules = import (root + "/system-modules");
-  homeModules = import (root + "/home-modules");
-  helpers = import (root + "/helpers");
-  services = import (root + "/services");
-  myLib = import (root + "/lib") {inherit pkgs;};
-  localOverlay = import (root + "/overlays") {inherit inputs;};
+  myUsers = import (root + "/src/users") {inherit inputs;};
+  systemModules = import (root + "/src/system-modules");
+  homeModules = import (root + "/src/home-modules");
+  helpers = import (root + "/src/helpers");
+  services = import (root + "/src/services");
+  myLib = import (root + "/src/lib") {inherit pkgs;};
+  localOverlay = import (root + "/src/overlays") {inherit inputs;};
 
   userSystemModules = map (user: myUsers.${user}.system) users;
 
@@ -46,7 +46,7 @@ in
     specialArgs = {inherit inputs systemModules homeModules myLib services;};
     modules =
       [
-        (root + "/hosts/${name}")
+        (root + "/src/hosts/${name}")
         inputs.home-manager.nixosModules.home-manager
         homeManagerConfig
         {nixpkgs.overlays = [localOverlay];}

@@ -33,36 +33,36 @@
 flake.nix
   65:    # TODO: split shells to seperate file
 
-home-modules/console/shell/elvish/default.nix
+plans/migration.md
+  770:  (`# TODO: handle enableHm == false`) — implement while touching the
+
+src/home-modules/console/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 
-lib/flake/_resolveHostSet.nix
+src/lib/flake/_resolveHostSet.nix
   81:  # TODO: handle enableHm == false
 
-lib/services/apps/authentik/default.nix
+src/lib/services/apps/authentik/default.nix
   67:        # TODO: make service name generators serparate functions for each service creating function/modules
 
-lib/services/apps/dbs/postgres/default.nix
+src/lib/services/apps/dbs/postgres/default.nix
   31:          owner = "999"; # TODO: allow making this arbitrary user
 
-lib/services/apps/nextcloud/default.nix
+src/lib/services/apps/nextcloud/default.nix
   49:  # TODO: add more asserts (at least one each)
 
-lib/services/apps/nextcloud/nextcloud.nix
+src/lib/services/apps/nextcloud/nextcloud.nix
   54:      # TODO: remove the ports! will need correct network + reverse proxy
 
-lib/services/ensureNetwork.nix
+src/lib/services/ensureNetwork.nix
   3:  # TODO: make this rootless
 
-lib/services/mkContainerService.nix
+src/lib/services/mkContainerService.nix
   117:  # TODO: write a validator for this
 
-plans/migration.bak.md
-  765:  (`# TODO: handle enableHm == false`) — implement while touching the
-
-system-modules/autologin.nix
+src/system-modules/autologin.nix
   26:      # TODO: assert de legal option
 
-system-modules/printing.nix
+src/system-modules/printing.nix
   1:# TODO: make it actually work
   2:# TODO: add pkg for scaning

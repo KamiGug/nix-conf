@@ -4,7 +4,7 @@
   arch ? "x86",
   gui ? false,
   users ? null,
-  root ? ../..,
+  root ? ../../..,
   extraModules ? [],
 }:
 assert (builtins.isString name) || throw "name must be a string";

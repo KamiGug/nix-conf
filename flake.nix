@@ -45,7 +45,7 @@
     flake-utils,
     ...
   }: let
-    flakeLib = import ./lib/flake;
+    flakeLib = import ./src/lib/flake;
     nixosHosts = {
       kkbook = {gui = true;};
       kktab = {
@@ -104,7 +104,7 @@
       # inherit services systemModules homeModules helpers myUsers;
 
       overlays = {
-        default = import ./overlays {inherit inputs;};
+        default = import ./src/overlays {inherit inputs;};
       };
 
       nixosConfigurations =

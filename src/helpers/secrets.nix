@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  secretsFile = ../secrets.yml;
+  secretsFile = ../../secrets.yml;
 
   simpleConf = name: {
     format = "yaml";

@@ -34,13 +34,13 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   };
   system = systemFromArch.${arch}.${os};
   pkgs = nixpkgs.legacyPackages.${system};
-  myUsers = import (lib.path.append root "users") {inherit inputs;};
-  systemModules = import (lib.path.append root "system-modules");
-  homeModules = import (lib.path.append root "home-modules");
-  helpers = import (lib.path.append root "helpers");
-  services = import (lib.path.append root "services");
-  myLib = import (lib.path.append root "lib") {inherit pkgs;};
-  localOverlay = import (lib.path.append root "overlays") {inherit inputs;};
+  myUsers = import (lib.path.append root "src/users") {inherit inputs;};
+  systemModules = import (lib.path.append root "src/system-modules");
+  homeModules = import (lib.path.append root "src/home-modules");
+  helpers = import (lib.path.append root "src/helpers");
+  services = import (lib.path.append root "src/services");
+  myLib = import (lib.path.append root "src/lib") {inherit pkgs;};
+  localOverlay = import (lib.path.append root "src/overlays") {inherit inputs;};
 
   userSystemModules =
     map (name: myUsers.${name}.system) users;
@@ -54,17 +54,17 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   );
   commonModules =
     [
-      (lib.path.append root "system-modules/common.nix")
+      (lib.path.append root "src/system-modules/common.nix")
     ]
     ++ (
       if os == "linux"
       then
         [
-          (lib.path.append root "system-modules/common-linux.nix")
+          (lib.path.append root "src/system-modules/common-linux.nix")
         ]
-        ++ lib.optional gui (lib.path.append root "system-modules/common-gui-linux.nix")
+        ++ lib.optional gui (lib.path.append root "src/system-modules/common-gui-linux.nix")
       else [
-        (lib.path.append root "system-modules/common-darwin.nix")
+        (lib.path.append root "src/system-modules/common-darwin.nix")
       ]
     );
 
@@ -116,7 +116,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
     )
     ++ helpers
     ++ [
-      (lib.path.append root "hosts/${name}")
+      (lib.path.append root "src/hosts/${name}")
       sopsModule
       homeManagerModule
       homeManagerConfig
