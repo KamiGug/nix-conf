@@ -20,19 +20,6 @@
     #  wget
   ];
 
-  services.my.ai = {
-    enable = false;
-
-    modelUrl = "https://huggingface.co/Lamapi/next-4b-Q4_0-GGUF/resolve/main/next-4b-q4_0.gguf";
-
-    modelSha256 = "0g29ky6rh5ag4qw41zxbil49q53md1gddzkwyqwwbwdmh2bs6nvd";
-
-    ctxSize = 2048;
-    threads = 4;
-
-    openClaw.enable = true;
-  };
-
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];

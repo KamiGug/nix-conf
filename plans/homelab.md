@@ -162,8 +162,8 @@ preset's `parentServiceName` uses `EnsureDirExists-` while
      directory-scoped grep (`rg -n "" helpers/` — direct path access is
      blocked by the `*secrets*` rule, directory scans are not); its shape
      is known (verified 2026-10-16), so this plan builds on it instead of
-     inventing a second convention. Only pocvm overrides the keyFile
-     (inside its VM config).
+     inventing a second convention. (pocvm used to override the keyFile but
+     was removed 2026-10-18 — no host overrides it now.)
    - Still missing: the age **key material** at `/etc/sops/age.key` on
      each host, and real (non-test) secrets in `sops.yml` — both
      user-executed steps; `sops.yml` / `secrets.yml` contents remain
@@ -688,7 +688,7 @@ migration.md steps 1-6 are done and sops is set up.
    Decision), folding their option vocabulary into `mk`. No consumers
    exist today (all call sites commented), so this is eval-safe. Verify:
    `nix eval` of `myLib.services.mk` on a throwaway dir under `/tmp` (or
-   an `--impure` expr) — not under `hosts/`, pocvm is a real TEMP host.
+   an `--impure` expr) — not under `hosts/`.
 1. **postgres** (simplest; no proxy, no templates beyond init SQL).
    Move `templates/services/service/postgres.yml.jinja` →
    `src/services/postgres/compose.yml` (rendered once, Jinja conditionals
@@ -768,7 +768,8 @@ migration.md steps 1-6 are done and sops is set up.
 ## Verification
 
 - `nix eval` of every host's `config.system.build.toplevel.drvPath` after
-  each migration step (all 6 nixos incl. TEMP pocvm + iso + darwin, per
+  each migration step (the configurations that eval — kkbook, kktab,
+  installer + darwin; kkserv/kknas/kkworker fail pre-existing, per
   migration.md).
 - `nix eval --impure --expr` smoke tests: `mk` autoload on a dir with/without
   Dockerfile/templates/compose.json; postfix appears in container name,

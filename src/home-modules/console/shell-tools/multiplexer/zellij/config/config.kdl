@@ -386,16 +386,16 @@ keybinds clear-defaults=true {
         }
     }
     shared_among "normal" {
-        bind "Alt left" {
+        bind "left" {
             MoveFocusOrTab "left"
         }
-        bind "Alt down" {
+        bind "down" {
             MoveFocus "down"
         }
-        bind "Alt up" {
+        bind "up" {
             MoveFocus "up"
         }
-        bind "Alt right" {
+        bind "right" {
             MoveFocusOrTab "right"
         }
         bind "Alt +" {
@@ -407,28 +407,28 @@ keybinds clear-defaults=true {
         bind "Alt =" {
             Resize "Increase"
         }
-        bind "Alt [" {
+        bind "[" {
             PreviousSwapLayout
         }
-        bind "Alt ]" {
+        bind "]" {
             NextSwapLayout
         }
         bind "Alt f" {
             ToggleFloatingPanes
         }
-        bind "Alt h" {
+        bind "h" {
             MoveFocusOrTab "left"
         }
         bind "Alt i" {
             MoveTab "left"
         }
-        bind "Alt j" {
+        bind "j" {
             MoveFocus "down"
         }
-        bind "Alt k" {
+        bind "k" {
             MoveFocus "up"
         }
-        bind "Alt l" {
+        bind "l" {
             MoveFocusOrTab "right"
         }
         bind "Alt n" {

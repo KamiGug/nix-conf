@@ -10,7 +10,9 @@
     // ─────────────────────────────────────────────
     // Reading the repository is OK
     // But never read secrets
-    // (matching is last-rule-wins, denies after allow)
+    // (matching is last-rule-wins, denies after allow.
+    // secrets.nix is source code, not a secret, so it is
+    // treated like any other repo file and reads freely)
     // ─────────────────────────────────────────────
 
     "read": {
@@ -256,6 +258,10 @@
       // Secrets: never readable through the shell either
       // (the `read` deny does not apply to bash). These stay
       // last so nothing above can turn a secret read back on.
+      // Exception: secrets.nix is source, not a secret, so
+      // shell commands on it follow the normal rules: the
+      // read-only viewers below run, everything else asks,
+      // and redirection/exec flags re-ask at the end.
       "*.env": "deny",
       "*.env.*": "deny",
       "*.envrc*": "deny",
@@ -273,6 +279,32 @@
       "*.npmrc*": "deny",
       "*.pypirc*": "deny",
       "*secrets*": "deny",
+
+      // secrets.nix: same treatment as any other file
+      "*secrets.nix*": "ask",
+      "cat *secrets.nix": "allow",
+      "bat *secrets.nix": "allow",
+      "batcat *secrets.nix": "allow",
+      "head *secrets.nix": "allow",
+      "tail *secrets.nix": "allow",
+      "nl *secrets.nix": "allow",
+      "wc *secrets.nix": "allow",
+      "grep *secrets.nix": "allow",
+      "rg *secrets.nix": "allow",
+      "diff *secrets.nix": "allow",
+      "ls *secrets.nix": "allow",
+      "stat *secrets.nix": "allow",
+      "git status *secrets.nix": "allow",
+      "git diff *secrets.nix": "allow",
+      "git log *secrets.nix": "allow",
+      "git show *secrets.nix": "allow",
+
+      // mutating flags on those viewers still ask
+      "*>*": "ask",
+      "*<*": "ask",
+      "bat * --pager*": "ask",
+      "rg * --pre*": "ask",
+
       "*sops*": "deny"
     },
 
@@ -415,12 +447,29 @@
           "*.pypirc": "deny",
 
           "*secrets*": "deny",
+          "*secrets*.nix": "allow",
           "*sops*": "deny"
         },
 
         // ...or through the shell.
         "bash": {
           "*": "allow",
+          "*secrets.nix*": "ask",
+          "cat *secrets.nix": "allow",
+          "bat *secrets.nix": "allow",
+          "head *secrets.nix": "allow",
+          "tail *secrets.nix": "allow",
+          "nl *secrets.nix": "allow",
+          "wc *secrets.nix": "allow",
+          "grep *secrets.nix": "allow",
+          "rg *secrets.nix": "allow",
+          "diff *secrets.nix": "allow",
+          "ls *secrets.nix": "allow",
+          "stat *secrets.nix": "allow",
+          "git status *secrets.nix": "allow",
+          "git diff *secrets.nix": "allow",
+          "git log *secrets.nix": "allow",
+          "git show *secrets.nix": "allow",
 
           "*.env": "deny",
           "*.env.*": "deny",
@@ -440,6 +489,25 @@
           "*.npmrc*": "deny",
           "*.pypirc*": "deny",
           "*secrets*": "deny",
+
+          // secrets.nix: same treatment as any other file
+          "*secrets.nix*": "ask",
+          "cat *secrets.nix": "allow",
+          "bat *secrets.nix": "allow",
+          "head *secrets.nix": "allow",
+          "tail *secrets.nix": "allow",
+          "nl *secrets.nix": "allow",
+          "wc *secrets.nix": "allow",
+          "grep *secrets.nix": "allow",
+          "rg *secrets.nix": "allow",
+          "diff *secrets.nix": "allow",
+          "ls *secrets.nix": "allow",
+          "stat *secrets.nix": "allow",
+          "git status *secrets.nix": "allow",
+          "git diff *secrets.nix": "allow",
+          "git log *secrets.nix": "allow",
+          "git show *secrets.nix": "allow",
+
           "*sops*": "deny"
         },
 
@@ -538,6 +606,7 @@
           "*.pypirc": "deny",
 
           "*secrets*": "deny",
+          "*secrets*.nix": "allow",
           "*sops*": "deny"
         },
         "bash": {
@@ -683,6 +752,28 @@
           "*.npmrc*": "deny",
           "*.pypirc*": "deny",
           "*secrets*": "deny",
+
+          // secrets.nix: same treatment as any other file.
+          // Reads run, writes are denied (this agent never writes),
+          // redirection/exec flags below re-deny.
+          "*secrets.nix*": "deny",
+          "cat *secrets.nix": "allow",
+          "bat *secrets.nix": "allow",
+          "batcat *secrets.nix": "allow",
+          "head *secrets.nix": "allow",
+          "tail *secrets.nix": "allow",
+          "nl *secrets.nix": "allow",
+          "wc *secrets.nix": "allow",
+          "grep *secrets.nix": "allow",
+          "rg *secrets.nix": "allow",
+          "diff *secrets.nix": "allow",
+          "ls *secrets.nix": "allow",
+          "stat *secrets.nix": "allow",
+          "git status *secrets.nix": "allow",
+          "git diff *secrets.nix": "allow",
+          "git log *secrets.nix": "allow",
+          "git show *secrets.nix": "allow",
+
           "*sops*": "deny"
         },
         "external_directory": {

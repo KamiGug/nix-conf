@@ -1,6 +1,6 @@
 # Migration: src/ layout, filesystem-as-registry, auto-loading modules, lib, hosts & users
 
-Status: **in progress** — step 1 done; step 2 next.
+Status: **in progress** — steps 1–2 done; step 3 next.
 Date: 2026-10-16
 
 ## Problem
@@ -20,8 +20,9 @@ drift from) the filesystem:
   themselves live in `hosts/<name>/` with no filesystem link to the
   registry. (`isoConfigurations.installer` is a third, separate mapping.)
 - `users/default.nix` — hand-written `{root, peon, wisp, kg, peasant}`
-  attrset, each entry imported with `inputs`; **already drifted**
-  (`users/pocuser.nix` is not listed — see Current state).
+  attrset, each entry imported with `inputs`; (was drifted with an unlisted
+  `users/pocuser.nix`, but that file was removed 2026-10-18 — see Current
+  state).
 
 Consequences: adding a module, host or user means editing a registry by
 hand;
@@ -80,7 +81,7 @@ hand; and `_resolveHostSet.nix` carries a dangling `import (root +
   `<host>/host.nix` = `{inputs}: { gui ? false; users ? null;
   extraModules ? []; iso ? false; }` (absent = `mk*Host` defaults). The
   existing flake-level data moves there: kkbook/kktab `gui = true`,
-  kktab's nixos-hardware `extraModules`, pocvm's and kg-continabook's
+  kktab's nixos-hardware `extraModules`, kg-continabook's
   `users`, installer's `users` + `iso = true`. Enumeration is done by a
   new unapplied lib member `readHosts` (`src/lib/flake/readHosts.nix`);
   a hosts-tier directory without a `default.nix` is a hard error — no
@@ -128,24 +129,41 @@ hand; and `_resolveHostSet.nix` carries a dangling `import (root +
   explicit list of the two cross-cutting modules `secrets.nix` +
   `using.nix`). Possible future work, out of scope here.
 
-## Current state (facts verified 2026-10-16)
+## Current state (facts verified 2026-10-16; updated 2026-10-20)
+
+> **Update 2026-10-20 (pre-step-2 baseline re-verified):** the TEMP `pocvm`
+> host and `users/pocuser.nix` were **already removed** (commit `4f5ad3a`,
+> 2026-10-18) — `flake.nix` no longer lists pocvm and neither
+> `hosts/pocvm/` nor `users/pocuser.nix` exists. So the target is **7
+> configurations**, not 8: 5 nixos (kkbook, kktab, kkserv, kknas, kkworker)
+> + 1 iso (installer) + 1 darwin (kg-continabook). Everything in this plan
+> that says "8 configurations" or "6 nixos" should be read as 7/5. The
+> pocvm/pocuser cleanup steps (step 5, open question 1) are therefore
+> already done — skip them.
+>
+> **Pre-existing host breakage (NOT caused by the migration; present at
+> HEAD `3bb807f`):** `kkserv`, `kknas` and `kkworker` do not evaluate.
+> `kkserv` defines `services.my.ai.*` (`hosts/kkserv/default.nix:23`) but no
+> module declares `options.my.ai` — eval error (`Did you mean services.mpd?`).
+> `kknas`/`kkworker` reference a `hardware-configuration.nix` that was never
+> committed (gitignored). These are out of scope for the migration; steps
+> that say "eval every configuration" apply to the hosts that evaluated
+> before the move (kkbook, kktab, installer, kg-continabook).
 
 - `flake.nix:48` — `flakeLib = import ./lib/flake;`. Hosts declared as
   data attrsets in flake.nix and mapped through `flakeLib.mkLinuxHost` /
   `mkDarwinHost` / `mkIsoHost`: `nixosHosts` = kkbook `{gui}`,
   kktab `{gui, extraModules = [nixos-hardware surface]}`, kkserv, kknas,
-  kkworker, **pocvm** `{users = ["pocuser"]}` (TEMP sops POC,
-  `flake.nix:60-62`, slated for removal with `users/pocuser.nix`);
-  `darwinHosts` = kg-continabook `{users = ["kg"]}`;
+  kkworker; `darwinHosts` = kg-continabook `{users = ["kg"]}`;
   `isoConfigurations.installer` via `mkIsoHost {users = ["peasant"];}`.
-  Total: 8 configurations (6 nixos + 1 iso + 1 darwin).
+  Total: **7 configurations (5 nixos + 1 iso + 1 darwin)** — pocvm already
+  removed (see update above).
 - `lib/flake/{mkLinuxHost,mkDarwinHost,mkIsoHost}.nix` — `root ? ../..`
   (3 occurrences; becomes `../../..` after the move).
 - `users/default.nix` — `{...} @ inputs: { root, peon, wisp, kg, peasant =
-  import ./<name>.nix inputs; }`: the hand-written user registry, already
-  drifted — `users/pocuser.nix` exists but is not listed (the commented-out
-  `users = ["pocuser"]` in `flake.nix:60-62` is its only would-be
-  reference). Consumed in `_resolveHostSet.nix:37,44-53` (`myUsers` →
+  import ./<name>.nix inputs; }`: the hand-written user registry
+  (`users/pocuser.nix` was already removed 2026-10-18, so the registry is no
+  longer drifted — the five entries match the directory). Consumed in `_resolveHostSet.nix:37,44-53` (`myUsers` →
   `userSystemModules` = `.system` per host-selected user;
   `homeManagerUsers` = `.home` under `home-manager.users.<name>`) and
   duplicated in `mkIsoHost.nix:15,22,27` (dies with mkIsoHost's dedup).
@@ -191,7 +209,7 @@ hand; and `_resolveHostSet.nix` carries a dangling `import (root +
   `secretsFile = ../secrets.yml;` (relative — **breaks** when helpers
   moves to `src/helpers/`, must become `../../secrets.yml` or absolute);
   `sops.age.keyFile = lib.mkDefault "/etc/sops/age.key"` (already set for
-  every host — helpers is appended everywhere; pocvm overrides it); three
+  every host — helpers is appended everywhere); three
   live test `sops.secrets` entries (`peon-password`, `nixos-secret-test`,
   `hm-secret-test`). `secrets.yml` contents remain user-only.
 - `console/terminal/` is the only directory registered both as itself and
@@ -246,7 +264,6 @@ src/
     linux/                    # NixOS systems + the ISO
       kkbook/ kktab/ kkserv/ kknas/ kkworker/
       installer/              # ISO: host.nix carries iso = true
-      pocvm/                  # TEMP sops POC (with users/pocuser.nix)
       # each host dir: default.nix (module) [+ hardware-configuration.nix]
       #                [+ optional host.nix = {inputs}: {gui, users,
       #                   extraModules, iso} — absent = mk*Host defaults]
@@ -588,16 +605,22 @@ Ordered so every step is independently eval-able; commit per step.
    kkbook and confirm `hello-world-rs` shows up in peon's `home.path`
    (`nix eval .#nixosConfigurations.kkbook.config.home-manager.users.peon.home.path`)
    or in the built toplevel closure.
-2. **Relocate (pure move, no semantics).** `git mv lib hosts users helpers
-   overlays pkgs home-modules system-modules src/` (create `src/` first).
-   Update the path list under "Current state" (flake.nix, mk*Host root
-   defaults + path strings, installer, hxr.nix) and fix
-   `src/helpers/secrets.nix:6` (`../secrets.yml` → `../../secrets.yml`,
-   verified 2026-10-16 — the file is readable via `rg -n "" helpers/`).
-   Verify:
-   `nix eval .#nixosConfigurations.kkbook.config.system.build.toplevel.drvPath`
-   and the same for `kktab kkserv kknas kkworker pocvm installer`,
-   `darwinConfigurations.kg-continabook`, plus `nix flake show`.
+2. **Relocate (pure move, no semantics).** ✅ **DONE** (2026-10-20).
+   `git mv lib hosts users helpers
+   overlays pkgs home-modules system-modules src/` (created `src/` first).
+   Updated: `flake.nix` (`./lib/flake` → `./src/lib/flake`, `./overlays` →
+   `./src/overlays`), `mk*Host` root defaults (`../..` → `../../..`) and all
+   `root + "/<dir>"` path strings → `"/src/<dir>"`,
+   `_resolveHostSet`/`mkIsoHost` host path → `src/hosts/${name}`,
+   `hosts/installer/default.nix` relative imports → `../../../src/...`.
+   Also fixed `src/helpers/secrets.nix:6` (`../secrets.yml` →
+   `../../secrets.yml`). **Verified:** kkbook, kktab, installer and
+   kg-continabook all eval to drvPaths; `nix flake show` lists 7
+   configurations (kkserv/kknas/kkworker fail on pre-existing errors — see
+   Current state update).
+   *Note (2026-10-20):* the move exposed that `overlays/default.nix` uses
+   `../lib/scan-pkgs.nix` and `../pkgs` — both resolve because `overlays/`
+   and `lib/`/`pkgs/` move together under `src/`; no edit needed.
 3. **Add the scanner.** Create `src/lib/fs.nix`; temporarily add
    `fs = import ./fs.nix parsedArgs;` to the old `src/lib/default.nix`.
    Verify with `nix eval` that set mode on `src/modules`… (still old dirs
@@ -618,13 +641,12 @@ Ordered so every step is independently eval-able; commit per step.
 5. **Auto-load the hosts (filesystem disambiguation).**
    - Move each host into its platform tier:
      `git mv src/hosts/kkbook src/hosts/linux/kkbook` (same for kktab,
-     kkserv, kknas, kkworker, installer, pocvm);
+     kkserv, kknas, kkworker, installer);
      `git mv src/hosts/kg-continabook src/hosts/darwin/kg-continabook`
-     (create the tier dirs first).
+     (create the tier dirs first). (pocvm already gone — skip.)
    - Write the `host.nix` files carrying today's flake-level data:
      `linux/kkbook` `{inputs}: {gui = true;}`; `linux/kktab`
      `{inputs}: {gui = true; extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel];}`;
-     `linux/pocvm` `{inputs}: {users = ["pocuser"];}` (TEMP);
      `linux/installer` `{inputs}: {iso = true; users = ["peasant"];}`;
      `darwin/kg-continabook` `{inputs}: {users = ["kg"];}`;
      kkserv/kknas/kkworker get no `host.nix` (defaults).
@@ -633,21 +655,21 @@ Ordered so every step is independently eval-able; commit per step.
      (step 4's root/path updates otherwise unchanged).
     - Rewrite `flake.nix` enumeration per the `readHosts` sketch above;
       delete the `nixosHosts`/`darwinHosts` attrsets.
-    - Delete the `users/default.nix` registry and rewire
-      `_resolveHostSet.nix`: `myUsers = myLib.flake.readUsers {inherit inputs;
-      dir = lib.path.append root "src/users";};` (below the `myLib`
-      binding; downstream selection unchanged). Fixes the current drift —
-      `users/pocuser.nix` is unlisted today and becomes reachable by name
-      like any other user (still inert — no host selects it).
-   - Verify: `nix flake show` (8 configurations, same names as before);
-     eval every configuration; smoke-test `readHosts` —
-     `kktab.args.extraModules` non-empty, `installer.args.iso == true`,
-     installer absent from `nixosConfigurations`, pocvm present, and a
-      throwaway dir without `default.nix` under `src/hosts/linux/` makes
-      `readHosts` throw. Smoke-test `readUsers` too: the scanned set is
-      `{root, peon, wisp, kg, peasant, pocuser}` (pocuser included — it was
-      missing from the hand-written registry), each value has `system` +
-      `home`, and a leftover `src/users/default.nix` makes eval throw.
+     - Delete the `users/default.nix` registry and rewire
+       `_resolveHostSet.nix`: `myUsers = myLib.flake.readUsers {inherit inputs;
+       dir = lib.path.append root "src/users";};` (below the `myLib`
+       binding; downstream selection unchanged).
+    - Verify: `nix flake show` (7 configurations, same names as before);
+      eval every configuration that evaluated before the move (kkbook,
+      kktab, installer, kg-continabook; kkserv/kknas/kkworker fail on
+      pre-existing errors — see Current state update); smoke-test `readHosts`
+      — `kktab.args.extraModules` non-empty, `installer.args.iso == true`,
+      installer absent from `nixosConfigurations`, and a
+       throwaway dir without `default.nix` under `src/hosts/linux/` makes
+       `readHosts` throw. Smoke-test `readUsers` too: the scanned set is
+       `{root, peon, wisp, kg, peasant}` (pocuser already removed), each
+       value has `system` + `home`, and a leftover `src/users/default.nix`
+       makes eval throw.
 6. **Filesystem-as-registry for modules.**
    - `git mv src/home-modules src/modules/home` (rename to
      `src/modules/home` in one step); same
@@ -734,19 +756,21 @@ build the ISO.
 
 ## Verification
 
-- `nix flake show` lists all 8 configurations — 6 nixos (kkbook, kktab,
-  kkserv, kknas, kkworker, pocvm) + 1 iso (installer) + 1 darwin
+- `nix flake show` lists all 7 configurations — 5 nixos (kkbook, kktab,
+  kkserv, kknas, kkworker) + 1 iso (installer) + 1 darwin
   (kg-continabook) — plus devShells/formatter; the same names as before
-  the migration, just derived from `src/hosts/{linux,darwin}/`.
+  the migration, just derived from `src/hosts/{linux,darwin}/`. (kkserv,
+  kknas, kkworker fail to eval on pre-existing errors — see Current state.)
 - `nix eval` of `config.system.build.toplevel.drvPath` for every linux
-  host + iso; `nix eval` of `darwinConfigurations.kg-continabook.system`
-  drvPath.
+  host that evaluated before the move (kkbook, kktab) + iso; `nix eval` of
+  `darwinConfigurations.kg-continabook.system` drvPath.
 - `nix eval --impure --expr` smoke tests of `readModules` (array + set
   mode, `stopOnDefault` on a program dir like `src/modules/home/common/console/git`
   returns the dir, not its `nix/` children) and of `readHosts` (attrs =
   tier dir names; `installer` only in `isoHosts`; `kktab.args.extraModules`
   non-empty; stray dir without `default.nix` throws) and of `readUsers`
-  (scanned set = filename stems incl. `pocuser`; each value has `system` +
+  (scanned set = filename stems `{root, peon, wisp, kg, peasant}`; each
+  value has `system` +
   `home`; leftover `default.nix` or a `home`-less user throws).
 - Before/after module-list diff for `kkbook` (the host using the most
   feature paths: gui, serv/apps, extraModules).
@@ -762,10 +786,9 @@ build the ISO.
 
 ## Open questions
 
-- Remove the TEMP `pocvm` host (and `users/pocuser.nix`) before or after
-  this migration? (`flake.nix:60` says "remove together with hosts/pocvm";
-  either way it just becomes `src/hosts/linux/pocvm/` + `host.nix` in
-  step 5 and can be deleted in a follow-up commit.)
+- ~~Remove the TEMP `pocvm` host (and `users/pocuser.nix`) before or after
+  this migration?~~ **Resolved 2026-10-20:** already removed in commit
+  `4f5ad3a` (2026-10-18).
 - `enableHm` in `_resolveHostSet.nix` is asserted but unused
   (`# TODO: handle enableHm == false`) — implement while touching the
   file, or leave?
