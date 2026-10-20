@@ -8,8 +8,8 @@ plan must be fully landed before the next one starts.
 
 | # | Plan | Status | Depends on | Scope |
 |---|------|--------|-----------|-------|
-| 1 | [`migration.md`](./migration.md) | in progress — steps 1–4 done | — | `src/` layout, filesystem-as-registry (`readModules`/`readHosts`/`readUsers`), lib autoloading, module/host/user auto-discovery |
-| 2 | [`homelab.md`](./homelab.md) | blocked | `migration.md` | `myLib.services.mk`/`mkEnv`/presets, config+image derivations, sops-nix secrets, multi-env via `postfix`, retires `docker-services/` |
+| 1 | [`migration.md`](./migration.md) | done (2026-10-20) — steps 1–7; remaining user actions: format `secrets.nix`, on-machine rebuild/ISO | — | `src/` layout, filesystem-as-registry (`readModules`/`readHosts`/`readUsers`), lib autoloading, module/host/user auto-discovery |
+| 2 | [`homelab.md`](./homelab.md) | ready (was blocked on `migration.md`, now done) | `migration.md` | `myLib.services.mk`/`mkEnv`/presets, config+image derivations, sops-nix secrets, multi-env via `postfix`, retires `docker-services/` |
 | 3 | [`sec-management.md`](./sec-management.md) | proposed | `migration.md`, `homelab.md` | modular auto-discovering secrets tree, sops-nix config, encryption policy |
 | — | [`opencode.md`](./opencode.md) | deferred | — | OpenCode V1 → V2 migration; independent of the three above, do whenever |
 

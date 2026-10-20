@@ -34,13 +34,21 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   };
   system = systemFromArch.${arch}.${os};
   pkgs = nixpkgs.legacyPackages.${system};
-  myUsers = import (lib.path.append root "src/users") {inherit inputs;};
-  systemModules = import (lib.path.append root "src/system-modules");
-  homeModules = import (lib.path.append root "src/home-modules");
+  fs = import (lib.path.append root "src/lib/fs.nix") {inherit lib;};
+  systemModules = fs.readModules {
+    dir = lib.path.append root "src/modules/system";
+    mode = "set";
+  };
+  homeModules = fs.readModules {
+    dir = lib.path.append root "src/modules/home";
+    mode = "set";
+  };
   helpers = import (lib.path.append root "src/helpers");
-  services = import (lib.path.append root "src/services");
   myLib = import (lib.path.append root "src/lib") {inherit pkgs;};
   localOverlay = import (lib.path.append root "src/overlays") {inherit inputs;};
+  myUsers = myLib.flake.readUsers {inherit inputs;} {
+    dir = lib.path.append root "src/users";
+  };
 
   userSystemModules =
     map (name: myUsers.${name}.system) users;
@@ -52,22 +60,6 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
     })
     users
   );
-  commonModules =
-    [
-      (lib.path.append root "src/system-modules/common.nix")
-    ]
-    ++ (
-      if os == "linux"
-      then
-        [
-          (lib.path.append root "src/system-modules/common-linux.nix")
-        ]
-        ++ lib.optional gui (lib.path.append root "src/system-modules/common-gui-linux.nix")
-      else [
-        (lib.path.append root "src/system-modules/common-darwin.nix")
-      ]
-    );
-
   # modulesName = "${system}Modules";
   # sopsModule = inputs.sops-nix.${modulesName}.sops;
   # homeManagerModule = inputs.home-manager.${modulesName}.home-manager;
@@ -107,16 +99,21 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
   };
 
   modules =
-    commonModules
-    ++ systemModules.common
+    systemModules.common
     ++ (
       if os == "linux"
       then systemModules.linux
       else systemModules.darwin
     )
+    ++ lib.optionals
+    (gui && os == "linux")
+    (fs.readModules {
+      dir = lib.path.append root "src/modules/system/gui";
+      mode = "array";
+    })
     ++ helpers
     ++ [
-      (lib.path.append root "src/hosts/${name}")
+      (lib.path.append root "src/hosts/${os}/${name}")
       sopsModule
       homeManagerModule
       homeManagerConfig
@@ -127,6 +124,6 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
 in {
   inherit system modules;
   specialArgs = {
-    inherit inputs systemModules homeModules myLib services;
+    inherit inputs systemModules homeModules myLib;
   };
 }

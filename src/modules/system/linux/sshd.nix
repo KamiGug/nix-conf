@@ -50,7 +50,7 @@ in {
     users.users.root.openssh.authorizedKeys.keyFiles = [];
     users.users.root.openssh.authorizedKeys.keys = mkIf cfg.allowRoot [authorizedKeys];
 
-    security.fail2ban = {
+    services.fail2ban = {
       enable = true;
       maxretry = 5;
       bantime = "1h";

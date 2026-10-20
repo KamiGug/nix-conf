@@ -172,13 +172,23 @@ Home Manager.
 - Scan `secrets/hosts/`, `secrets/services/`, `secrets/users/` recursively.
 - For each `.yml` file found, produce a Nix module entry keyed by the filename stem.
 - **Nested directories** (e.g. `secrets/services/db/postgres.yml`) are descended
-  into; the relative path from the root becomes the module key suffix.
+  into; the relative path from `secrets/` becomes part of the secret name.
 - **Stop at `default.nix`**: if a subdirectory contains a `default.nix`, treat it
   as an opaque module and do not descend further.
 - **Host-aware filtering**: each module may declare which host(s) it is authorised
   for via a `hosts` attribute. The caller filters accordingly.
 - **Home Manager support**: when running under Home Manager, the same walker
   produces `home-manager.secrets` entries keyed by the same names.
+- **Secret naming**: the path relative to `secrets/` is used as a prefix: `/` is
+  replaced with `-` (dash), and `.yml`/`.yaml` is trimmed from the filename.
+  For each top-level secret key read inside that YAML file, the final sops
+  secret name is `<path-prefix>__<key-name>` — the path prefix is joined to the
+  secret name (read from the file) with `__` (double underscore). So
+  `secrets/services/db/postgres.yml` containing key `password` produces
+  sops secret `services-db-postgres__password`, and
+  `secrets/hosts/kkbook.yml` containing key `ssh-host-key` produces
+  `hosts-kkbook__ssh-host-key`. Extension trimming matches `.ya?ml`
+  (both `.yml` and `.yaml`).
 
 The module path is `helpers/secrets/default.nix` and it is included via the
 existing `helpers` import in `_resolveHostSet.nix` (updated path from

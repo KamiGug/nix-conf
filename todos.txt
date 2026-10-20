@@ -31,16 +31,13 @@
   59:          SEARCH_CMD='grep -nE "\b(TODO|FIXME|FIX)\b"'
 
 flake.nix
-  65:    # TODO: split shells to seperate file
+  55:    # TODO: split shells to seperate file
 
 plans/migration.md
-  817:  (`# TODO: handle enableHm == false`) — implement while touching the
-
-src/home-modules/console/shell/elvish/default.nix
-  1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
+  855:  (`# TODO: handle enableHm == false`) — implement while touching the
 
 src/lib/flake/_resolveHostSet.nix
-  81:  # TODO: handle enableHm == false
+  73:  # TODO: handle enableHm == false
 
 src/lib/services/apps/authentik/default.nix
   67:        # TODO: make service name generators serparate functions for each service creating function/modules
@@ -60,9 +57,12 @@ src/lib/services/ensureNetwork.nix
 src/lib/services/mkContainerService.nix
   117:  # TODO: write a validator for this
 
-src/system-modules/autologin.nix
+src/modules/home/common/console/shell/elvish/default.nix
+  1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
+
+src/modules/system/linux/autologin.nix
   26:      # TODO: assert de legal option
 
-src/system-modules/printing.nix
+src/modules/system/linux/printing.nix
   1:# TODO: make it actually work
   2:# TODO: add pkg for scaning

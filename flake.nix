@@ -46,21 +46,11 @@
     ...
   }: let
     flakeLib = import ./src/lib/flake {};
-    nixosHosts = {
-      kkbook = {gui = true;};
-      kktab = {
-        gui = true;
-        extraModules = [inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel];
-      };
+    linuxHosts = flakeLib.readHosts {inherit inputs;} {dir = ./src/hosts/linux;};
+    darwinHosts = flakeLib.readHosts {inherit inputs;} {dir = ./src/hosts/darwin;};
 
-      kkserv = {};
-      kknas = {};
-      kkworker = {};
-    };
-
-    darwinHosts = {
-      kg-continabook = {users = ["kg"];};
-    };
+    isoHosts = nixpkgs.lib.filterAttrs (_: h: h.args.iso or false) linuxHosts;
+    nixosHosts = nixpkgs.lib.filterAttrs (_: h: !(h.args.iso or false)) linuxHosts;
   in
     # TODO: split shells to seperate file
     flake-utils.lib.eachDefaultSystem (
@@ -107,35 +97,15 @@
         default = import ./src/overlays {inherit inputs;};
       };
 
-      nixosConfigurations =
-        builtins.mapAttrs
-        (
-          name: hostArgs:
-            flakeLib.mkLinuxHost (
-              hostArgs
-              // {
-                inherit inputs name;
-              }
-            )
-        )
-        nixosHosts;
-      darwinConfigurations =
-        builtins.mapAttrs
-        (
-          name: hostArgs:
-            flakeLib.mkDarwinHost (
-              hostArgs
-              // {
-                inherit inputs name;
-              }
-            )
-        )
-        darwinHosts;
-
-      isoConfigurations.installer = flakeLib.mkIsoHost {
-        inherit inputs;
-        name = "installer";
-        users = ["peasant"];
-      };
+      nixosConfigurations = builtins.mapAttrs (name: host:
+        flakeLib.mkLinuxHost (host.args // {inherit inputs name;}))
+      nixosHosts;
+      isoConfigurations = builtins.mapAttrs (name: host:
+        flakeLib.mkIsoHost (builtins.removeAttrs host.args ["iso"]
+          // {inherit inputs name;}))
+      isoHosts;
+      darwinConfigurations = builtins.mapAttrs (name: host:
+        flakeLib.mkDarwinHost (host.args // {inherit inputs name;}))
+      darwinHosts;
     };
 }

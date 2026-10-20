@@ -1,0 +1,4 @@
+{...}: {
+  iso = true;
+  users = ["peasant"];
+}

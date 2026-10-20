@@ -1,7 +1,10 @@
 args: let
   parsedArgs = args // {lib = args.pkgs.lib;};
   fs = import ./fs.nix parsedArgs;
-  tree = fs.readModules {dir = ./.; mode = "set";};
+  tree = fs.readModules {
+    dir = ./.;
+    mode = "set";
+  };
   resolve = paths:
     if builtins.length paths == 1
     then import (builtins.head paths) parsedArgs

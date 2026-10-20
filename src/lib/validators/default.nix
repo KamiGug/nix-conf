@@ -1,3 +1,3 @@
-args: {
+_args: {
   domain = import ./domain.nix;
 }
