@@ -103,7 +103,7 @@
   #   enable = false;
   #   user = "peon";
 }
-# // myLib.serv.ensureNetwork {
+# // myLib.services.ensureNetwork {
 #   name="nextcloud";
 # }
 # // (
@@ -111,16 +111,16 @@
 #   lib.recursiveUpdate
 #   {}
 #   [
-#     (myLib.apps.dbs.postgres {
+#     (myLib.services.apps.dbs.postgres {
 #       configArgs = {
 #         nameSuffix = "-test";
 #         # serviceUser = "peon";
 #         # serviceUser = "root";
 #         # containerUser = "1000";
-#         networks = [(myLib.serv.mkNetwork {name = "nextcloud";})];
+#         networks = [(myLib.services.mkNetwork {name = "nextcloud";})];
 #       };
 #     })
-#     (myLib.apps.nextcloud {
+#     (myLib.services.apps.nextcloud {
 #       configArgs = {
 #         protocol = "http";
 #         nameSuffix = "-test";
@@ -132,22 +132,22 @@
 #         # containerUser = "1000";
 #         networks = {
 #           nextcloud = [
-#             (myLib.serv.mkNetwork {name = "nextcloud";})
-#             (myLib.serv.mkNetwork {name = "proxy";})
+#             (myLib.services.mkNetwork {name = "nextcloud";})
+#             (myLib.services.mkNetwork {name = "proxy";})
 #           ];
 #         };
 #       };
 #     })
-#     (myLib.apps.authentik {
+#     (myLib.services.apps.authentik {
 #       configArgs = {
 #         networks = {
 #           server = [
-#             (myLib.serv.mkNetwork {name = "authenthik";})
-#             (myLib.serv.mkNetwork {name = "proxy";})
+#             (myLib.services.mkNetwork {name = "authenthik";})
+#             (myLib.services.mkNetwork {name = "proxy";})
 #           ];
 #           worker = [
-#             (myLib.serv.mkNetwork {name = "authenthik";})
-#             (myLib.serv.mkNetwork {name = "proxy";})
+#             (myLib.services.mkNetwork {name = "authenthik";})
+#             (myLib.services.mkNetwork {name = "proxy";})
 #           ];
 #         };
 #       };

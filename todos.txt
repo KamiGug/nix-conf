@@ -34,7 +34,7 @@ flake.nix
   65:    # TODO: split shells to seperate file
 
 plans/migration.md
-  793:  (`# TODO: handle enableHm == false`) — implement while touching the
+  817:  (`# TODO: handle enableHm == false`) — implement while touching the
 
 src/home-modules/console/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv

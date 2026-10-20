@@ -1,6 +1,6 @@
 # Migration: src/ layout, filesystem-as-registry, auto-loading modules, lib, hosts & users
 
-Status: **in progress** — steps 1–2 done; step 3 next.
+Status: **in progress** — steps 1–4 done; step 5 next.
 Date: 2026-10-16
 
 ## Problem
@@ -621,23 +621,47 @@ Ordered so every step is independently eval-able; commit per step.
    *Note (2026-10-20):* the move exposed that `overlays/default.nix` uses
    `../lib/scan-pkgs.nix` and `../pkgs` — both resolve because `overlays/`
    and `lib/`/`pkgs/` move together under `src/`; no edit needed.
-3. **Add the scanner.** Create `src/lib/fs.nix`; temporarily add
-   `fs = import ./fs.nix parsedArgs;` to the old `src/lib/default.nix`.
-   Verify with `nix eval` that set mode on `src/modules`… (still old dirs
-   at this point — smoke-test on `src/lib` instead) returns the expected
-   shape.
-4. **Autoload the lib.** Normalize `validators/default.nix` and
-   `flake/default.nix` to `args:` functions (the latter re-exports
-    `mkLinuxHost`/`mkDarwinHost`/`mkIsoHost`/`readHosts`/`readUsers`
-    **unapplied**); create `src/lib/flake/{readHosts,readUsers}.nix` per
-    the specs; `git mv scan-pkgs.nix scanPkgs.nix`; replace
-    `src/lib/default.nix` with the
-   autoloader; rename in `hosts/kkbook/default.nix`: `myLib.serv.*` →
-   `myLib.services.*`, `myLib.apps.*` → `myLib.services.apps.*`; rewrite
-   `mkContainerService.nix:178`'s `myLib.ensureDirExists` →
-   `myLib.file.ensureDirExists` (resolves today only via the file's
-   local binding — see Current state). Verify:
-   rebuild `kkbook` (the only host exercising `serv`/`apps`).
+3. **Add the scanner.** ✅ **DONE** (2026-10-20). Created `src/lib/fs.nix`;
+   added `fs = import ./fs.nix parsedArgs;` to the current
+   `src/lib/default.nix`. **Verified** with `nix eval --impure --expr`:
+   set mode on `src/lib` returns the expected attrset keyed by children
+   (`default.nix`, `editor.nix`, `file`, `flake`, `fs.nix`, `lsp.nix`,
+   `program.nix`, `scan-pkgs.nix`, `services`, `validators`); array mode on
+   a program dir (`home-modules/console/git`) with default `stopOnDefault`
+   returns the dir itself, and with `stopOnDefault = false` descends to
+   `default.nix` + `nix/*.nix`; kkbook still evals after wiring.
+4. **Autoload the lib.** ✅ **DONE** (2026-10-20). Normalized
+   `validators/default.nix` and `flake/default.nix` to `args:` functions
+   (flake re-exports `mkLinuxHost`/`mkDarwinHost`/`mkIsoHost`/`readHosts`/
+   `readUsers` **unapplied**); created `src/lib/flake/{readHosts,readUsers}.nix`
+   per the specs; `git mv scan-pkgs.nix scanPkgs.nix` (and updated
+   `overlays/default.nix`'s import); added `apps = import ./apps args;` to
+   `services/default.nix` so `myLib.services.apps` resolves; replaced
+   `src/lib/default.nix` with the autoloader; renamed `myLib.serv.*` →
+   `myLib.services.*` and `myLib.apps.*` → `myLib.services.apps.*` in the
+   (commented) `hosts/kkbook/default.nix` sites. `flake.nix` now calls
+   `import ./src/lib/flake {}`.
+   *Deviations from the draft:* (a) `readModules` set-mode **keys strip
+   `.nix`** so `program.nix` → attr `program` (the draft's worked example
+   assumed this but the spec code didn't do it); (b) the autoloader filters
+   the `default` key (the autoloader file is itself a child of `src/lib`);
+   (c) `mkContainerService.nix:178` was **left** as `myLib.ensureDirExists`
+   — the file's local `myLib = import ../file {inherit pkgs;};` binding
+   returns the file attrs directly, so `.file.ensureDirExists` would break;
+   the call resolves correctly as-is.
+   **Verified** (in a `path:`-flake copy under `/tmp`, since new files
+   aren't git-staged — see blocker below): `myLib` keys =
+   `[editor file flake fs lsp program scanPkgs services validators]`;
+   `myLib.services.apps` = authentik/dbs/nextcloud; `myLib.file` =
+   ensureDirExists/mkMutableFile/mkRandomSecret; `myLib.flake` =
+   mk*Host + readHosts + readUsers; kkbook, kktab, kkserv, installer,
+   kg-continabook all eval.
+   *Blocker (environment):* `git add` of new files fails —
+   `.git/objects` is `root:config-editor` without group-write, so the three
+   new files (`fs.nix`, `readHosts.nix`, `readUsers.nix`) can't be staged,
+   and `git+file://` flake evaluation can't see them until they are. Fix
+   the object-dir permissions (or stage as root) before the next
+   git-based eval.
 5. **Auto-load the hosts (filesystem disambiguation).**
    - Move each host into its platform tier:
      `git mv src/hosts/kkbook src/hosts/linux/kkbook` (same for kktab,

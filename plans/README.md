@@ -8,7 +8,7 @@ plan must be fully landed before the next one starts.
 
 | # | Plan | Status | Depends on | Scope |
 |---|------|--------|-----------|-------|
-| 1 | [`migration.md`](./migration.md) | in progress — steps 1–2 done | — | `src/` layout, filesystem-as-registry (`readModules`/`readHosts`/`readUsers`), lib autoloading, module/host/user auto-discovery |
+| 1 | [`migration.md`](./migration.md) | in progress — steps 1–4 done | — | `src/` layout, filesystem-as-registry (`readModules`/`readHosts`/`readUsers`), lib autoloading, module/host/user auto-discovery |
 | 2 | [`homelab.md`](./homelab.md) | blocked | `migration.md` | `myLib.services.mk`/`mkEnv`/presets, config+image derivations, sops-nix secrets, multi-env via `postfix`, retires `docker-services/` |
 | 3 | [`sec-management.md`](./sec-management.md) | proposed | `migration.md`, `homelab.md` | modular auto-discovering secrets tree, sops-nix config, encryption policy |
 | — | [`opencode.md`](./opencode.md) | deferred | — | OpenCode V1 → V2 migration; independent of the three above, do whenever |

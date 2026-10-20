@@ -1,5 +1,5 @@
 {...}: final: prev: let
-  scanPkgs = import ../lib/scan-pkgs.nix {
+  scanPkgs = import ../lib/scanPkgs.nix {
     pkgs = final;
     inherit (prev) lib;
   };

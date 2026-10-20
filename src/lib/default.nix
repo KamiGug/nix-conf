@@ -1,12 +1,10 @@
 args: let
   parsedArgs = args // {lib = args.pkgs.lib;};
-in {
-  program = import ./program.nix parsedArgs;
-  scanPkgs = import ./scan-pkgs.nix parsedArgs;
-  editor = import ./editor.nix parsedArgs;
-  lsp = import ./lsp.nix parsedArgs;
-  file = import ./file parsedArgs;
-  serv = import ./services parsedArgs;
-  apps = import ./services/apps parsedArgs;
-  validate = import ./validators;
-}
+  fs = import ./fs.nix parsedArgs;
+  tree = fs.readModules {dir = ./.; mode = "set";};
+  resolve = paths:
+    if builtins.length paths == 1
+    then import (builtins.head paths) parsedArgs
+    else throw "src/lib entry must resolve to exactly one module";
+in
+  builtins.mapAttrs (_: resolve) (builtins.removeAttrs tree ["default"])

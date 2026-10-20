@@ -45,7 +45,7 @@
     flake-utils,
     ...
   }: let
-    flakeLib = import ./src/lib/flake;
+    flakeLib = import ./src/lib/flake {};
     nixosHosts = {
       kkbook = {gui = true;};
       kktab = {
