@@ -9,39 +9,38 @@
 
     // ─────────────────────────────────────────────
     // Reading the repository is OK
-    // But never read secrets
-    // (matching is last-rule-wins, denies after allow.
-    // secrets.nix is source code, not a secret, so it is
-    // treated like any other repo file and reads freely)
+    // Secrets protection is disabled for now: every deny
+    // rule below is commented out, so anything inside the
+    // repo can be read.
     // ─────────────────────────────────────────────
 
     "read": {
-      "*": "allow",
+      "*": "allow"
 
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.env.example": "allow",
-      "*.envrc": "deny",
-      "*.envrc.*": "deny",
+      // "*.env": "deny",
+      // "*.env.*": "deny",
+      // "*.env.example": "allow",
+      // "*.envrc": "deny",
+      // "*.envrc.*": "deny",
 
-      "*.pem": "deny",
-      "*.key": "deny",
-      "*.p12": "deny",
-      "*.pfx": "deny",
-      "*.kdbx": "deny",
+      // "*.pem": "deny",
+      // "*.key": "deny",
+      // "*.p12": "deny",
+      // "*.pfx": "deny",
+      // "*.kdbx": "deny",
 
-      "*id_rsa*": "deny",
-      "*id_ed25519*": "deny",
-      "*id_ecdsa*": "deny",
-      "*id_dsa*": "deny",
-      "*.netrc": "deny",
-      "*.pgpass": "deny",
-      "*.npmrc": "deny",
-      "*.pypirc": "deny",
+      // "*id_rsa*": "deny",
+      // "*id_ed25519*": "deny",
+      // "*id_ecdsa*": "deny",
+      // "*id_dsa*": "deny",
+      // "*.netrc": "deny",
+      // "*.pgpass": "deny",
+      // "*.npmrc": "deny",
+      // "*.pypirc": "deny",
 
-      "*secrets*": "deny",
-      "*secrets*.nix": "allow",
-      "*sops*": "deny"
+      // "*secrets*": "deny",
+      // "*secrets*.nix": "allow",
+      // "*sops*": "deny"
     },
 
     "glob": "allow",
@@ -209,15 +208,14 @@
       // ─────────────────────────────────────────────
       // Taskfile tasks run without approval (go-task is the
       // project task runner). Must stay above the hardening
-      // rules: redirections and secret paths in a `task ...`
-      // command line still fall through to ask/deny below.
+      // rules: redirections in a `task ...` command line
+      // still fall through to ask below.
       // ─────────────────────────────────────────────
       "task *": "allow",
 
       // ─────────────────────────────────────────────
       // Hardening. MUST stay last: last matching rule wins.
-      // Anything that can change state asks (never auto-runs);
-      // only secret reads are denied outright.
+      // Anything that can change state asks (never auto-runs).
       // ─────────────────────────────────────────────
 
       // Redirection: `>`/`>>`/`2>` can write files (bypassing
@@ -253,59 +251,49 @@
       "date -s*": "ask",
       "date * -s*": "ask",
       "date --set*": "ask",
-      "date * --set*": "ask",
+      "date * --set*": "ask"
 
-      // Secrets: never readable through the shell either
-      // (the `read` deny does not apply to bash). These stay
-      // last so nothing above can turn a secret read back on.
-      // Exception: secrets.nix is source, not a secret, so
-      // shell commands on it follow the normal rules: the
-      // read-only viewers below run, everything else asks,
-      // and redirection/exec flags re-ask at the end.
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.envrc*": "deny",
-      "*.pem*": "deny",
-      "*.key*": "deny",
-      "*.p12*": "deny",
-      "*.pfx*": "deny",
-      "*.kdbx*": "deny",
-      "*id_rsa*": "deny",
-      "*id_ed25519*": "deny",
-      "*id_ecdsa*": "deny",
-      "*id_dsa*": "deny",
-      "*.netrc*": "deny",
-      "*.pgpass*": "deny",
-      "*.npmrc*": "deny",
-      "*.pypirc*": "deny",
-      "*secrets*": "deny",
+      // ─────────────────────────────────────────────
+      // Secrets protection disabled for now: secrets are
+      // no longer blocked in the shell either.
+      // ─────────────────────────────────────────────
 
-      // secrets.nix: same treatment as any other file
-      "*secrets.nix*": "allow",
-      "cat *secrets.nix": "allow",
-      "bat *secrets.nix": "allow",
-      "batcat *secrets.nix": "allow",
-      "head *secrets.nix": "allow",
-      "tail *secrets.nix": "allow",
-      "nl *secrets.nix": "allow",
-      "wc *secrets.nix": "allow",
-      "grep *secrets.nix": "allow",
-      "rg *secrets.nix": "allow",
-      "diff *secrets.nix": "allow",
-      "ls *secrets.nix": "allow",
-      "stat *secrets.nix": "allow",
-      "git status *secrets.nix": "allow",
-      "git diff *secrets.nix": "allow",
-      "git log *secrets.nix": "allow",
-      "git show *secrets.nix": "allow",
+      // "*.env": "deny",
+      // "*.env.*": "deny",
+      // "*.envrc*": "deny",
+      // "*.pem*": "deny",
+      // "*.key*": "deny",
+      // "*.p12*": "deny",
+      // "*.pfx*": "deny",
+      // "*.kdbx*": "deny",
+      // "*id_rsa*": "deny",
+      // "*id_ed25519*": "deny",
+      // "*id_ecdsa*": "deny",
+      // "*id_dsa*": "deny",
+      // "*.netrc*": "deny",
+      // "*.pgpass*": "deny",
+      // "*.npmrc*": "deny",
+      // "*.pypirc*": "deny",
+      // "*secrets*": "deny",
 
-      // mutating flags on those viewers still ask
-      "*>*": "ask",
-      "*<*": "ask",
-      "bat * --pager*": "ask",
-      "rg * --pre*": "ask",
+      // "cat *secrets.nix": "allow",
+      // "bat *secrets.nix": "allow",
+      // "batcat *secrets.nix": "allow",
+      // "head *secrets.nix": "allow",
+      // "tail *secrets.nix": "allow",
+      // "nl *secrets.nix": "allow",
+      // "wc *secrets.nix": "allow",
+      // "grep *secrets.nix": "allow",
+      // "rg *secrets.nix": "allow",
+      // "diff *secrets.nix": "allow",
+      // "ls *secrets.nix": "allow",
+      // "stat *secrets.nix": "allow",
+      // "git status *secrets.nix": "allow",
+      // "git diff *secrets.nix": "allow",
+      // "git log *secrets.nix": "allow",
+      // "git show *secrets.nix": "allow",
 
-      "*sops*": "deny"
+      // "*sops*": "deny"
     },
 
     // ─────────────────────────────────────────────
@@ -317,12 +305,12 @@
 
   "agent": {
     // ─────────────────────────────────────────────
-    // yolo: allow almost anything. Only secret reads and
-    // anything outside the repo prompt; /tmp is exempt.
+    // yolo: allow almost anything. Only access outside
+    // the repo prompts; /tmp is exempt.
     // ─────────────────────────────────────────────
 
     "yolo": {
-      "description": "Full-send: allow almost everything, prompt for secrets and out-of-repo access (/tmp allowed).",
+      "description": "Full-send: allow almost everything (secrets included), prompt for out-of-repo access (/tmp allowed).",
       "mode": "primary",
       "permission": {
         // Override the global `*: ask`; every tool not named
@@ -331,37 +319,37 @@
 
         "edit": "allow",
 
-        // Read anything, but prompt before touching secrets.
+        // Read anything, secrets included (protection disabled).
         "read": {
-          "*": "allow",
+          "*": "allow"
 
-          "*.env": "ask",
-          "*.env.*": "ask",
-          "*.env.example": "allow",
-          "*.envrc": "ask",
-          "*.envrc.*": "ask",
+          // "*.env": "ask",
+          // "*.env.*": "ask",
+          // "*.env.example": "allow",
+          // "*.envrc": "ask",
+          // "*.envrc.*": "ask",
 
-          "*.pem": "ask",
-          "*.key": "ask",
-          "*.p12": "ask",
-          "*.pfx": "ask",
-          "*.kdbx": "ask",
+          // "*.pem": "ask",
+          // "*.key": "ask",
+          // "*.p12": "ask",
+          // "*.pfx": "ask",
+          // "*.kdbx": "ask",
 
-          "*id_rsa*": "ask",
-          "*id_ed25519*": "ask",
-          "*id_ecdsa*": "ask",
-          "*id_dsa*": "ask",
-          "*.netrc": "ask",
-          "*.pgpass": "ask",
-          "*.npmrc": "ask",
-          "*.pypirc": "ask",
+          // "*id_rsa*": "ask",
+          // "*id_ed25519*": "ask",
+          // "*id_ecdsa*": "ask",
+          // "*id_dsa*": "ask",
+          // "*.netrc": "ask",
+          // "*.pgpass": "ask",
+          // "*.npmrc": "ask",
+          // "*.pypirc": "ask",
 
-          "*secrets*": "ask",
-          "*sops*": "ask"
+          // "*secrets*": "ask",
+          // "*sops*": "ask"
         },
 
-        // Run anything, but prompt before reading secrets and
-        // before changing git state.
+        // Run anything, secrets included (protection disabled).
+        // Git state changes still ask.
         "bash": {
           "*": "allow",
 
@@ -374,27 +362,27 @@
           "git checkout *": "ask",
           "git switch *": "ask",
           "git restore *": "ask",
-          "git clean *": "ask",
+          "git clean *": "ask"
 
-          "*.env": "ask",
-          "*.env.*": "ask",
-          "*.env.example": "allow",
-          "*.envrc*": "ask",
-          "*.pem*": "ask",
-          "*.key*": "ask",
-          "*.p12*": "ask",
-          "*.pfx*": "ask",
-          "*.kdbx*": "ask",
-          "*id_rsa*": "ask",
-          "*id_ed25519*": "ask",
-          "*id_ecdsa*": "ask",
-          "*id_dsa*": "ask",
-          "*.netrc*": "ask",
-          "*.pgpass*": "ask",
-          "*.npmrc*": "ask",
-          "*.pypirc*": "ask",
-          "*secrets*": "ask",
-          "*sops*": "ask"
+          // "*.env": "ask",
+          // "*.env.*": "ask",
+          // "*.env.example": "allow",
+          // "*.envrc*": "ask",
+          // "*.pem*": "ask",
+          // "*.key*": "ask",
+          // "*.p12*": "ask",
+          // "*.pfx*": "ask",
+          // "*.kdbx*": "ask",
+          // "*id_rsa*": "ask",
+          // "*id_ed25519*": "ask",
+          // "*id_ecdsa*": "ask",
+          // "*id_dsa*": "ask",
+          // "*.netrc*": "ask",
+          // "*.pgpass*": "ask",
+          // "*.npmrc*": "ask",
+          // "*.pypirc*": "ask",
+          // "*secrets*": "ask",
+          // "*sops*": "ask"
         },
 
         // Anything outside the repo prompts, except /tmp.
@@ -407,13 +395,12 @@
     },
 
     // ─────────────────────────────────────────────
-    // auto: like yolo, but never prompts. Secret reads
-    // are denied outright (never); everything else —
+    // auto: like yolo, but never prompts. Everything —
     // including access outside the repo — is allowed.
     // ─────────────────────────────────────────────
 
     "auto": {
-      "description": "No prompts: everything allowed, secret reads denied, out-of-repo access allowed.",
+      "description": "No prompts: everything allowed, out-of-repo access allowed.",
       "mode": "primary",
       "permission": {
         // Override the global `*: ask`; nothing prompts.
@@ -421,94 +408,77 @@
 
         "edit": "allow",
 
-        // Secrets can never be read through the read tool.
+        // Secrets can be read too (protection disabled).
         "read": {
-          "*": "allow",
+          "*": "allow"
 
-          "*.env": "deny",
-          "*.env.*": "deny",
-          "*.env.example": "allow",
-          "*.envrc": "deny",
-          "*.envrc.*": "deny",
+          // "*.env": "deny",
+          // "*.env.*": "deny",
+          // "*.env.example": "allow",
+          // "*.envrc": "deny",
+          // "*.envrc.*": "deny",
 
-          "*.pem": "deny",
-          "*.key": "deny",
-          "*.p12": "deny",
-          "*.pfx": "deny",
-          "*.kdbx": "deny",
+          // "*.pem": "deny",
+          // "*.key": "deny",
+          // "*.p12": "deny",
+          // "*.pfx": "deny",
+          // "*.kdbx": "deny",
 
-          "*id_rsa*": "deny",
-          "*id_ed25519*": "deny",
-          "*id_ecdsa*": "deny",
-          "*id_dsa*": "deny",
-          "*.netrc": "deny",
-          "*.pgpass": "deny",
-          "*.npmrc": "deny",
-          "*.pypirc": "deny",
+          // "*id_rsa*": "deny",
+          // "*id_ed25519*": "deny",
+          // "*id_ecdsa*": "deny",
+          // "*id_dsa*": "deny",
+          // "*.netrc": "deny",
+          // "*.pgpass": "deny",
+          // "*.npmrc": "deny",
+          // "*.pypirc": "deny",
 
-          "*secrets*": "deny",
-          "*secrets*.nix": "allow",
-          "*sops*": "deny"
+          // "*secrets*": "deny",
+          // "*secrets*.nix": "allow",
+          // "*sops*": "deny"
         },
 
-        // ...or through the shell.
+        // ...or through the shell (secrets protection disabled).
         "bash": {
-          "*": "allow",
-          "*secrets.nix*": "allow",
-          "cat *secrets.nix": "allow",
-          "bat *secrets.nix": "allow",
-          "head *secrets.nix": "allow",
-          "tail *secrets.nix": "allow",
-          "nl *secrets.nix": "allow",
-          "wc *secrets.nix": "allow",
-          "grep *secrets.nix": "allow",
-          "rg *secrets.nix": "allow",
-          "diff *secrets.nix": "allow",
-          "ls *secrets.nix": "allow",
-          "stat *secrets.nix": "allow",
-          "git status *secrets.nix": "allow",
-          "git diff *secrets.nix": "allow",
-          "git log *secrets.nix": "allow",
-          "git show *secrets.nix": "allow",
+          "*": "allow"
 
-          "*.env": "deny",
-          "*.env.*": "deny",
-          "*.env.example": "allow",
-          "*.envrc*": "deny",
-          "*.pem*": "deny",
-          "*.key*": "deny",
-          "*.p12*": "deny",
-          "*.pfx*": "deny",
-          "*.kdbx*": "deny",
-          "*id_rsa*": "deny",
-          "*id_ed25519*": "deny",
-          "*id_ecdsa*": "deny",
-          "*id_dsa*": "deny",
-          "*.netrc*": "deny",
-          "*.pgpass*": "deny",
-          "*.npmrc*": "deny",
-          "*.pypirc*": "deny",
-          "*secrets*": "deny",
+          // "*secrets.nix*": "allow",
+          // "cat *secrets.nix": "allow",
+          // "bat *secrets.nix": "allow",
+          // "head *secrets.nix": "allow",
+          // "tail *secrets.nix": "allow",
+          // "nl *secrets.nix": "allow",
+          // "wc *secrets.nix": "allow",
+          // "grep *secrets.nix": "allow",
+          // "rg *secrets.nix": "allow",
+          // "diff *secrets.nix": "allow",
+          // "ls *secrets.nix": "allow",
+          // "stat *secrets.nix": "allow",
+          // "git status *secrets.nix": "allow",
+          // "git diff *secrets.nix": "allow",
+          // "git log *secrets.nix": "allow",
+          // "git show *secrets.nix": "allow",
 
-          // secrets.nix: same treatment as any other file
-          "*secrets.nix*": "allow",
-          "cat *secrets.nix": "allow",
-          "bat *secrets.nix": "allow",
-          "head *secrets.nix": "allow",
-          "tail *secrets.nix": "allow",
-          "nl *secrets.nix": "allow",
-          "wc *secrets.nix": "allow",
-          "grep *secrets.nix": "allow",
-          "rg *secrets.nix": "allow",
-          "diff *secrets.nix": "allow",
-          "ls *secrets.nix": "allow",
-          "stat *secrets.nix": "allow",
-          "git status *secrets.nix": "allow",
-          "git diff *secrets.nix": "allow",
-          "git log *secrets.nix": "allow",
-          "git show *secrets.nix": "allow",
+          // "*.env": "deny",
+          // "*.env.*": "deny",
+          // "*.env.example": "allow",
+          // "*.envrc*": "deny",
+          // "*.pem*": "deny",
+          // "*.key*": "deny",
+          // "*.p12*": "deny",
+          // "*.pfx*": "deny",
+          // "*.kdbx*": "deny",
+          // "*id_rsa*": "deny",
+          // "*id_ed25519*": "deny",
+          // "*id_ecdsa*": "deny",
+          // "*id_dsa*": "deny",
+          // "*.netrc*": "deny",
+          // "*.pgpass*": "deny",
+          // "*.npmrc*": "deny",
+          // "*.pypirc*": "deny",
+          // "*secrets*": "deny",
 
-          "*sops*": "deny"
+          // "*sops*": "deny"
         },
 
         // Leave the repo freely.
@@ -517,8 +487,8 @@
     },
 
     // ─────────────────────────────────────────────
-    // full-yolo: like auto, but secrets are fair game.
-    // Nothing prompts and nothing is denied.
+    // full-yolo: like auto, but also without the repo
+    // boundary. Nothing prompts and nothing is denied.
     // ─────────────────────────────────────────────
 
     "full-yolo": {
@@ -536,7 +506,7 @@
 
     // ─────────────────────────────────────────────
     // build: edits allowed, read-only commands allowed,
-    // everything else asks. Secrets denied, repo-only.
+    // everything else asks. Repo-only.
     // ─────────────────────────────────────────────
 
     "build": {
@@ -550,7 +520,7 @@
     // ─────────────────────────────────────────────
     // plan: reads and read-only commands allowed, edits
     // denied. Anything outside the repo prompts except
-    // /tmp. Secrets denied.
+    // /tmp.
     // ─────────────────────────────────────────────
 
     "plan": {
@@ -582,32 +552,32 @@
           "*": "deny"
         },
         "read": {
-          "*": "allow",
+          "*": "allow"
 
-          "*.env": "deny",
-          "*.env.*": "deny",
-          "*.env.example": "allow",
-          "*.envrc": "deny",
-          "*.envrc.*": "deny",
+          // "*.env": "deny",
+          // "*.env.*": "deny",
+          // "*.env.example": "allow",
+          // "*.envrc": "deny",
+          // "*.envrc.*": "deny",
 
-          "*.pem": "deny",
-          "*.key": "deny",
-          "*.p12": "deny",
-          "*.pfx": "deny",
-          "*.kdbx": "deny",
+          // "*.pem": "deny",
+          // "*.key": "deny",
+          // "*.p12": "deny",
+          // "*.pfx": "deny",
+          // "*.kdbx": "deny",
 
-          "*id_rsa*": "deny",
-          "*id_ed25519*": "deny",
-          "*id_ecdsa*": "deny",
-          "*id_dsa*": "deny",
-          "*.netrc": "deny",
-          "*.pgpass": "deny",
-          "*.npmrc": "deny",
-          "*.pypirc": "deny",
+          // "*id_rsa*": "deny",
+          // "*id_ed25519*": "deny",
+          // "*id_ecdsa*": "deny",
+          // "*id_dsa*": "deny",
+          // "*.netrc": "deny",
+          // "*.pgpass": "deny",
+          // "*.npmrc": "deny",
+          // "*.pypirc": "deny",
 
-          "*secrets*": "deny",
-          "*secrets*.nix": "allow",
-          "*sops*": "deny"
+          // "*secrets*": "deny",
+          // "*secrets*.nix": "allow",
+          // "*sops*": "deny"
         },
         "bash": {
           "*": "deny",
@@ -733,48 +703,46 @@
           "date -s*": "deny",
           "date * -s*": "deny",
           "date --set*": "deny",
-          "date * --set*": "deny",
+          "date * --set*": "deny"
 
-          "*.env": "deny",
-          "*.env.*": "deny",
-          "*.envrc*": "deny",
-          "*.pem*": "deny",
-          "*.key*": "deny",
-          "*.p12*": "deny",
-          "*.pfx*": "deny",
-          "*.kdbx*": "deny",
-          "*id_rsa*": "deny",
-          "*id_ed25519*": "deny",
-          "*id_ecdsa*": "deny",
-          "*id_dsa*": "deny",
-          "*.netrc*": "deny",
-          "*.pgpass*": "deny",
-          "*.npmrc*": "deny",
-          "*.pypirc*": "deny",
-          "*secrets*": "deny",
+          // Secrets protection disabled for now.
+          // "*.env": "deny",
+          // "*.env.*": "deny",
+          // "*.envrc*": "deny",
+          // "*.pem*": "deny",
+          // "*.key*": "deny",
+          // "*.p12*": "deny",
+          // "*.pfx*": "deny",
+          // "*.kdbx*": "deny",
+          // "*id_rsa*": "deny",
+          // "*id_ed25519*": "deny",
+          // "*id_ecdsa*": "deny",
+          // "*id_dsa*": "deny",
+          // "*.netrc*": "deny",
+          // "*.pgpass*": "deny",
+          // "*.npmrc*": "deny",
+          // "*.pypirc*": "deny",
+          // "*secrets*": "deny",
 
-          // secrets.nix: same treatment as any other file.
-          // Reads run, writes are denied (this agent never writes),
-          // redirection/exec flags below re-deny.
-          "*secrets.nix*": "allow",
-          "cat *secrets.nix": "allow",
-          "bat *secrets.nix": "allow",
-          "batcat *secrets.nix": "allow",
-          "head *secrets.nix": "allow",
-          "tail *secrets.nix": "allow",
-          "nl *secrets.nix": "allow",
-          "wc *secrets.nix": "allow",
-          "grep *secrets.nix": "allow",
-          "rg *secrets.nix": "allow",
-          "diff *secrets.nix": "allow",
-          "ls *secrets.nix": "allow",
-          "stat *secrets.nix": "allow",
-          "git status *secrets.nix": "allow",
-          "git diff *secrets.nix": "allow",
-          "git log *secrets.nix": "allow",
-          "git show *secrets.nix": "allow",
+          // "*secrets.nix*": "allow",
+          // "cat *secrets.nix": "allow",
+          // "bat *secrets.nix": "allow",
+          // "batcat *secrets.nix": "allow",
+          // "head *secrets.nix": "allow",
+          // "tail *secrets.nix": "allow",
+          // "nl *secrets.nix": "allow",
+          // "wc *secrets.nix": "allow",
+          // "grep *secrets.nix": "allow",
+          // "rg *secrets.nix": "allow",
+          // "diff *secrets.nix": "allow",
+          // "ls *secrets.nix": "allow",
+          // "stat *secrets.nix": "allow",
+          // "git status *secrets.nix": "allow",
+          // "git diff *secrets.nix": "allow",
+          // "git log *secrets.nix": "allow",
+          // "git show *secrets.nix": "allow",
 
-          "*sops*": "deny"
+          // "*sops*": "deny"
         },
         "external_directory": {
           "*": "deny",
