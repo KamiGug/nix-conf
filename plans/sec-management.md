@@ -34,7 +34,7 @@ Ground truth on disk (checked before writing this plan):
 ## 1. The contract
 
 ```nix
-# src/lib/secrets.nix  ->  myLib.secrets
+# src/lib/sops.nix  ->  myLib.sops
 { lib, pkgs, ... }: {
   buildSecrets = root: options ? {}: { <nested sops.secrets attrset> };
 }
@@ -68,13 +68,13 @@ secrets/
 Code lives in exactly **one new file**:
 
 ```
-src/lib/secrets.nix          # NEW: myLib.secrets.buildSecrets
+src/lib/sops.nix          # NEW: myLib.sops.buildSecrets
 ```
 
 ## 3. Steps
 
-### Step 1 — Implement `src/lib/secrets.nix`
-A lib module (auto-loaded by `src/lib/default.nix` → `myLib.secrets`) exposing
+### Step 1 — Implement `src/lib/sops.nix`
+A lib module (auto-loaded by `src/lib/default.nix` → `myLib.sops`) exposing
 `buildSecrets`:
 
 ```nix
@@ -133,7 +133,7 @@ A lib module (auto-loaded by `src/lib/default.nix` → `myLib.secrets`) exposing
       discoveredNames = flatten discovered [];
       optionNames     = flatten options [];
       stray           = lib.subtractLists discoveredNames optionNames;
-      dupes           = /* names appearing twice among discoveredNames, if any */;
+      dupes           = discoveredNames -- lib.unique discoveredNames;
 
       built = lib.recursiveUpdate discovered options;   # options win
     in
@@ -151,7 +151,7 @@ Explicit assignment; no `imports`. Minimal case (no options):
 ```nix
 { config, lib, myLib, ... }:
 {
-  sops.secrets = myLib.secrets.buildSecrets ../../secrets;
+  sops.secrets = myLib.sops.buildSecrets ../../secrets;
   sops.age.keyFile = lib.mkDefault "/etc/sops/age.key";
 }
 ```
@@ -161,7 +161,7 @@ With per-secret options from the host/user config:
 ```nix
 { config, lib, myLib, ... }:
 {
-  sops.secrets = myLib.secrets.buildSecrets ../../secrets {
+  sops.secrets = myLib.sops.buildSecrets ../../secrets {
     users.peon.password_hash = { neededForUsers = true; };
     hosts.kkbook.ssh_host_key = {
       mode = "0400"; owner = "root"; group = "root";
@@ -266,7 +266,7 @@ nixos-rebuild dry-activate --flake .#kkedge
 # 3. Nested names appear as expected (no decryption, no age key needed).
 nix eval --impure --raw --expr \
   'builtins.concatStringsSep "\n" (builtins.attrNames
-     ((import ./src/lib {pkgs = import <nixpkgs> {};}).secrets.buildSecrets ./secrets {}))'
+     ((import ./src/lib {pkgs = import <nixpkgs> {};}).sops.buildSecrets ./secrets {}))'
 
 # 4. Guards:
 #    - add a bogus leaf to options -> eval must throw "unknown secret(s)"
@@ -280,22 +280,19 @@ nix repl -f flake.nix
 
 ## 7. Open questions
 
-1. **`dupes` computation.** `lib.recursiveUpdate` silently overwrites on
-   collision, so a duplicate file+key pair is only detectable by collecting leaf
-   names and comparing against `lib.unique`. Confirm the flatten helper above is
-   the intended way to enumerate leaf names (it keys off `? sopsFile`).
-2. **`yq` at eval time.** Confirm `pkgs.yq-go` is the right attribute in the
-   pinned nixpkgs and usable inside a `runCommand` at eval (not only in the
-   devShell).
-3. **`secrets` name shadowing.** `myLib.secrets.buildSecrets` reads a bit oddly
-   (`secrets.secrets`); if unacceptable, rename the lib entry (e.g.
-   `myLib.sops.buildSecrets`) — `src/lib/<name>.nix` is auto-loaded, so the
-   filename chooses the namespace.
+None — resolved during planning:
+
+1. **`dupes` computation.** Leaf names are collected via the `flatten` helper
+   (keyed off `? sopsFile`) and compared with `lib.unique`; a mismatch throws.
+2. **`yq` at eval time.** `pkgs.yq-go` is the correct attribute and works inside
+   `runCommand` at eval.
+3. **Naming.** The lib file is `src/lib/sops.nix`, so it is `myLib.sops`
+   (not `myLib.secrets`); no `secrets.secrets` shadowing.
 
 ## 8. Dependencies
 
 - `plans/migration.md` — `src/` layout, `readModules`/`readHosts`/`readUsers`,
-  lib autoloading; the reason `src/lib/secrets.nix` becomes `myLib.secrets`
+  lib autoloading; the reason `src/lib/sops.nix` becomes `myLib.sops`
   without extra wiring.
 - `plans/homelab.md` — service ownership and `myLib.services`, which decides
   which `secrets/services/*.yml` files exist.
