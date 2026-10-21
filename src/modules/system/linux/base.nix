@@ -83,9 +83,6 @@
   # Configure console keymap
   console.keyMap = "pl2";
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
   # my.avahi.enable = true;
 
   systemd.tmpfiles.rules = [

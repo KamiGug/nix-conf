@@ -5,9 +5,7 @@
   lib,
   pkgs,
   ...
-}: let
-  cfg = config.my.hardware.printing;
-in {
+}: {
   options.my.hardware.printing = {
     enable = lib.mkEnableOption "printing and scanning support";
 
@@ -18,16 +16,27 @@ in {
         Users that should be added to the printer and scanner groups.
       '';
     };
+
+    drivers = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = [];
+      example = lib.literalExpression "with pkgs; [ hplip splix ]";
+      description = ''
+        Additional CUPS drivers to install.
+      '';
+    };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf config.my.hardware.printing.enable {
     services.printing = {
       enable = true;
 
-      drivers = [
-        pkgs.gutenprint
-        pkgs.cups-filters
-      ];
+      drivers =
+        [
+          pkgs.gutenprint
+          pkgs.cups-filters
+        ]
+        ++ config.my.hardware.printing.drivers;
     };
 
     hardware.sane = {
@@ -49,7 +58,7 @@ in {
       };
     };
 
-    users.users = lib.genAttrs cfg.users (_: {
+    users.users = lib.genAttrs config.my.hardware.printing.users (_: {
       extraGroups = [
         "lp"
         "scanner"

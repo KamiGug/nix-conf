@@ -1,8 +1,5 @@
-{
-  # config,
-  lib,
-  ...
-}: let
+{ config, lib, ... }:
+let
   secretsFile = ../../secrets.yml;
 
   simpleConf = name: {
@@ -16,23 +13,11 @@
       # neededForUsers = true;
     };
 
-    nixos-secret-test = {
-    };
+    nixos-secret-test = {};
 
-    hm-secret-test = {
-    };
-
-    # github-priv-key = {};
-
-    # ananas-priv-key = {};
+    hm-secret-test = {};
   };
 in {
   sops.age.keyFile = lib.mkDefault "/etc/sops/age.key";
-  sops.secrets =
-    lib.mapAttrs
-    (
-      name: extra:
-        simpleConf name // extra
-    )
-    secrets;
+  sops.secrets = lib.mapAttrs (name: extra: simpleConf name // extra) secrets;
 }

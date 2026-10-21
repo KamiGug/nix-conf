@@ -70,14 +70,13 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
     else inputs.sops-nix.darwinModules;
   sopsModule = platformModules.sops;
 
-  # TODO: handle enableHm == false
   hmPlatformModules =
     if os == "linux"
     then inputs.home-manager.nixosModules
     else inputs.home-manager.darwinModules;
-  homeManagerModule = hmPlatformModules.home-manager;
+  homeManagerModule = lib.optional enableHm hmPlatformModules.home-manager;
 
-  homeManagerConfig = {
+  homeManagerConfig = lib.mkIf enableHm {
     home-manager.useGlobalPkgs = true;
     home-manager.useUserPackages = true;
 
@@ -115,7 +114,9 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
     ++ [
       (lib.path.append root "src/hosts/${os}/${name}")
       sopsModule
-      homeManagerModule
+    ]
+    ++ homeManagerModule
+    ++ [
       homeManagerConfig
       {nixpkgs.overlays = [localOverlay];}
     ]

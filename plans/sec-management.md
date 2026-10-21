@@ -1,323 +1,301 @@
 # sops-nix: Modular secrets management
 
-Status: **proposed** — depends on `plans/migration.md` and `plans/homelab.md`.
+Status: **ready** — depends on `plans/migration.md` and `plans/homelab.md`.
 
-This plan refactors the repository's secrets management into a modular,
-auto-discovering sops-nix configuration. It builds on the filesystem-as-registry
-conventions established in `plans/migration.md` and the service ownership
-definitions in `plans/homelab.md`.
+Secrets are declared by dropping an encrypted YAML file into `secrets/`. A lib
+function walks that directory at evaluation time and returns a nested
+`config.sops.secrets` attrset whose **namespace mirrors the filesystem tree**
+(`secrets/users/darwin/post2016/dude.yml` + key `password_hash` →
+`config.sops.secrets.users.darwin.post2016.dude.password_hash`). There is **no
+imposed directory structure**, recursion is **unconditional** (to the leaves, no
+`default.nix` stop-rule), and the result is **assigned explicitly at the call
+site** — the function returns a plain value, it is **not** a module and is **not**
+wired through the NixOS `imports` mechanism.
 
-## 1. Overview
+Per-secret sops options are passed by the caller from host/user config (default
+`{}`). Any option naming a secret that no `.yml` file produces is a **hard
+evaluation error** (`throw`), so a typo is never silently discarded.
 
-The secrets layout is converted from a single `secrets.yml` + `sops.yml` at the
-repo root into a directory-based structure under `secrets/` that is auto-discovered
-by a `helpers/secrets/default.nix` Nix module. Each host and each service gets its
-own encrypted YAML file; recipient metadata is tracked per-file so that decryption
-is restricted to the authorised principals.
+## 0. Verified starting state
 
-The `.sops.yaml` master configuration includes one age recipient for the admin
-(shared across all hosts) and one recipient per host. A separate `ssh-public.yml`
-maps public keys to names without distributing private keys.
+Ground truth on disk (checked before writing this plan):
 
-## 2. Secrets Directory Structure
+| Path | State |
+|------|-------|
+| `src/helpers/default.nix` | list: `[ ./secrets.nix ./using.nix ]` — imported by every host |
+| `src/helpers/secrets.nix` | legacy module, 23 lines, uses `../../secrets.yml` |
+| `src/lib/default.nix` | autoloads every `src/lib/*.nix` (except `default`) via `readModules` |
+| `src/lib/secrets.nix` | **does not exist** |
+| `src/helpers/secrets/` | **does not exist** |
+| `secrets/` | **exists** (directory at repo root) |
+| `secrets.yml`, `sops.yml` | **exist** (legacy, repo root) |
+| `_resolveHostSet.nix:47` | `myLib = import (root + "/src/lib") { inherit pkgs; }` |
+
+## 1. The contract
+
+```nix
+# src/lib/secrets.nix  ->  myLib.secrets
+{ lib, pkgs, ... }: {
+  buildSecrets = root: options ? {}: { <nested sops.secrets attrset> };
+}
+```
+
+- **Returns only the `sops.secrets` attrset.** No module, no `imports`, no
+  assertions option (validation throws inline).
+- `root` — path to the `secrets/` directory (e.g. `../../secrets`).
+- `options` — per-secret sops options, keyed by the same tree; **defaults to `{}`**.
+- The caller assigns the result and owns `sops.age.keyFile`
+  (default `/etc/sops/age.key`, overridable per host/user via `mkDefault`).
+- **No `imports`.** The secrets machinery is never registered via the NixOS
+  module `imports` mechanism, never listed in `src/helpers/default.nix`.
+
+## 2. Layout
+
+`secrets/` holds **encrypted YAML only — no `.nix` files, ever**. Its sub-tree is
+free-form; whatever dirs the user creates become namespace segments.
 
 ```
 secrets/
-├── common/
-│   └── API_keys.yml      # AI service API keys (OpenAI, Anthropic, etc.)
 ├── hosts/
-│   ├── kg-continabook.yml
-│   ├── kkbook.yml
-│   ├── kkedge.yml       <--- newly added (was missing)
-│   ├── kknas.yml
-│   ├── kkphone.yml
-│   ├── kkserv.yml
-│   ├── kktab.yml
-│   └── kkworker.yml
+│   └── kkbook.yml
 ├── services/
-│   ├── authentik.yml
-│   ├── db/postgres.yml
-│   ├── forgejo.yml
-│   ├── netbird.yml
-│   ├── nextcloud.yml
-│   └── nfs.yml
-├── ssh-public.yml
-└── users/
-    ├── peon.yml
-    └── wisp.yml
+│   └── db/postgres.yml
+├── users/
+│   └── darwin/post2016/dude.yml
+└── ssh-public.yml
 ```
 
-- **Host secrets** (`secrets/hosts/*`): Each file contains the secrets for one
-  machine. The filename matches the hostname. Per-file age recipients are listed
-  in the sops file header (`.sops.yaml` creation_rules). A host's own secret is
-  decryptable by that host's age key plus the admin key.
-- **Service secrets** (`secrets/services/*`): Independent of host secrets; each
-  service file contains the credentials consumed by the service regardless of
-  which host it runs on.
-- **User secrets** (`secrets/users/*`): Credentials for individual users.
-  - `peon`: `kkbook`, `kktab`
-  - `wisp`: `kkphone`, `kknas`, `kkworker`, `kkserv`, `kkedge`
-- **SSH public keys** (`secrets/ssh-public.yml`): Maps key names to key data and
-  the hosts/users authorised to use them. Private keys never leave the source host.
+Code lives in exactly **one new file**:
 
-## 3. Encryption Policy & Recipients
+```
+src/lib/secrets.nix          # NEW: myLib.secrets.buildSecrets
+```
 
-`.sops.yaml` (at repo root) — do not invent new age key IDs; document missing
-keys and manual steps.
+## 3. Steps
+
+### Step 1 — Implement `src/lib/secrets.nix`
+A lib module (auto-loaded by `src/lib/default.nix` → `myLib.secrets`) exposing
+`buildSecrets`:
+
+```nix
+{ lib, pkgs, ... }: {
+  buildSecrets = root: options ? {}:
+    let
+      # YAML -> JSON index at eval time (yq-go is in the devShell).
+      # sops leaves top-level keys plaintext; only values are ENC[...]. No decryption.
+      index = file:
+        builtins.fromJSON (builtins.readFile (pkgs.runCommand "sops-index.json"
+          { nativeBuildInputs = [ pkgs.yq-go ]; } ''
+            yq -o=json 'del(.sops)' ${file} > $out
+          ''));
+
+      isSecret = name: kind:
+        kind == "regular"
+        && (lib.hasSuffix ".yml" name || lib.hasSuffix ".yaml" name)
+        && !(lib.hasPrefix "_" name);
+
+      # Unconditional recursion to the leaves (no default.nix stop-rule).
+      walk = dir:
+        let entries = builtins.readDir dir; in
+        lib.concatMap (name:
+          let p = dir + "/${name}"; in
+          if entries.${name} == "directory" then walk p
+          else lib.optional (isSecret name entries.${name}) p)
+        (builtins.attrNames entries);
+
+      # "…/secrets/users/darwin/post2016/dude.yml" -> ["users" "darwin" "post2016" "dude"]
+      relSegments = p:
+        lib.splitString "/"
+          (lib.removeSuffix ".yml" (lib.removeSuffix ".yaml"
+            (lib.removePrefix (toString root + "/") (toString p))));
+
+      # nested { <seg...>.<key> = { sopsFile; format; key; }; }
+      expand = p:
+        let
+          doc  = index p;                  # .sops already stripped
+          segs = relSegments p;
+        in map (k: lib.setAttrByPath (segs ++ [ k ]) {
+             sopsFile = p;
+             format = "yaml";
+             key = k;
+           }) (builtins.attrNames doc);
+
+      pieces = lib.concatMap expand (walk root);
+      discovered = lib.foldl' lib.recursiveUpdate {} pieces;
+
+      # --- validation (throw, not assertions) ---
+      flatten = set: prefix:
+        lib.concatLists (lib.mapAttrsToList (n: v:
+          if builtins.isAttrs v && !(v ? sopsFile)
+          then flatten v (prefix ++ [ n ])
+          else [ (lib.concatStringsSep "." (prefix ++ [ n ])) ]) set);
+
+      discoveredNames = flatten discovered [];
+      optionNames     = flatten options [];
+      stray           = lib.subtractLists discoveredNames optionNames;
+      dupes           = /* names appearing twice among discoveredNames, if any */;
+
+      built = lib.recursiveUpdate discovered options;   # options win
+    in
+      if stray != []
+      then throw "secrets: options reference unknown secret(s): ${lib.concatStringsSep ", " stray}"
+      else if dupes != []
+      then throw "secrets: name collision: ${lib.concatStringsSep ", " dupes}"
+      else built;
+}
+```
+
+### Step 2 — Call it from each host/user that needs secrets
+Explicit assignment; no `imports`. Minimal case (no options):
+
+```nix
+{ config, lib, myLib, ... }:
+{
+  sops.secrets = myLib.secrets.buildSecrets ../../secrets;
+  sops.age.keyFile = lib.mkDefault "/etc/sops/age.key";
+}
+```
+
+With per-secret options from the host/user config:
+
+```nix
+{ config, lib, myLib, ... }:
+{
+  sops.secrets = myLib.secrets.buildSecrets ../../secrets {
+    users.peon.password_hash = { neededForUsers = true; };
+    hosts.kkbook.ssh_host_key = {
+      mode = "0400"; owner = "root"; group = "root";
+      restartUnits = [ "sshd.service" ];
+    };
+  };
+  sops.age.keyFile = lib.mkDefault "/etc/sops/age.key";
+}
+```
+
+### Step 3 — Delete the legacy module
+```bash
+rm src/helpers/secrets.nix
+```
+Then remove its entry from `src/helpers/default.nix`:
+```nix
+# before
+[ ./secrets.nix ./using.nix ]
+# after
+[ ./using.nix ]
+```
+No shim. The hard-coded names (`peon-password`, `nixos-secret-test`,
+`hm-secret-test`) are re-expressed as YAML keys in `secrets/**/*.yml` and, where
+needed, as options at the call sites.
+
+### Step 4 — Migrate the three test secrets into data files
+For each legacy name, create the matching `secrets/.../*.yml` with the value as a
+top-level YAML key, then `sops`-encrypt it:
+
+```bash
+# user-only: requires the age key; agent cannot read these files
+sops secrets/users/peon.yml            # key: password_hash
+sops secrets/services/nixos-test.yml   # key: test
+sops secrets/services/hm-test.yml      # key: test
+```
+
+### Step 5 — Repoint password-hash consumers
+```nix
+users.users.peon.hashedPasswordFile =
+  config.sops.secrets.users.peon.password_hash.path;
+```
+Find them with:
+```bash
+rg -n 'hashedPassword|sops\.secrets' src/
+```
+
+### Step 6 — Repoint `.sops.yaml` recipients
+Path-based `creation_rules` covering the new tree (admin key is the only known ID;
+per-host recipients appended by the user once each key exists):
 
 ```yaml
 keys:
-  - &admin_key age1dmawdc96sk8yent9u9wvmwzxk6ean4zpkq6n7msx952ppnnxj90q5utu5u   # admin / master
+  - &admin age1dmawdc96sk8yent9u9wvmwzxk6ean4zpkq6n7msx952ppnnxj90q5utu5u
 creation_rules:
-  - path_regex: secrets/hosts/.*\.yml$
-    age: *admin_key
-    sops_key: /etc/sops/age.key
-  - path_regex: secrets/services/.*\.yml$
-    age: *admin_key
-    sops_key: /etc/sops/age.key
-  - path_regex: secrets/users/.*\.yml$
-    age: *admin_key
-    sops_key: /etc/sops/age.key
+  - path_regex: '^secrets/.*\.ya?ml$'
+    key_groups: [{ age: [*admin] }]
 ```
 
-**Per-host recipients**: Each `secrets/hosts/<name>.yml` sops file must list the
-admin key **plus** the age recipient for the corresponding host. The host recipient
-is identified by the age key fingerprint that matches that machine's `/etc/sops/age.key`.
-If a host needs to decrypt its own secret, its age key must be listed. The admin
-key is always listed so the master can decrypt anything.
-
-- Host secrets: `hosts/<name>.yml` → recipients = `[admin_key, <host_age_key>]`
-- Service secrets: `services/<name>.yml` → recipients as determined by required
-  hosts (see Section 4)
-- User secrets: `users/peon.yml` → recipients = `[admin_key]` (peon can decrypt
-  kkbook and kktab); `users/wisp.yml` → recipients = `[admin_key]` (wisp can
-  decrypt kkphone, kknas, kkworker, kkserv, kkedge)
-
-**Do not invent recipient keys**: The only age key ID known to exist is the admin
-key above. Any host whose age key is not yet in the known recipient list must be
-added manually (see Section 6).
-
-## 4. Service Ownership & Secret Consumers
-
-Per `plans/homelab.md`, service secrets are owned by specific hosts. Recipients
-are assigned per-service based on the intended owner. Do not assign recipients
-without confirming the service actually runs on that host.
-
-| Service | Owner Host | Secrets contained | Recipients |
-|---|---|---|---|
-| **Nextcloud** | `kknas` | DB password, OIDC client secret, admin password | `kknas_age_key`, `admin_key` |
-| **Jellyfin** | `kknas` | Media DB credentials | `kknas_age_key`, `admin_key` |
-| **Navidrome** | `kknas` | DB credentials | `kknas_age_key`, `admin_key` |
-| **NFS** | `kknas` | Export/auth secrets | `kknas_age_key`, `admin_key` |
-| **All database secrets** | `kknas` | PostgreSQL users/passwords for all services | `kknas_age_key`, `admin_key` |
-| **Forgejo** | `kkworker` | DB password, repository config | `kkworker_age_key`, `admin_key` |
-| **Excalidraw/Excalidash** | `kkworker` | Config/DB secrets | `kkworker_age_key`, `admin_key` |
-| **Conduit/Element Call** | `kkworker` | Chat server secrets | `kkworker_age_key`, `admin_key` |
-| **Taiga** | `kkworker` | Project/DB secrets | `kkworker_age_key`, `admin_key` |
-| **Penpot** | `kkworker` | Design/secrets | `kkworker_age_key`, `admin_key` |
-| **Wiki.js** | `kkworker` | DB password, OIDC | `kkworker_age_key`, `admin_key` |
-| **Yumtrack** | `kkworker` | Yum repo credentials | `kkworker_age_key`, `admin_key` |
-| **NetBird** | `kkserv` | VPN node config | `kkserv_age_key`, `admin_key` |
-| **Bind9/Pi-hole** | `kkserv` | DNS/DHCP secrets | `kkserv_age_key`, `admin_key` |
-| **Nginx** | `kkserv` | TLS certs, proxy secrets | `kkserv_age_key`, `admin_key` |
-| **Smallstep CA** | `kkserv` | CA config, JWKs | `kkserv_age_key`, `admin_key` |
-| **Authentik** | — | **Must include PostgreSQL username and password** as required by the actual deployment. Owner: `kknas` (database) + `kkserv` (frontend). Recipients: `kknas_age_key`, `kkserv_age_key`, `admin_key`. | |
-
-*Missing keys*: If a host age key is not yet known, document it in the "Manual
-steps" section (Section 6) and do not add it to the `.sops.yaml` creation_rules
-until the key fingerprint is verified.
-
-## 5. Automatic Discovery
-
-`helpers/secrets.nix` is refactored into a modular directory structure:
-
+### Step 7 — Remove the legacy files
+```bash
+rm secrets.yml sops.yml
 ```
-helpers/
-└── secrets/
-    ├── default.nix    # module entry point (auto-discovers all secret files)
-    ├── hosts/         # per-host secret definitions (auto-discovered)
-    │   ├── default.nix
-    │   ├── kg-continabook.nix
-    │   ├── kkbook.nix
-    │   ├── kkedge.nix   <--- newly added
-    │   ├── kknas.nix
-    │   ├── kkphone.nix
-    │   ├── kkserv.nix
-    │   ├── kktab.nix
-    │   └── kkworker.nix
-    ├── services/      # per-service secret definitions (auto-discovered)
-    │   ├── default.nix
-    │   ├── authentik.nix
-    │   ├── db/
-    │   │   └── postgres.nix
-    │   ├── forgejo.nix
-    │   ├── netbird.nix
-    │   ├── nextcloud.nix
-    │   └── nfs.nix
-    ├── ssh-public.yml # public key mappings (explicit, not auto-discovered)
-    └── users/         # per-user secret definitions (auto-discovered)
-        ├── default.nix
-        ├── peon.nix
-        └── wisp.nix
-```
+Only after `rg -n 'secrets\.yml|sops\.yml' src/` returns nothing.
 
-### `helpers/secrets/default.nix`
+### Step 8 — Public metadata must not be walked
+Put public metadata at `secrets/_ssh-public.yml` (leading `_` → skipped by
+`isSecret`) or outside `secrets/` entirely.
 
-The module exports `config.secrets` as an attrset of `{hosts, services, users}`
-derived by walking the `secrets/` directory tree. It supports both NixOS and
-Home Manager.
+### Step 9 — Update the plans table
+Edit `plans/README.md` row 3: status `proposed` → `in progress` → `done`, and
+rewrite the `Scope` cell to the tree-preserving description.
 
-**Walker logic** (analogue of `readModules` from `plans/migration.md`):
+## 4. Naming rules (authoritative)
 
-- Scan `secrets/hosts/`, `secrets/services/`, `secrets/users/` recursively.
-- For each `.yml` file found, produce a Nix module entry keyed by the filename stem.
-- **Nested directories** (e.g. `secrets/services/db/postgres.yml`) are descended
-  into; the relative path from `secrets/` becomes part of the secret name.
-- **Stop at `default.nix`**: if a subdirectory contains a `default.nix`, treat it
-  as an opaque module and do not descend further.
-- **Host-aware filtering**: each module may declare which host(s) it is authorised
-  for via a `hosts` attribute. The caller filters accordingly.
-- **Home Manager support**: when running under Home Manager, the same walker
-  produces `home-manager.secrets` entries keyed by the same names.
-- **Secret naming**: the path relative to `secrets/` is used as a prefix: `/` is
-  replaced with `-` (dash), and `.yml`/`.yaml` is trimmed from the filename.
-  For each top-level secret key read inside that YAML file, the final sops
-  secret name is `<path-prefix>__<key-name>` — the path prefix is joined to the
-  secret name (read from the file) with `__` (double underscore). So
-  `secrets/services/db/postgres.yml` containing key `password` produces
-  sops secret `services-db-postgres__password`, and
-  `secrets/hosts/kkbook.yml` containing key `ssh-host-key` produces
-  `hosts-kkbook__ssh-host-key`. Extension trimming matches `.ya?ml`
-  (both `.yml` and `.yaml`).
+- Namespace = path of the `.yml` under `secrets/`, minus extension, split on `/`,
+  then the YAML top-level key as the final segment.
+  - `secrets/services/db/postgres.yml` + key `password`
+    → `config.sops.secrets.services.db.postgres.password`
+  - `secrets/users/darwin/post2016/dude.yml` + key `password_hash`
+    → `config.sops.secrets.users.darwin.post2016.dude.password_hash`
+- **No `/`→`-` flattening. No `__` joining.** The tree is preserved.
+- `.yml` and `.yaml` both accepted; extension trimmed.
+- Files beginning with `_` are skipped.
+- The reserved `sops` key is stripped by `del(.sops)` in the `yq` call.
 
-The module path is `helpers/secrets/default.nix` and it is included via the
-existing `helpers` import in `_resolveHostSet.nix` (updated path from
-`../helpers/secrets.nix` to the new directory structure).
+## 5. Per-secret options (from sops-nix)
 
-## 6. Migration
+Any sops-nix secret option is valid at the leaf: `neededForUsers`, `mode`,
+`owner`, `group`, `restartUnits`, `reloadUnits`, `path`, etc. `sopsFile` and `key`
+are supplied by the walker; caller options are merged over them
+(`lib.recursiveUpdate discovered options` — options win).
 
-### 6.1. Preserve existing values
-
-1. **Dump existing `secrets.yml` values**: before any restructuring, transcribe
-   every key/value from the root `secrets.yml` into the new per-file structure.
-   The existing values are:
-   - User-secrets only (confirmed from grep of `secrets.yml:6` = `sops:`).
-   - Three test sops secrets in `helpers/secrets.nix`: `peon-password`,
-     `nixos-secret-test`, `hm-secret-test`.
-
-2. **Create new file layout**: for each existing secret, create the appropriate
-   `secrets/hosts/<name>.yml`, `secrets/services/<name>.yml`, or
-   `secrets/users/<name>.yml` file. Keep the exact same sops key references.
-
-3. **Update `.sops.yaml`**: add per-host creation_rules as described in Section 3.
-   The existing `sops.yml` creation_rules for `secrets\.ya?ml` remain valid for
-   host and user secrets; service secrets get their own rules.
-
-4. **Update `helpers/secrets.nix`**: change `secretsFile = ../secrets.yml;` to
-   point at the new module structure. The new default.nix walks the directory
-   tree and does not rely on a single flat file.
-
-### 6.2. Incorporate `kkedge`
-
-`kkedge` is currently missing from the host secret files. During migration:
-
-1. Create `secrets/hosts/kkedge.yml` with the appropriate secrets for that host.
-2. Add the age recipient for `kkedge` to the file's sops header (admin key +
-   kkedge's age key, once provisioned).
-3. If `kkedge` runs any of the services listed in Section 4, add the relevant
-   service secrets to `secrets/services/` and assign recipients per the table.
-4. Update any host-level imports that reference the old flat secret structure.
-
-### 6.3. Verification after migration
-
-- `nix eval` or `nixos-rebuild dry-activate` on each host (kkbook, kktab,
-  kkserv, kknas, kkworker, kg-continabook) should succeed without sops
-  decryption errors.
-- `rg -n "secrets.yml"` should find zero results in tracked Nix files (the legacy
-  file has been removed or is only referenced in migration history).
-- No plaintext secret values appear in any `.nix` file or `diff` output.
-
-### 6.4. Remove legacy `secrets.yml`
-
-After all values are transcribed and verified, `rm secrets.yml`. Update any
-remaining references in the flake or host configs.
-
-## 7. Validation
-
-After implementing this plan, run the following checks:
-
-### 7.1. Nix evaluation
+## 6. Verification
 
 ```bash
-# Verify the flake evals on all hosts
+# 1. Plain host still evaluates.
 nixos-rebuild dry-activate --flake .#kkbook
-nixos-rebuild dry-activate --flake .#kktab
-nixos-rebuild dry-activate --flake .#kknas
-nixos-rebuild dry-activate --flake .#kkserv
-nixos-rebuild dry-activate --flake .#kkworker
-darwin-rebuild switch --flake .#kg-continabook
+
+# 2. A host with no secrets file present still evaluates (no error).
+nixos-rebuild dry-activate --flake .#kkedge
+
+# 3. Nested names appear as expected (no decryption, no age key needed).
+nix eval --impure --raw --expr \
+  'builtins.concatStringsSep "\n" (builtins.attrNames
+     ((import ./src/lib {pkgs = import <nixpkgs> {};}).secrets.buildSecrets ./secrets {}))'
+
+# 4. Guards:
+#    - add a bogus leaf to options -> eval must throw "unknown secret(s)"
+#    - two files producing the same name  -> eval must throw "collision"
+
+# 5. REPL sanity: nested lookup resolves.
+nix repl -f flake.nix
+# > :lf .
+# > nixosConfigurations.kkbook.config.sops.secrets.users.peon.password_hash.path
 ```
 
-All should complete without errors related to missing sops secrets or unknown
-recipients.
+## 7. Open questions
 
-### 7.2. Secret discovery coverage
+1. **`dupes` computation.** `lib.recursiveUpdate` silently overwrites on
+   collision, so a duplicate file+key pair is only detectable by collecting leaf
+   names and comparing against `lib.unique`. Confirm the flatten helper above is
+   the intended way to enumerate leaf names (it keys off `? sopsFile`).
+2. **`yq` at eval time.** Confirm `pkgs.yq-go` is the right attribute in the
+   pinned nixpkgs and usable inside a `runCommand` at eval (not only in the
+   devShell).
+3. **`secrets` name shadowing.** `myLib.secrets.buildSecrets` reads a bit oddly
+   (`secrets.secrets`); if unacceptable, rename the lib entry (e.g.
+   `myLib.sops.buildSecrets`) — `src/lib/<name>.nix` is auto-loaded, so the
+   filename chooses the namespace.
 
-```bash
-# Ensure every secret file under secrets/ is discovered by the module
-nix eval --impure --expr "builtins.length (import ./helpers/secrets/default.nix {})"
-```
-The result should equal the total number of `.yml` files in `secrets/`.
+## 8. Dependencies
 
-### 7.3. Host-specific access
-
-- `kkbook` should only decrypt secrets in `secrets/hosts/kkbook.yml` and
-  `secrets/users/{peon,wisp}` files it is authorised for.
-- `wisp` should only decrypt secrets in `secrets/hosts/wisp.yml` (if it has one)
-  and `secrets/users/wisp.yml` plus `secrets/services/` for services it runs.
-- `kkedge` coverage: verify `secrets/hosts/kkedge.yml` is discovered and its
-  recipient is listed (even if the key is not yet active, the file exists).
-
-### 7.4. Legacy reference removal
-
-```bash
-grep -r "secrets.yml" --include="*.nix" --include="*.md" /etc/nixos/ | grep -v ".bak" || echo "No remaining references to secrets.yml"
-```
-Should produce no output (or only references in `plans/` history).
-
-### 7.5. `.sops.yaml` format
-
-```bash
-pre-commit run --files .sops.yaml -- check-yaml 2>/dev/null || yaml_validator .sops.yaml
-```
-The file should parse as valid YAML with the expected keys.
-
-## 5. Outstanding Manual Steps
-
-- **Provision age keys**: Each host's `/etc/sops/age.key` must be generated and
-  the fingerprint added as a recipient in the corresponding
-  `secrets/hosts/<name>.yml` sops header. The admin key is already known
-  (`age1dmawdc96sk8yent9u9wvmwzxk6ean4zpkq6n7msx952ppnnxj90q5utu5u`).
-- **Verify `kkedge` age key**: If `kkedge` has an age key, add it as a recipient
-  to `secrets/hosts/kkedge.yml`. If not yet provisioned, document the gap in
-  Section 6.2 and add the recipient later.
-- **Transcribe all plaintext secrets from `secrets.yml` and `environment.yml`**:
-  The agent cannot read these files (permission rules). The user must manually
-  copy every value into the new `secrets/hosts/*.yml`,
-  `secrets/services/*.yml`, `secrets/users/*.yml` files, ensuring no value is
-  lost.
-- **Update `ssh-public.yml`**: Populate with the current public keys and host/
-  user access mappings. This file is referenced by the SSH module but was not
-  previously tracked in the repository.
-- **Run on-machine functional checks**: After `nixos-rebuild`, verify that
-  services can read their sops-decrypted secrets from the expected file paths
-  (e.g., `cat /run/secrets/<VAR>` inside running containers).
-
-## 6. Dependencies
-
-- `plans/migration.md` — required for the `readModules` autoloader, filesystem
-  disambiguation, and `helpers/` → `src/helpers/` move that affects
-  `helpers/secrets.nix` paths.
-- `plans/homelab.md` — required for service ownership assignments, the
-  `myLib.services` namespace, and the docker-services-to-Nix migration that
-  determines which secrets belong to which service.
+- `plans/migration.md` — `src/` layout, `readModules`/`readHosts`/`readUsers`,
+  lib autoloading; the reason `src/lib/secrets.nix` becomes `myLib.secrets`
+  without extra wiring.
+- `plans/homelab.md` — service ownership and `myLib.services`, which decides
+  which `secrets/services/*.yml` files exist.

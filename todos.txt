@@ -36,9 +36,6 @@ flake.nix
 plans/migration.md
   855:  (`# TODO: handle enableHm == false`) — implement while touching the
 
-src/lib/flake/_resolveHostSet.nix
-  73:  # TODO: handle enableHm == false
-
 src/lib/services/apps/authentik/default.nix
   67:        # TODO: make service name generators serparate functions for each service creating function/modules
 
