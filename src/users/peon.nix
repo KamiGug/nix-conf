@@ -18,7 +18,7 @@
       extraGroups =
         ["wheel" "networkmanager" "docker" "config-editor"]
         ++ ["video" "input" "render"]; # for sunshine
-      # hashedPasswordFile = config.sops.secrets.peon-password.path;
+      # hashedPasswordFile = config.sops.secrets."users/peon/password_hash".path;
     };
   };
   home = {
@@ -90,8 +90,8 @@
     apps.ssh = {
       enable = true;
       privateKeys = [
-        # "github-priv-key"
-        # "ananas-priv-key"
+        # "ssh/github/github-priv-key"
+        # "ssh/ananas/ananas-priv-key"
       ];
       hosts = {
         github = {

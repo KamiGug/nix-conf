@@ -43,7 +43,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
     dir = lib.path.append root "src/modules/home";
     mode = "set";
   };
-  helpers = import (lib.path.append root "src/helpers");
+  sops = import (lib.path.append root "src/modules/common");
   myLib = import (lib.path.append root "src/lib") {inherit pkgs;};
   localOverlay = import (lib.path.append root "src/overlays") {inherit inputs;};
   myUsers = myLib.flake.readUsers {inherit inputs;} {
@@ -91,7 +91,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
       ++ homeModules.${os}
       ++ lib.optional (gui && os == "linux")
       inputs.noctalia.homeModules.default
-      ++ helpers
+      ++ sops
       ++ [
         inputs.sops-nix.homeManagerModules.sops
       ];
@@ -110,7 +110,7 @@ assert (builtins.isBool enableHm) || throw "enableHm must be bool"; let
       dir = lib.path.append root "src/modules/system/gui";
       mode = "array";
     })
-    ++ helpers
+    ++ sops
     ++ [
       (lib.path.append root "src/hosts/${os}/${name}")
       sopsModule

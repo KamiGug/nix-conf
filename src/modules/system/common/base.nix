@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   # config,
   # inputs,
   ...
@@ -9,10 +10,6 @@
   nix.package = pkgs.lixPackageSets.stable.lix;
 
   home-manager.backupFileExtension = "bak";
-  # sops.secrets.repo = {
-  #   format = "yaml";
-  #   sopsFile = ../secrets.yml;
-  # };
 
   services.openssh.enable = true;
   environment.systemPackages = with pkgs; [
@@ -48,4 +45,6 @@
   # Enable the OpenSSH daemon.
 
   users.groups.config-editor = {};
+
+  sopsSecrets.enable = lib.mkDefault true;
 }

@@ -53,3 +53,5 @@ add automatic pkg adding
 https://terminal-browser.com/
 https://github.com/H1rla/markdown-on-kitty/tree/main
 https://github.com/junosuarez/termtex
+
+move to compact zellij (check matrix layout)

@@ -14,7 +14,7 @@
       home = "/home/wisp";
       shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
-      # hashedPasswordFile = config.sops.secrets.peon-password.path;
+      # hashedPasswordFile = config.sops.secrets."users/wisp/password_hash".path;
     };
   };
   home = {
@@ -55,8 +55,8 @@
     apps.ssh = {
       enable = true;
       privateKeys = [
-        # "github-priv-key"
-        # "ananas-priv-key"
+        # "ssh/github/github-priv-key"
+        # "ssh/ananas/ananas-priv-key"
       ];
       hosts = {
         github = {

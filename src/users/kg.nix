@@ -19,7 +19,7 @@
       home = "/Users/kg";
       shell = pkgs.fish;
       # extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
-      # hashedPasswordFile = config.sops.secrets.kg-password.path;
+      # hashedPasswordFile = config.sops.secrets."users/kg/password_hash".path;
     };
 
     system.defaults.dock = {
@@ -106,8 +106,8 @@
     apps.ssh = {
       enable = true;
       privateKeys = [
-        # "github-priv-key"
-        # "ananas-priv-key"
+        # "ssh/github/github-priv-key"
+        # "ssh/ananas/ananas-priv-key"
       ];
       hosts = {
         github = {

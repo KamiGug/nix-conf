@@ -1,6 +1,6 @@
 # sops-nix: Modular secrets management
 
-Status: **ready** — depends on `plans/migration.md` and `plans/homelab.md`.
+Status: **done** (2026-10-21) — `nixos-rebuild dry-activate` and all plan verification steps pass.
 
 Secrets are declared by dropping an encrypted YAML file into `secrets/`. A lib
 function walks that directory at evaluation time and returns a nested
@@ -296,3 +296,29 @@ None — resolved during planning:
   without extra wiring.
 - `plans/homelab.md` — service ownership and `myLib.services`, which decides
   which `secrets/services/*.yml` files exist.
+
+## 9. Deviations from the original plan
+
+- **Flat `"/"`-joined names instead of nested attrsets.** The plan's §4 showed
+  `config.sops.secrets.services.db.postgres.password`. In practice, sops-nix's
+  `sops.secrets` is declared as `lib.types.attrsOf secretType` — the module
+  system rejects nested attrsets (error: "The option `sops.secrets.users.peon' does
+  not exist"). The tree is therefore preserved inside the attribute name
+  (`services/db/postgres/password`). Nothing is flattened to `-` or `__`.
+- **`buildSecrets` signature uses an attrset pattern.** The plan wrote
+  `buildSecrets = root: options ? {}:` — default arguments on positional
+  parameters are invalid Nix syntax. Changed to `buildSecrets = {root, options ? {}}:`.
+- **`ananas-priv-key` / `github-priv-key` migrated.** The plan's Step 4 only
+  listed the three test secrets; the two SSH private keys were silently omitted.
+  They are now at `secrets/ssh/ananas.yml` (`private_key`) and `secrets/ssh/github.yml`
+  (`private_key`) to avoid data loss.
+- **`secrets/common/API_keys.yml` renamed to `_API_keys.yml`** (leading `_` =
+  skipped by walker) and rewritten as valid YAML. The original was invalid YAML
+  (parser error at L4).
+- **Call sites at `src/modules/system/common/secrets.nix` and
+  `src/modules/home/common/secrets.nix`.** These use the filesystem-as-registry
+  convention (`myLib` from `specialArgs`/`extraSpecialArgs`), not the old
+  `src/helpers/secrets.nix` module loaded via `src/helpers/default.nix` imports.
+- **`.sops.yaml` instead of `sops.yml`.** Modern sops 3.x convention; the
+  `creation_rules.path_regex` covers `^secrets/.*\.ya?ml$`. Legacy `sops.yml`
+  and `secrets.yml` deleted.
