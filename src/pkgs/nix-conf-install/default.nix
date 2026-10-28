@@ -1,43 +1,72 @@
 {
   writeShellApplication,
   coreutils,
-  gnused,
-  gnugrep,
   nixos-install-tools,
   nix-conf-clone,
+  disko,
 }:
 writeShellApplication {
   name = "nix-conf-install";
 
   runtimeInputs = [
     coreutils
-    gnused
-    gnugrep
     nixos-install-tools
     nix-conf-clone
+    disko
   ];
 
   text = ''
     HOST=""
-    MOUNT="/mnt"
+    MOUNT="/mnt/disko-install-root"
     EXISTING=false
     GUI=true
+    WRITE_EFI=false
+    DISK_ARGS=()
 
     usage() {
       cat <<'EOF'
-    Usage: nix-conf-install <hostname> [--mount /mnt] [--existing-host] [--no-gui]
+    Usage: nix-conf-install <hostname> [OPTIONS]
 
-    Generates a fresh hardware-configuration.nix for the target mounted at
-    <mount>, clones the nix-conf repo into <mount>/etc/nixos, injects the
-    generated hardware config into hosts/<hostname>/, and runs nixos-install.
+    Clones nix-conf, creates src/hosts/linux/<hostname>/, generates a
+    hardware-configuration.nix without fileSystems, and installs the host with
+    disko-install.
+
+    Options:
+      --disk NAME DEVICE          Map a disko disk name to a block device.
+                                  Repeat for every disk. Examples:
+                                    --disk main /dev/nvme0n1
+                                    --disk tank_0 /dev/sda --disk tank_1 /dev/sdb
+      --mount-point PATH          Mount point used by disko-install.
+                                  Default: /mnt/disko-install-root
+      --mount PATH                Alias for --mount-point.
+      --write-efi-boot-entries    Write EFI boot entries to NVRAM.
+      --existing-host             Do not create default.nix/host.nix; the host
+                                  must already exist in the cloned repo.
+      --no-gui                    Create the host with gui = false.
+      -h, --help                  Show this help.
     EOF
+    }
+
+    die() {
+      echo "nix-conf-install: $*" >&2
+      exit 1
     }
 
     while [ $# -gt 0 ]; do
       case "$1" in
-        --mount)
+        --disk)
+          [ $# -ge 3 ] || die "--disk requires NAME and DEVICE"
+          DISK_ARGS+=(--disk "$2" "$3")
+          shift 3
+          ;;
+        --mount-point|--mount)
+          [ $# -ge 2 ] || die "$1 requires a path"
           MOUNT="$2"
           shift 2
+          ;;
+        --write-efi-boot-entries)
+          WRITE_EFI=true
+          shift
           ;;
         --existing-host)
           EXISTING=true
@@ -52,47 +81,49 @@ writeShellApplication {
           exit 0
           ;;
         -*)
-          echo "nix-conf-install: unknown option $1" >&2
           usage >&2
-          exit 1
+          die "unknown option $1"
           ;;
         *)
+          [ -z "$HOST" ] || die "only one hostname may be given"
           HOST="$1"
           shift
           ;;
       esac
     done
 
-    if [ -z "$HOST" ]; then
-      echo "nix-conf-install: hostname is required" >&2
+    [ -n "$HOST" ] || {
       usage >&2
-      exit 1
-    fi
+      die "hostname is required"
+    }
 
-    if [ ! -d "$MOUNT/etc" ]; then
-      echo "nix-conf-install: $MOUNT does not look like a mounted root" >&2
-      exit 1
-    fi
+    [ "$EUID" -eq 0 ] || die "must be run as root"
 
-    echo "nix-conf-install: generating hardware configuration for $MOUNT"
-    nixos-generate-config --root "$MOUNT"
+    WORK="$(mktemp -d)"
+    STAGE="$WORK/nix-conf"
+    HW="$WORK/hw"
+    trap 'rm -rf "$WORK"' EXIT
 
-    HW=$(mktemp)
-    cp "$MOUNT/etc/nixos/hardware-configuration.nix" "$HW"
+    echo "nix-conf-install: generating hardware configuration"
+    nixos-generate-config --dir "$HW" --no-filesystems >/dev/null
 
-    # Drop the placeholder configuration.nix so the clone target is empty.
-    rm -rf "$MOUNT/etc/nixos"
+    echo "nix-conf-install: cloning nix-conf into $STAGE"
+    nix-conf-clone "$STAGE"
 
-    echo "nix-conf-install: cloning repo into $MOUNT/etc/nixos"
-    nix-conf-clone "$MOUNT/etc/nixos"
+    [ -d "$STAGE/src/hosts/linux" ] \
+      || die "cloned repo has no src/hosts/linux directory"
 
-    HOSTDIR="$MOUNT/etc/nixos/hosts/$HOST"
-    mkdir -p "$HOSTDIR"
-    install -m 644 "$HW" "$HOSTDIR/hardware-configuration.nix"
+    HOSTDIR="$STAGE/src/hosts/linux/$HOST"
 
-    if [ ! -f "$HOSTDIR/default.nix" ]; then
-      echo "nix-conf-install: creating hosts/$HOST/default.nix"
-      cat > "$HOSTDIR/default.nix" <<EOF
+    if [ "$EXISTING" = true ]; then
+      [ -f "$HOSTDIR/default.nix" ] \
+        || die "--existing-host given but $HOST does not exist in the repo"
+    else
+      mkdir -p "$HOSTDIR"
+
+      if [ ! -f "$HOSTDIR/default.nix" ]; then
+        echo "nix-conf-install: creating hosts/linux/$HOST/default.nix"
+        cat > "$HOSTDIR/default.nix" <<EOF
     {
       lib,
       ...
@@ -108,18 +139,36 @@ writeShellApplication {
       nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
     }
     EOF
-    fi
+      fi
 
-    if [ "$EXISTING" = false ]; then
-      if grep -qE "(^|[[:space:]])$HOST[[:space:]]*=" "$MOUNT/etc/nixos/flake.nix"; then
-        echo "nix-conf-install: $HOST already present in flake.nix"
-      else
-        echo "nix-conf-install: adding $HOST to flake.nix nixosHosts"
-        sed -i "s/^\([[:space:]]*\)nixosHosts = {/\1nixosHosts = {\n\1  $HOST = {gui = $GUI;};/" "$MOUNT/etc/nixos/flake.nix"
+      if [ ! -f "$HOSTDIR/host.nix" ]; then
+        echo "nix-conf-install: creating hosts/linux/$HOST/host.nix"
+        cat > "$HOSTDIR/host.nix" <<EOF
+    {...}: {
+      gui = $GUI;
+    }
+    EOF
       fi
     fi
 
-    echo "nix-conf-install: installing $HOST"
-    nixos-install --root "$MOUNT" --flake "path:$MOUNT/etc/nixos#$HOST"
+    install -m 644 "$HW/hardware-configuration.nix" \
+      "$HOSTDIR/hardware-configuration.nix"
+
+    echo "nix-conf-install: installing $HOST with disko-install"
+    args=(
+      --flake "path:$STAGE#$HOST"
+      --mount-point "$MOUNT"
+      --extra-files "$STAGE" /etc/nixos
+    )
+
+    if [ "$WRITE_EFI" = true ]; then
+      args+=(--write-efi-boot-entries)
+    fi
+
+    args+=("''${DISK_ARGS[@]}")
+    disko-install "''${args[@]}"
+
+    echo "nix-conf-install: $HOST installed"
+    echo "nix-conf-install: remove the installer media and reboot"
   '';
 }

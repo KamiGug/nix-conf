@@ -31,7 +31,7 @@
   59:          SEARCH_CMD='grep -nE "\b(TODO|FIXME|FIX)\b"'
 
 flake.nix
-  55:    # TODO: split shells to seperate file
+  60:    # TODO: split shells to seperate file
 
 plans/migration.md
   855:  (`# TODO: handle enableHm == false`) — implement while touching the

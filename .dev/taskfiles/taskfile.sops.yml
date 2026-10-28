@@ -1,0 +1,73 @@
+version: "3"
+
+vars:
+  SOPS_BIN: '{{default "sops" .SOPS_BIN}}'
+  YQ_BIN: '{{default "yq" .YQ_BIN}}'
+
+tasks:
+  encrypt:
+    desc: "Encrypt a file with sops if it's not already encrypted (usage: task sops:encrypt -- path/to/file.yaml)"
+    silent: true
+    cmds:
+      - |
+        set -euo pipefail
+        FILE="{{.CLI_ARGS}}"
+        if [ -z "$FILE" ]; then
+          echo "Error: no file provided. Usage: task sops:encrypt -- path/to/file.yaml" >&2
+          exit 1
+        fi
+        if [ ! -f "$FILE" ]; then
+          echo "Error: file not found: $FILE" >&2
+          exit 1
+        fi
+        # Check if already encrypted by looking for sops metadata
+        if {{.YQ_BIN}} -e 'has("sops")' "$FILE" >/dev/null 2>&1; then
+          echo "Already encrypted: $FILE"
+          exit 0
+        fi
+        echo "Encrypting: $FILE"
+        {{.SOPS_BIN}} -e -i "$FILE"
+
+  rotate:
+    desc: "Rotate data keys for an encrypted sops file (usage: task sops:rotate -- path/to/file.yaml)"
+    silent: true
+    cmds:
+      - |
+        set -euo pipefail
+        FILE="{{.CLI_ARGS}}"
+        if [ -z "$FILE" ]; then
+          echo "Error: no file provided. Usage: task sops:rotate -- path/to/file.yaml" >&2
+          exit 1
+        fi
+        if [ ! -f "$FILE" ]; then
+          echo "Error: file not found: $FILE" >&2
+          exit 1
+        fi
+        if ! {{.YQ_BIN}} -e 'has("sops")' "$FILE" >/dev/null 2>&1; then
+          echo "Error: file is not encrypted: $FILE" >&2
+          exit 1
+        fi
+        echo "Rotating keys: $FILE"
+        {{.SOPS_BIN}} -r -i "$FILE"
+
+  update-keys:
+    desc: "Update keys for an encrypted sops file according to .sops.yaml (usage: task sops:update-keys -- path/to/file.yaml)"
+    silent: true
+    cmds:
+      - |
+        set -euo pipefail
+        FILE="{{.CLI_ARGS}}"
+        if [ -z "$FILE" ]; then
+          echo "Error: no file provided. Usage: task sops:update-keys -- path/to/file.yaml" >&2
+          exit 1
+        fi
+        if [ ! -f "$FILE" ]; then
+          echo "Error: file not found: $FILE" >&2
+          exit 1
+        fi
+        if ! {{.YQ_BIN}} -e 'has("sops")' "$FILE" >/dev/null 2>&1; then
+          echo "Error: file is not encrypted: $FILE" >&2
+          exit 1
+        fi
+        echo "Updating keys: $FILE"
+        {{.SOPS_BIN}} updatekeys -y "$FILE"

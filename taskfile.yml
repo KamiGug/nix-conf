@@ -11,3 +11,5 @@ includes:
   docker:
     taskfile: docker-services
     dir: docker-services
+  sops:
+    taskfile: .dev/taskfiles/taskfile.sops.yml
