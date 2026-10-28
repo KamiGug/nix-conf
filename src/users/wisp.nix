@@ -54,10 +54,7 @@
 
     apps.ssh = {
       enable = true;
-      privateKeys = [
-        # "ssh/github/github-priv-key"
-        # "ssh/ananas/ananas-priv-key"
-      ];
+      privateKeys = {};
       hosts = {
         github = {
           host = "github.com";

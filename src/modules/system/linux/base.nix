@@ -1,4 +1,9 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}: {
   # users.mutableUsers = false;
 
   # Enable sound with pipewire.
@@ -70,7 +75,8 @@
     LC_TIME = "pl_PL.UTF-8";
   };
 
-  networking.firewall.allowedTCPPorts = [22];
+  services.openssh.ports = lib.mkDefault [config.my.sshd.port];
+  networking.firewall.allowedTCPPorts = [config.my.sshd.port];
   networking.networkmanager.enable = true;
 
   services.xserver.enable = false;

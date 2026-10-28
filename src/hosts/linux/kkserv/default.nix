@@ -15,6 +15,11 @@
   networking.hostName = "kkserv";
   networking.networkmanager.enable = true;
 
+  my.sshd = {
+    enable = true;
+    authorizedKeys.wisp = ["ssh/public/hosts/kkserv"];
+  };
+
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #  wget

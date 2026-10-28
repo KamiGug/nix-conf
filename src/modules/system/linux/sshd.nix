@@ -6,21 +6,27 @@
 with lib; let
   cfg = config.my.sshd;
 
-  authorizedKeys = concatStringsSep "\n" (map (k: builtins.readFile config.sops.secrets.${k}.path) cfg.publicKeys);
+  keyNames = cfg.authorizedKeys // optionalAttrs cfg.allowRoot {root = cfg.publicKeys;};
 in {
   options.my.sshd = {
     enable = mkEnableOption "Hardened SSH daemon";
 
     port = mkOption {
       type = types.port;
-      default = 22;
+      default = 2122;
       description = "SSH listen port";
     };
 
     publicKeys = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = "List of sops secret names containing public SSH keys.";
+      description = "List of sops secret names containing public SSH keys authorized for root.";
+    };
+
+    authorizedKeys = mkOption {
+      type = types.attrsOf (types.listOf types.str);
+      default = {};
+      description = "Map of system user to sops secret names containing authorized public SSH keys.";
     };
 
     allowRoot = mkOption {
@@ -32,7 +38,7 @@ in {
   config = mkIf cfg.enable {
     services.openssh = {
       enable = true;
-      ports = [cfg.port];
+      authorizedKeysFiles = ["/run/secrets/rendered/sshd-authorized-keys/%u"];
       settings = {
         PasswordAuthentication = false;
         KbdInteractiveAuthentication = false;
@@ -47,15 +53,19 @@ in {
       };
     };
 
-    users.users.root.openssh.authorizedKeys.keyFiles = [];
-    users.users.root.openssh.authorizedKeys.keys = mkIf cfg.allowRoot [authorizedKeys];
+    sops.templates = mapAttrs' (user: keys:
+      nameValuePair "sshd-authorized-keys-${user}" {
+        path = "/run/secrets/rendered/sshd-authorized-keys/${user}";
+        content = concatMapStringsSep "\n" (key: config.sops.placeholder.${key}) keys + "\n";
+        mode = "0444";
+        restartUnits = ["sshd.service"];
+      })
+    (filterAttrs (_: keys: keys != []) keyNames);
 
     services.fail2ban = {
       enable = true;
       maxretry = 5;
       bantime = "1h";
     };
-
-    networking.firewall.allowedTCPPorts = [cfg.port];
   };
 }

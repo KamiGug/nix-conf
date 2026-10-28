@@ -3,6 +3,7 @@
   lib,
   pkgs,
   myLib,
+  osConfig,
   ...
 }:
 with lib; let
@@ -12,9 +13,9 @@ in {
     enable = mkEnableOption "User SSH setup";
 
     privateKeys = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      description = "List of sops secret names containing private SSH keys.";
+      type = types.attrsOf types.str;
+      default = {};
+      description = "Map of ~/.ssh filename to the sops secret name containing the private key.";
     };
 
     hosts = mkOption {
@@ -62,7 +63,7 @@ in {
     name = "ssh";
     homeFile = true;
     force = true;
-    args = {inherit config lib pkgs myLib;};
+    args = {inherit config lib pkgs myLib osConfig;};
     context = {inherit (cfg) hosts;};
   });
 }

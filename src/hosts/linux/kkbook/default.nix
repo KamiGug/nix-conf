@@ -79,6 +79,11 @@
   ];
 
   networking.hostName = "kkbook";
+
+  my.sshd = {
+    enable = true;
+    authorizedKeys.peon = ["ssh/public/hosts/kkbook"];
+  };
   # networking.wireless.enable = tr:hardware;  # Enables wireless support via wpa_supplicant.
 
   # Enable touchpad support (enabled default in most desktopManager).

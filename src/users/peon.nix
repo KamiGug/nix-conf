@@ -20,6 +20,18 @@
         ++ ["video" "input" "render"]; # for sunshine
       # hashedPasswordFile = config.sops.secrets."users/peon/password_hash".path;
     };
+
+    sops.secrets = {
+      "host/kkbook/github/key".owner = "peon";
+      "ssh/private/kg-continabook/key".owner = "peon";
+      "ssh/private/kkbook/key".owner = "peon";
+      "ssh/private/kkedge/key".owner = "peon";
+      "ssh/private/kknas/key".owner = "peon";
+      "ssh/private/kkphone/key".owner = "peon";
+      "ssh/private/kkserv/key".owner = "peon";
+      "ssh/private/kktab/key".owner = "peon";
+      "ssh/private/kkworker/key".owner = "peon";
+    };
   };
   home = {
     pkgs,
@@ -89,24 +101,80 @@
 
     apps.ssh = {
       enable = true;
-      privateKeys = [
-        # "ssh/github/github-priv-key"
-        # "ssh/ananas/ananas-priv-key"
-      ];
+      privateKeys = {
+        "kg-continabook" = "ssh/private/kg-continabook/key";
+        "kkbook" = "ssh/private/kkbook/key";
+        "kkedge" = "ssh/private/kkedge/key";
+        "kknas" = "ssh/private/kknas/key";
+        "kkphone" = "ssh/private/kkphone/key";
+        "kkserv" = "ssh/private/kkserv/key";
+        "kktab" = "ssh/private/kktab/key";
+        "kkworker" = "ssh/private/kkworker/key";
+        "github-priv-key" = "host/kkbook/github/key";
+      };
       hosts = {
         github = {
           host = "github.com";
           hostname = "github.com";
           user = "git";
-          identityFile = "/home/peon/.ssh/github-priv-key";
+          identityFile = "~/.ssh/github-priv-key";
         };
-        # git-ananas = {
-        #   host = "git.ananas-project.dns-dynamic.net";
-        #   hostname = "git.ananas-project.dns-dynamic.net";
-        #   user = "git";
-        #   port = 22222;
-        #   identityFile = "/home/peon/.ssh/ananas-priv-key";
-        # };
+        "kg-continabook" = {
+          host = "kg-continabook";
+          hostname = "kg-continabook";
+          user = "kg";
+          port = 2122;
+          identityFile = "~/.ssh/kg-continabook";
+        };
+        kkbook = {
+          host = "kkbook";
+          hostname = "kkbook";
+          user = "peon";
+          port = 2122;
+          identityFile = "~/.ssh/kkbook";
+        };
+        kkedge = {
+          host = "kkedge";
+          hostname = "kkedge";
+          user = "wisp";
+          port = 2122;
+          identityFile = "~/.ssh/kkedge";
+        };
+        kknas = {
+          host = "kknas";
+          hostname = "kknas";
+          user = "wisp";
+          port = 2122;
+          identityFile = "~/.ssh/kknas";
+        };
+        kkphone = {
+          host = "kkphone";
+          hostname = "kkphone";
+          user = "peon";
+          port = 2122;
+          identityFile = "~/.ssh/kkphone";
+        };
+        kkserv = {
+          host = "kkserv";
+          hostname = "kkserv";
+          user = "wisp";
+          port = 2122;
+          identityFile = "~/.ssh/kkserv";
+        };
+        kktab = {
+          host = "kktab";
+          hostname = "kktab";
+          user = "peon";
+          port = 2122;
+          identityFile = "~/.ssh/kktab";
+        };
+        kkworker = {
+          host = "kkworker";
+          hostname = "kkworker";
+          user = "wisp";
+          port = 2122;
+          identityFile = "~/.ssh/kkworker";
+        };
       };
       sshfs.enable = true;
     };

@@ -66,7 +66,7 @@
 
     apps.ssh = {
       enable = true;
-      privateKeys = [];
+      privateKeys = {};
       hosts = {
         github = {
           host = "github.com";

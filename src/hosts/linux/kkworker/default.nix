@@ -8,6 +8,11 @@
 
   networking.hostName = "kkworker";
   networking.networkmanager.enable = true;
+
+  my.sshd = {
+    enable = true;
+    authorizedKeys.wisp = ["ssh/public/hosts/kkworker"];
+  };
   # nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [

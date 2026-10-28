@@ -233,59 +233,23 @@ in {
     '';
   };
 
-  config = lib.mkIf (cfg != []) {
+  config = lib.mkIf (cfg != []) (let
+    normalizedEncKeys =
+      lib.imap0 (keyIdx: key: {
+        name = "key${toString keyIdx}";
+        value = {
+          inherit (key) device keyName fallbackToPassword;
+        };
+      })
+      (lib.concatMap (drive: drive.encryptionKeys) cfg);
+  in {
     disko.devices = {
       disk = disks;
       zpool = zpools;
     };
 
-    luksKey.enable = cfg.encryptionKeys != [];
-    luksKey.devices = builtins.listToAttrs (lib.imap0 (i: k: {
-        name = "key${toString i}";
-        value = {
-          device = k.device;
-          keyName = k.keyName;
-          fallbackToPassword = k.fallbackToPassword;
-        };
-      })
-      cfg.encryptionKeys);
-    # normalise each drive's encryptionKeys
-    normalizedEncKeys = lib.concatMap (driveIdx: drive:
-      let
-        disks = drive.disks;
-        rawKeys = drive.encryptionKeys;
-        keyCount = builtins.length rawKeys;
-        normEntry i =
-          if builtins.isString rawKeys[i] then
-            { device = null; keyName = rawKeys[i]; fallbackToPassword = true; }
-          else
-            { device = rawKeys[i].device // null; keyName = rawKeys[i].keyName; fallbackToPassword = rawKeys[i].fallbackToPassword // true; };
-        autoDev = dIdx: d:
-          if builtins.hasAttr (lib.toLower drive.type) zfsModes then
-            if drive.mount == "" && dIdx == 0 then "${d}-part2"
-            else "${d}-part1"
-          else
-            if drive.mount == "" then "${d}-part2"
-            else "${d}-part1";
-      in
-      if keyCount == 0 then []
-      else lib.imap0 (diskIdx: disk:
-        let
-          keyIdx = diskIdx % keyCount;
-          nk = normEntry keyIdx;
-          dev = if nk.device != null then nk.device else autoDev driveIdx diskIdx;
-        in
-        {
-          name = "key${toString driveIdx}-${toString diskIdx}";
-          value = {
-            device = dev;
-            keyName = nk.keyName;
-            fallbackToPassword = nk.fallbackToPassword;
-          };
-        }) disks) cfg;
-
-    luksKey.enable = builtins.any (drive: builtins.length drive.encryptionKeys > 0) cfg;
-    usbLuksKey.enable = builtins.any (drive: builtins.length drive.encryptionKeys > 0) cfg;
+    luksKey.enable = normalizedEncKeys != [];
+    usbLuksKey.enable = normalizedEncKeys != [];
     luksKey.devices = builtins.listToAttrs normalizedEncKeys;
 
     assertions = [
@@ -326,5 +290,5 @@ in {
         message = "drives: ZFS pool names must be unique";
       }
     ];
-  };
+  });
 }

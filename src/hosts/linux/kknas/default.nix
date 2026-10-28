@@ -8,6 +8,11 @@
 
   networking.hostName = "kknas";
   networking.networkmanager.enable = true;
+
+  my.sshd = {
+    enable = true;
+    authorizedKeys.wisp = ["ssh/public/hosts/kknas"];
+  };
   # nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [

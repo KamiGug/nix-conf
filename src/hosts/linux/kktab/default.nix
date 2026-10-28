@@ -40,6 +40,11 @@
   networking.networkmanager.enable = true;
   networking.hostName = "kktab";
 
+  my.sshd = {
+    enable = true;
+    authorizedKeys.peon = ["ssh/public/hosts/kktab"];
+  };
+
   services.libinput.enable = true;
 
   my.autoLogin = {
