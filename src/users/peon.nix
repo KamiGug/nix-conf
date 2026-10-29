@@ -35,6 +35,7 @@
   };
   home = {
     pkgs,
+    myLib,
     # config,
     # homeModules,
     ...
@@ -112,68 +113,56 @@
         "kkworker" = "ssh/private/kkworker/key";
         "github-priv-key" = "host/kkbook/github/key";
       };
-      hosts = {
-        github = {
-          host = "github.com";
-          hostname = "github.com";
-          user = "git";
-          identityFile = "~/.ssh/github-priv-key";
-        };
-        "kg-continabook" = {
-          host = "kg-continabook";
-          hostname = "kg-continabook";
-          user = "kg";
-          port = 2122;
-          identityFile = "~/.ssh/kg-continabook";
-        };
-        kkbook = {
-          host = "kkbook";
-          hostname = "kkbook";
-          user = "peon";
-          port = 2122;
-          identityFile = "~/.ssh/kkbook";
-        };
-        kkedge = {
-          host = "kkedge";
-          hostname = "kkedge";
-          user = "wisp";
-          port = 2122;
-          identityFile = "~/.ssh/kkedge";
-        };
-        kknas = {
-          host = "kknas";
-          hostname = "kknas";
-          user = "wisp";
-          port = 2122;
-          identityFile = "~/.ssh/kknas";
-        };
-        kkphone = {
-          host = "kkphone";
-          hostname = "kkphone";
-          user = "peon";
-          port = 2122;
-          identityFile = "~/.ssh/kkphone";
-        };
-        kkserv = {
-          host = "kkserv";
-          hostname = "kkserv";
-          user = "wisp";
-          port = 2122;
-          identityFile = "~/.ssh/kkserv";
-        };
-        kktab = {
-          host = "kktab";
-          hostname = "kktab";
-          user = "peon";
-          port = 2122;
-          identityFile = "~/.ssh/kktab";
-        };
-        kkworker = {
-          host = "kkworker";
-          hostname = "kkworker";
-          user = "wisp";
-          port = 2122;
-          identityFile = "~/.ssh/kkworker";
+      hosts = myLib.ssh.mkHosts {
+        hosts = {
+          github = {
+            hostname = "github.com";
+            user = "git";
+            identityFile = "~/.ssh/github-priv-key";
+          };
+          "kg-continabook" = {
+            user = "kg";
+            port = 2122;
+            identityFile = "~/.ssh/kg-continabook";
+          };
+          kkbook = {
+            ips = ["192.168.3.100"];
+            user = "peon";
+            port = 2122;
+            identityFile = "~/.ssh/kkbook";
+          };
+          kkedge = {
+            user = "wisp";
+            port = 2122;
+            identityFile = "~/.ssh/kkedge";
+          };
+          kknas = {
+            ips = ["192.168.3.107"];
+            user = "wisp";
+            port = 2122;
+            identityFile = "~/.ssh/kknas";
+          };
+          kkphone = {
+            user = "peon";
+            port = 2122;
+            identityFile = "~/.ssh/kkphone";
+          };
+          kkserv = {
+            ips = ["192.168.3.5"];
+            user = "wisp";
+            port = 2122;
+            identityFile = "~/.ssh/kkserv";
+          };
+          kktab = {
+            user = "peon";
+            port = 2122;
+            identityFile = "~/.ssh/kktab";
+          };
+          kkworker = {
+            user = "wisp";
+            port = 2122;
+            identityFile = "~/.ssh/kkworker";
+          };
         };
       };
       sshfs.enable = true;
