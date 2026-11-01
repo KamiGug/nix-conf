@@ -1,0 +1,51 @@
+services:
+  {{ fullName }}-server:
+    container_name: {{ fullName }}-server
+    image: localhost/{{ fullName }}:latest
+    restart: unless-stopped
+    command: server
+    shm_size: 512mb
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_host | default("postgres") }}"
+      AUTHENTIK_POSTGRESQL__PORT: "{{ postgres_port | default(5432) }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ fullName }}"
+      AUTHENTIK_POSTGRESQL__USER: "{{ fullName }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "${AUTHENTIK_POSTGRESQL__PASSWORD:?database password required}"
+      AUTHENTIK_SECRET_KEY: "${AUTHENTIK_SECRET_KEY:?secret key required}"
+    volumes:
+      - "{{ root }}/{{ fullName }}/data:/data"
+      - "{{ root }}/{{ fullName }}/custom-templates:/templates"
+{% if networks %}
+    networks:
+{% for network in networks %}
+      - "app-service-{{ network }}{{ postfix }}"
+{% endfor %}
+{% else %}
+    networks: []
+{% endif %}
+
+  {{ name }}-worker{{ postfix }}:
+    container_name: {{ name }}-worker{{ postfix }}
+    image: localhost/{{ name }}-worker{{ postfix }}:latest
+    restart: unless-stopped
+    command: worker
+    shm_size: 512mb
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: "{{ postgres_host | default("postgres") }}"
+      AUTHENTIK_POSTGRESQL__PORT: "{{ postgres_port | default(5432) }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ fullName }}"
+      AUTHENTIK_POSTGRESQL__USER: "{{ fullName }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "${AUTHENTIK_POSTGRESQL__PASSWORD:?database password required}"
+      AUTHENTIK_SECRET_KEY: "${AUTHENTIK_SECRET_KEY:?secret key required}"
+    volumes:
+      - "{{ root }}/{{ fullName }}/data:/data"
+      - "{{ root }}/{{ fullName }}/certs:/certs"
+      - "{{ root }}/{{ fullName }}/custom-templates:/templates"
+{% if networks %}
+    networks:
+{% for network in networks %}
+      - "app-service-{{ network }}{{ postfix }}"
+{% endfor %}
+{% else %}
+    networks: []
+{% endif %}

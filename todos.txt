@@ -36,24 +36,6 @@ flake.nix
 plans/migration.md
   855:  (`# TODO: handle enableHm == false`) — implement while touching the
 
-src/lib/services/apps/authentik/default.nix
-  67:        # TODO: make service name generators serparate functions for each service creating function/modules
-
-src/lib/services/apps/dbs/postgres/default.nix
-  31:          owner = "999"; # TODO: allow making this arbitrary user
-
-src/lib/services/apps/nextcloud/default.nix
-  49:  # TODO: add more asserts (at least one each)
-
-src/lib/services/apps/nextcloud/nextcloud.nix
-  54:      # TODO: remove the ports! will need correct network + reverse proxy
-
-src/lib/services/ensureNetwork.nix
-  3:  # TODO: make this rootless
-
-src/lib/services/mkContainerService.nix
-  117:  # TODO: write a validator for this
-
 src/modules/home/common/console/shell/elvish/default.nix
   1:#TODO: starship, elvish-bash-completion, carapace, atuin (+ add to ctrl + R). yazi, fzf, fd, rg, direnv
 

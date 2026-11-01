@@ -1,0 +1,25 @@
+services:
+  {{ fullName }}:
+    container_name: {{ fullName }}
+    image: localhost/{{ fullName }}:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "{{ postgres_user | default("postgres") }}"
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?database password required}"
+    volumes:
+      - "{{ root }}/{{ fullName }}/data:{{ dataContainerPath }}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ postgres_user | default("postgres") }} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+{% if networks %}
+    networks:
+{% for network in networks %}
+      - "app-service-{{ network }}{{ postfix }}"
+{% endfor %}
+{% else %}
+    networks: []
+{% endif %}

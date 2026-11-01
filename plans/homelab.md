@@ -1,9 +1,12 @@
 # Homelab services migration
 
-Status: **in progress** (2026-10-31). The first implementation was reverted;
-this revision uses Jinja rendered by Nix and one mandatory Dockerfile per
-service. Review-hardened for secret handling, image builds, and network naming.
-Update this line and `plans/README.md` as steps land.
+Status: **in progress** (2026-10-31). Steps 0–5 are implemented; every current
+service image builds with podman and the combined NixOS module evaluates.
+Runtime smoke tests, host wiring, TLS, and steps 6–7 remain. The first
+implementation was reverted; this revision uses Jinja rendered by Nix and one
+mandatory Dockerfile per service. Review-hardened for secret handling, image
+builds, and network naming. Update this line and `plans/README.md` as steps
+land.
 
 ## Invariants
 
@@ -15,14 +18,16 @@ Update this line and `plans/README.md` as steps land.
   each.
 - Secrets are files, never values in the Nix store, image layers, or a declared
   `environment`/`environmentFiles`/`templateVars`/`buildArgs`/`extraOptions`.
-  sops decrypts to the tree-preserving host path `/run/secrets/<sopsName>` (e.g.
-  `/run/secrets/services/forgejo/DB_PASSWORD`); `mk` bind-mounts that same path
-  read-only; the image entrypoint exports each file's basename before exec.
-  Runtime env is the only place a secret value may appear.
+  sops decrypts to the tree-preserving host path `/run/secrets/<sopsName>`
+  (e.g. `/run/secrets/services/forgejo/db/db_password`); `mk` bind-mounts it
+  read-only under a container alias ending in the image's env-var name, and
+  the image entrypoint exports each file's basename before exec. Runtime env
+  is the only place a secret value may appear.
 - `postfix` is appended to every generated name/path: container/unit,
   network, data dir, sops path, build/init units.
-- Secrets use tree-preserving sops names (`services/<fullName>/<key>`), not a
-  synthetic container-local name.
+- Secrets use tree-preserving sops names (`services/<service>/db/db_password`,
+  `services/<service>/service/root_password`), not a synthetic container-local
+  name.
 - Network names are `app-service-<name><postfix>` everywhere. `mkNetwork`
   returns the full name; `ensureNetwork` accepts the logical name and applies
   the prefix exactly once. Never pass an `mkNetwork` result to `ensureNetwork`.
@@ -100,19 +105,25 @@ root }`. Files under `templates/` are all Jinja, regardless of extension.
 `extraOptions` must never contain secret values; templates that need a secret
 emit a placeholder and read it at runtime (see postgres/netbird).
 
-`secrets` is `VAR -> { sopsName, path?, sopsFile?, key?, optional?, random? }`.
-`VAR` is the env var name the entrypoint exports (the key basename). `sopsName`
-is the tree-preserving name (e.g. `services/forgejo/DB_PASSWORD`), so the
-sops-nix default path is `/run/secrets/<sopsName>` (i.e.
-`/run/secrets/services/<fullName>/<key>`). `mk` creates/merges
-`sops.secrets."<sopsName>"` using that same name (never a synthetic
-`<fullName>-<VAR>` name), mounts `secret.path or "/run/secrets/<sopsName>"` at
-the same path read-only, and may add `<VAR>_FILE=<same path>` for images with
-native support. `sopsFile`/`key` are passed through when set; otherwise the
-secret must already be declared by `buildSecrets`, and `mk` only adds the mount
-and any `*_FILE` entry. A `path?` override is passed through to `sops.secrets`
-and used for both mounts. For `optional = true`, a missing file omits both the
-mount and the `*_FILE` entry.
+`secrets` is
+`VAR -> { sopsName, env?, path?, containerPath?, sopsFile?, key?, owner?,
+group?, mode?, optional?, random? }`. `VAR` names the secret in the attrset;
+`env` (default `VAR`) is the environment variable the entrypoint exports.
+`sopsName` is the tree-preserving sops name (for this repo usually
+`services/<service>/db/db_password` or `services/<service>/service/root_user`,
+not the env-var name). `mk` creates/merges `sops.secrets."<sopsName>"` using
+that same name (never a synthetic `<fullName>-<VAR>` name), mounts
+`secret.path or "/run/secrets/<sopsName>"` at
+`containerPath or "<dirname>/<env>"` read-only, and may add
+`<env>_FILE=<containerPath>` for images with native support. The alias exists
+because sops basenames (`db_password`) and image env names
+(`FORGEJO__database__PASSWD`) differ. `sopsFile`/`key` are passed through when
+set; otherwise the secret must already be declared by `buildSecrets`, and `mk`
+only adds the mount and any `*_FILE` entry. `owner`/`group`/`mode` are merged
+into `sops.secrets` even when the file is declared by `buildSecrets` (needed
+for images whose `USER` is not root, e.g. authentik uid/gid 1000). A `path?`
+override is passed through to `sops.secrets` and used for the host mount. For
+`optional = true`, a missing file omits both the mount and the `*_FILE` entry.
 
 Dockerfile contract:
 
@@ -229,12 +240,14 @@ ports, proxySnippet}`.
 - Throwaway smoke test: postfix appears in container, unit, network, data,
   secret, and build names; `config` has one file per template; `compose`
   renders the same values as the Nix args.
-- Secret check: mount is read-only at `/run/secrets/<sopsName>` in both host
-  and container, the entrypoint exports the basename, and no secret value is in
-  `environment`, `environmentFiles`, `templateVars`, `buildArgs`,
-  `extraOptions`, the build context, or the Nix store (`nix path-info` on each
-  rendered config drv). An `optional` secret with no file produces no mount and
-  no `*_FILE`.
+- Secret check: the host file is read-only at its sops path and the container
+  alias ends in the env-var basename, the entrypoint exports that basename, and
+  no secret value is in `environment`, `environmentFiles`, `templateVars`,
+  `buildArgs`, `extraOptions`, the build context, or the Nix store
+  (`nix path-info` on each rendered config drv). An `optional` secret with no
+  file produces no mount and no `*_FILE`. Non-root images need explicit
+  `owner`/`group`/`mode`; verify their parent `/run/secrets` directories are
+  traversable.
 - Build each image once through the `build-<fullName>` oneshot, confirm the
   container unit is ordered after it, and confirm the wrapper execs the
   upstream entrypoint+cmd.

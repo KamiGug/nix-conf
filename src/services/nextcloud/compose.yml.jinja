@@ -1,0 +1,28 @@
+services:
+  {{ fullName }}:
+    container_name: {{ fullName }}
+    image: localhost/{{ fullName }}:latest
+    restart: always
+    environment:
+      NEXTCLOUD_TRUSTED_DOMAINS: "{{ fullName }}.{{ domain }} {{ fullName }}"
+      overwriteprotocol: "{{ protocol }}"
+      overwritehost: "{{ fullName }}.{{ domain }}"
+      overwrite.cli.url: "{{ protocol }}://{{ fullName }}.{{ domain }}"
+      POSTGRES_HOST: "{{ postgres_host | default("postgres") }}:{{ postgres_port | default(5432) }}"
+      POSTGRES_USER: "{{ fullName }}"
+      POSTGRES_DB: "{{ fullName }}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?database password required}"
+    volumes:
+      - "{{ root }}/{{ fullName }}/data:/var/www/html/data"
+      - "{{ root }}/{{ fullName }}/apps:/var/www/html/apps"
+      - "{{ root }}/{{ fullName }}/custom-apps:/var/www/html/custom_apps"
+      - "{{ root }}/{{ fullName }}/config:/var/www/html/config"
+      - "{{ root }}/{{ fullName }}/application:/var/www/html"
+{% if networks %}
+    networks:
+{% for network in networks %}
+      - "app-service-{{ network }}{{ postfix }}"
+{% endfor %}
+{% else %}
+    networks: []
+{% endif %}

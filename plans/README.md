@@ -9,7 +9,7 @@ plan must be fully landed before the next one starts.
 | # | Plan | Status | Depends on | Scope |
 |---|------|--------|-----------|-------|
 | 1 | [`migration.md`](./migration.md) | done (2026-10-20) — steps 1–7; remaining user actions: format `secrets.nix`, on-machine rebuild/ISO | — | `src/` layout, filesystem-as-registry (`readModules`/`readHosts`/`readUsers`), lib autoloading, module/host/user auto-discovery |
-| 2 | [`homelab.md`](./homelab.md) | in progress (2026-10-31) — first implementation reverted; revised to Jinja rendered from Nix + mandatory per-service Dockerfiles, review-hardened secret/build/network handling | `migration.md` | `myLib.services.mk`/`mkEnv`/presets, Jinja config/compose renders, per-service image builds, sops-nix file secrets, multi-env via `postfix`, retires `docker-services/` |
+| 2 | [`homelab.md`](./homelab.md) | in progress (2026-10-31) — steps 0–5 implemented; images build locally and the combined NixOS module evaluates; runtime checks, host wiring, TLS, and steps 6–7 remain | `migration.md` | `myLib.services.mk`/`mkEnv`/presets, Jinja config/compose renders, per-service image builds, sops-nix file secrets, multi-env via `postfix`, retires `docker-services/` |
 | 3 | [`sec-management.md`](./sec-management.md) | done (2026-10-21) — tree-preserving flat "/"-joined names (sops-nix `attrsOf` limitation); direct eval & `nixos-rebuild dry-activate` pass | `migration.md`, `homelab.md` | YAML-key auto-discovery via `yq`, options-in-Nix set with typo guard, sops-nix config |
 | — | [`opencode.md`](./opencode.md) | deferred | — | OpenCode V1 → V2 migration; independent of the three above, do whenever |
 

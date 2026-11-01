@@ -55,3 +55,34 @@ https://github.com/H1rla/markdown-on-kitty/tree/main
 https://github.com/junosuarez/termtex
 
 move to compact zellij (check matrix layout)
+
+homelab (plans/homelab.md): steps 0-5 implemented, images build, module evals
+[homelab] transcribe every live docker-services/environment.yml secret into secrets/ and confirm the diff before retiring docker-services
+[homelab] verify existing secrets decrypt: postgres/service/{root_user,root_password}, {forgejo,nextcloud,authentik,wiki}/db/{db_user,db_table,db_password}, authentik/service/secret_key
+[homelab] confirm postgres root_user value matches expected superuser (sample says admin) and root_password is the superuser password
+[homelab] confirm db_user values are gitter/filer/auther/wikir and db_table values are the existing database names
+[homelab] optionally wire app admin secrets for forgejo/nextcloud/authentik from services/<name>/service/{root_user,root_password}
+[homelab] decide how postfix test env gets secrets (services/<name>-test/... do not exist yet)
+[homelab] wiki admin password now defaults to services/wiki/service/root_password; confirm root_user matches adminUser or pass adminUser explicitly
+[homelab] optional: add services/wiki/service/oidc_client_secret and pass it as oidc.clientSecretSopsName
+[homelab] secret container aliases now map db_password to the env-var basename; verify wrapper exports them at runtime
+[homelab] authentik secrets are installed owner/group 1000 mode 0400; verify /run/secrets parent dirs stay traversable for uid 1000
+[homelab] wire myLib.services.mkEnv into the chosen host (kkbook/kkserv/kknas) behind an enable option with domain, protocol, root, networks and postfix
+[homelab] add host aliases (git/file/auth/office/vpn/wiki) or decide to use service fullNames as DNS names
+[homelab] open firewall ports for nginx 80/443 and any non-proxied services (wiki 3001, netbird 8080/8081/3478 udp) on the service host
+[homelab] verify each container starts with dummy secret files and the wrapper exports basenames to env before exec
+[homelab] verify upstream entrypoints: forgejo /usr/bin/entrypoint, nextcloud /entrypoint.sh, authentik /usr/local/bin/ak, mediawiki setup.sh
+[homelab] postgres init now reads db_user/db_table/db_password secrets via psql -v; verify values and run twice
+[homelab] list every app database in the postgres preset (keys must match services/<name>/db/*)
+[homelab] verify forgejo, nextcloud, authentik server+worker, wiki Special:Version and nginx routing end to end
+[homelab] verify authentik worker runs migrations/jobs and its healthcheck passes
+[homelab] add nginx TLS (cert/key from /etc/nginx/tls), HTTP/2, HSTS and websocket upgrade handling; test nginx -t for https
+[homelab] add nginx resolver/upstream re-resolution so recreated containers do not require an nginx restart
+[homelab] verify wiki LocalSettings.php, setup.sh admin password flow and OIDC redirect URI
+[homelab] per-secret owner/group/mode is now supported (used by authentik); use it for any future non-root image
+[homelab] add netbird preset/Dockerfile/config template after confirming the combined-server image and NB_* overrides
+[homelab] add euroOffice preset/Dockerfile/templates after confirming the image ref and JWT secret handling
+[homelab] retire docker-services/ only after kkbook/kkserv parity and explicit diff confirmation
+[homelab] clear remaining deadnix/statix warnings in the services library
+[homelab] remove or integrate the unused src/lib/services/mkImmutableFile.nix
+[homelab] mark homelab steps done in plans/homelab.md and plans/README.md after verification

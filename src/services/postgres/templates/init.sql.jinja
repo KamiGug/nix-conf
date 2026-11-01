@@ -1,0 +1,33 @@
+-- Generated file. DO NOT EDIT.
+--
+-- Creates application roles and databases. Role names, database names and
+-- passwords are never rendered here: each database has psql variables
+-- supplied at runtime with `psql -v`, and the values come from /run/secrets.
+{% for db in databases %}
+-- ============================================================================
+-- {{ db.name }}
+-- ============================================================================
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'{{ db.userVar }}', :'{{ db.var }}')
+WHERE NOT EXISTS (
+    SELECT FROM pg_catalog.pg_roles WHERE rolname = :'{{ db.userVar }}'
+)
+\gexec
+
+SELECT format('ALTER ROLE %I LOGIN PASSWORD %L', :'{{ db.userVar }}', :'{{ db.var }}')
+WHERE EXISTS (
+    SELECT FROM pg_catalog.pg_roles WHERE rolname = :'{{ db.userVar }}'
+)
+\gexec
+
+SELECT format('CREATE DATABASE %I OWNER %I', :'{{ db.nameVar }}', :'{{ db.userVar }}')
+WHERE NOT EXISTS (
+    SELECT FROM pg_database WHERE datname = :'{{ db.nameVar }}'
+)
+\gexec
+
+SELECT format('ALTER DATABASE %I OWNER TO %I', :'{{ db.nameVar }}', :'{{ db.userVar }}')
+\gexec
+
+SELECT format('ALTER ROLE %I NOCREATEDB NOCREATEROLE NOINHERIT', :'{{ db.userVar }}')
+\gexec
+{% endfor %}
