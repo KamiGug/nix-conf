@@ -4,21 +4,21 @@
   config,
   ...
 }: let
-  # Create a udev rules package for the initrd
-  usbLuksKeyUdevRules = pkgs.runCommand "usb-luks-key-udev-rules" {} ''
-        mkdir -p $out/lib/udev/rules.d
-        cat > $out/lib/udev/rules.d/99-usb-luks-key.rules <<'EOF'
-    ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="${config.usbLuksKey.label}", RUN+="/run/initrd/bin/usb-luks-key"
-    EOF
-  '';
+  cfg = config.usbLuksKey;
 
-  # Create a wrapper script that sets environment variables
+  testDevice =
+    if cfg.devices == []
+    then ""
+    else config.boot.initrd.luks.devices.${builtins.head cfg.devices}.device or "";
+
   usbLuksKeyScript = pkgs.writeScriptBin "usb-luks-key-wrapper" ''
     #!/bin/sh
-    export USB_LUKS_LABEL="${config.usbLuksKey.label}"
-    export USB_LUKS_KEY_SUBDIR="${config.usbLuksKey.keyPath}"
-    export USB_LUKS_OUTPUT="${config.usbLuksKey.targetPath}"
-    export USB_LUKS_TIMEOUT="${toString config.usbLuksKey.timeout}"
+    export USB_LUKS_LABEL="${cfg.label}"
+    export USB_LUKS_KEY_SUBDIR="${cfg.keyPath}"
+    export USB_LUKS_OUTPUT="${cfg.targetPath}"
+    export USB_LUKS_TIMEOUT="${toString cfg.timeout}"
+    export USB_LUKS_HOSTNAME="${config.networking.hostName}"
+    export USB_LUKS_TEST_DEVICE="${testDevice}"
     exec ${pkgs.usb-luks-key-script}/bin/usb-luks-key
   '';
 in {
@@ -46,7 +46,7 @@ in {
     devices = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      description = "LUKS device names (keys in luksKey.devices) to apply USB key to. Empty = all devices from luksKey.devices.";
+      description = "LUKS device names from boot.initrd.luks.devices to unlock with the USB key";
     };
 
     timeout = lib.mkOption {
@@ -54,35 +54,38 @@ in {
       default = 30;
       description = "Seconds to wait for USB device to appear";
     };
+
+    keyFileTimeout = lib.mkOption {
+      type = lib.types.int;
+      default = 5;
+      description = "Seconds for initrd to wait for the USB key file before prompting for a passphrase";
+    };
   };
 
-  config = lib.mkIf config.usbLuksKey.enable {
-    # Add required kernel modules for USB storage and filesystems
-    boot.initrd.kernelModules = lib.mkMerge [
-      (config.boot.initrd.kernelModules or [])
-      ["usb_storage" "sd_mod" "vfat" "ext4" "f2fs"]
-    ];
+  config = lib.mkIf cfg.enable {
+    boot.initrd.kernelModules = ["usb_storage" "sd_mod" "vfat" "ext4" "f2fs" "exfat"];
 
-    # Install the script and udev rules into systemd initrd
     boot.initrd.systemd.extraBin.usb-luks-key = usbLuksKeyScript;
-    boot.initrd.services.udev.packages = lib.mkMerge [
-      (config.boot.initrd.services.udev.packages or [])
-      [usbLuksKeyUdevRules]
-    ];
 
-    # Add USB key as additional keyFile for selected devices
-    boot.initrd.luks.devices = lib.mapAttrs (name: cfg: {
-      keyFile =
-        if
-          lib.hasElement name (
-            if config.usbLuksKey.devices != []
-            then config.usbLuksKey.devices
-            else lib.attrNames config.luksKey.devices
-          )
-        then [cfg.keyFile] ++ [config.usbLuksKey.targetPath]
-        else [cfg.keyFile];
-      inherit (cfg) device;
-      inherit (cfg) fallbackToPassword;
-    }) (config.boot.initrd.luks.devices or {});
+    boot.initrd.systemd.services.usb-luks-key = {
+      description = "Load LUKS key from USB";
+      wantedBy = ["initrd.target"];
+      after = ["systemd-udevd.service" "systemd-modules-load.service"];
+      before = map (name: "systemd-cryptsetup@${name}.service") cfg.devices;
+      unitConfig.DefaultDependencies = false;
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = "${usbLuksKeyScript}/bin/usb-luks-key-wrapper";
+    };
+
+    boot.initrd.luks.devices =
+      lib.genAttrs cfg.devices (name: {
+        keyFile = lib.mkForce cfg.targetPath;
+      }
+      // lib.optionalAttrs config.boot.initrd.systemd.enable {
+        keyFileTimeout = cfg.keyFileTimeout;
+      });
   };
 }

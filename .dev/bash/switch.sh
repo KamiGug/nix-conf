@@ -115,12 +115,9 @@ fi
 
 echo "→ Checking flake attr: $ATTR_PATH"
 
-if ! nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
-  echo "Missing flake output:"
+if ! nix eval ".#${ATTR_PATH}" >/dev/null; then
+  echo "→ Failed to evaluate flake output:"
   echo "   .#${ATTR_PATH}"
-  echo ""
-  echo "→ Try:"
-  echo "   task build:switch TARGET=<nixos|darwin|droid|home>"
   exit 1
 fi
 
