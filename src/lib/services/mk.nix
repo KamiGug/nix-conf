@@ -18,7 +18,6 @@
   ports ? [],
   volumes ? [],
   environment ? {},
-  environmentFiles ? [],
   secrets ? {},
   command ? [],
   entrypoint ? null,
@@ -33,7 +32,6 @@
   labels ? {},
   extraOptions ? [],
   templateVars ? {},
-  imageEntrypoint ? null,
   fileEnvSupport ? false,
   domain ? null,
   protocol ? null,
@@ -48,7 +46,6 @@
   buildImage = import ./buildImage.nix {inherit pkgs lib;};
   mkVolume = import ./mkVolume.nix;
   mkNetwork = import ./mkNetwork.nix;
-  mkHealthcheck = import ./mkHealthcheck.nix;
 
   renderVars =
     templateVars
@@ -207,7 +204,7 @@
     (s:
       mkVolume {
         hostPath = s.path;
-        containerPath = s.containerPath;
+        inherit (s) containerPath;
         readOnly = true;
         create = false;
       })

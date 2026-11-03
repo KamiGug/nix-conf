@@ -177,8 +177,8 @@ in {
     imports = [server.module worker.module];
   };
   config = server.config // worker.config;
-  compose = server.compose;
+  inherit (server) compose;
   networks = lib.unique (server.networks ++ worker.networks);
   ports = server.ports ++ worker.ports;
-  image = server.image;
+  inherit (server) image;
 }

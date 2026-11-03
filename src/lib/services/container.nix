@@ -1,5 +1,4 @@
 {
-  pkgs,
   lib,
   ...
 }: {
@@ -95,7 +94,7 @@ in
           ++ lib.optional (containerUser != null) "--user=${containerUser}"
           ++ healthOptions
           ++ lib.optional (shmSize != null) "--shm-size=${shmSize}";
-        dependsOn = dependsOn;
+        inherit dependsOn;
       }
       // commandOptions
       // entrypointOptions;
