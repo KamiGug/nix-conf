@@ -3,18 +3,23 @@
   ...
 }: {
   system = {
-    # config,
+    config,
     pkgs,
     ...
   }: {
     programs.fish.enable = true;
+
+    sops.secrets."user/wisp/password/password".neededForUsers = true;
+
+    users.mutableUsers = false;
+
     users.users.wisp = {
       isNormalUser = true;
       description = "peon";
       home = "/home/wisp";
       shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "docker" "config-editor"];
-      # hashedPasswordFile = config.sops.secrets."users/wisp/password_hash".path;
+      hashedPasswordFile = config.sops.secrets."user/wisp/password/password".path;
     };
   };
   home = {
