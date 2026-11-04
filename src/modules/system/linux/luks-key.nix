@@ -39,14 +39,17 @@
       )
       config.luksKey.devices;
 
-    # Configure each LUKS device
-    boot.initrd.luks.devices =
-      lib.mapAttrs (_name: cfg: {
+    # Configure each LUKS device. With systemd stage 1, password fallback is
+    # implicit and setting fallbackToPassword is rejected by NixOS.
+    boot.initrd.luks.devices = lib.mapAttrs (_name: cfg:
+      {
         inherit (cfg) device;
         keyFile = "/run/keys/${cfg.keyName}";
+      }
+      // lib.optionalAttrs (!config.boot.initrd.systemd.enable) {
         inherit (cfg) fallbackToPassword;
       })
-      config.luksKey.devices;
+    config.luksKey.devices;
 
     # Ensure sops secrets are placed in initrd at /run/keys/
     # This is handled by sops.secrets.<name>.initrd = true and path = "/run/keys/<name>"

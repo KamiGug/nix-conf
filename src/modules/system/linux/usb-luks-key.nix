@@ -6,21 +6,16 @@
 }: let
   cfg = config.usbLuksKey;
 
-  testDevice =
-    if cfg.devices == []
-    then ""
-    else config.boot.initrd.luks.devices.${builtins.head cfg.devices}.device or "";
+  # Empty means "all devices managed by the sops-backed luksKey module".
+  devices =
+    if cfg.devices != []
+    then cfg.devices
+    else lib.attrNames config.luksKey.devices;
 
-  usbLuksKeyScript = pkgs.writeScriptBin "usb-luks-key-wrapper" ''
-    #!/bin/sh
-    export USB_LUKS_LABEL="${cfg.label}"
-    export USB_LUKS_KEY_SUBDIR="${cfg.keyPath}"
-    export USB_LUKS_OUTPUT="${cfg.targetPath}"
-    export USB_LUKS_TIMEOUT="${toString cfg.timeout}"
-    export USB_LUKS_HOSTNAME="${config.networking.hostName}"
-    export USB_LUKS_TEST_DEVICE="${testDevice}"
-    exec ${pkgs.usb-luks-key-script}/bin/usb-luks-key
-  '';
+  testDevice =
+    if devices == []
+    then ""
+    else config.boot.initrd.luks.devices.${builtins.head devices}.device or "";
 in {
   options.usbLuksKey = {
     enable = lib.mkEnableOption "USB LUKS key fallback";
@@ -46,7 +41,10 @@ in {
     devices = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      description = "LUKS device names from boot.initrd.luks.devices to unlock with the USB key";
+      description = ''
+        LUKS device names from boot.initrd.luks.devices to unlock with the USB
+        key. Empty means all devices from luksKey.devices.
+      '';
     };
 
     timeout = lib.mkOption {
@@ -58,34 +56,62 @@ in {
     keyFileTimeout = lib.mkOption {
       type = lib.types.int;
       default = 5;
-      description = "Seconds for initrd to wait for the USB key file before prompting for a passphrase";
+      description = ''
+        Seconds passed to systemd-cryptsetup as keyfile-timeout. This also marks
+        the key file as optional, so a missing key does not fail the unit.
+      '';
+    };
+
+    fallbackToPassword = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Allow an interactive passphrase prompt when the USB key is missing or
+        does not unlock the device. Only used by the scripted (non-systemd)
+        stage 1; systemd stage 1 always falls back to a passphrase.
+      '';
     };
   };
 
   config = lib.mkIf cfg.enable {
     boot.initrd.kernelModules = ["usb_storage" "sd_mod" "vfat" "ext4" "f2fs" "exfat"];
 
-    boot.initrd.systemd.extraBin.usb-luks-key = usbLuksKeyScript;
+    # The actual script is referenced by name from the service below. Nix does
+    # not track that textual reference, so add the package to the initrd
+    # explicitly. Without this the service fails with "not found" and the USB
+    # key is never read.
+    boot.initrd.systemd.storePaths = [pkgs.usb-luks-key-script pkgs.cryptsetup];
 
     boot.initrd.systemd.services.usb-luks-key = {
       description = "Load LUKS key from USB";
       wantedBy = ["initrd.target"];
       after = ["systemd-udevd.service" "systemd-modules-load.service"];
-      before = map (name: "systemd-cryptsetup@${name}.service") cfg.devices;
+      before = map (name: "systemd-cryptsetup@${name}.service") devices;
       unitConfig.DefaultDependencies = false;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
-      script = "${usbLuksKeyScript}/bin/usb-luks-key-wrapper";
+      environment = {
+        USB_LUKS_LABEL = cfg.label;
+        USB_LUKS_KEY_SUBDIR = cfg.keyPath;
+        USB_LUKS_OUTPUT = cfg.targetPath;
+        USB_LUKS_TIMEOUT = toString cfg.timeout;
+        USB_LUKS_HOSTNAME = config.networking.hostName;
+        USB_LUKS_TEST_DEVICE = testDevice;
+      };
+      script = "${pkgs.usb-luks-key-script}/bin/usb-luks-key";
     };
 
-    boot.initrd.luks.devices =
-      lib.genAttrs cfg.devices (name: {
+    boot.initrd.luks.devices = lib.genAttrs devices (_name:
+      {
         keyFile = lib.mkForce cfg.targetPath;
       }
       // lib.optionalAttrs config.boot.initrd.systemd.enable {
-        keyFileTimeout = cfg.keyFileTimeout;
+        inherit (cfg) keyFileTimeout;
+      }
+      // lib.optionalAttrs (!config.boot.initrd.systemd.enable) {
+        inherit (cfg) fallbackToPassword;
       });
   };
 }

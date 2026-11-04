@@ -4,7 +4,7 @@
 }:
 writeScriptBin "usb-luks-key" ''
   #!/bin/sh
-  set -eu
+  set -u
 
   LABEL="''${USB_LUKS_LABEL:-LUKS-KEY}"
   KEY_SUBDIR="''${USB_LUKS_KEY_SUBDIR-}"
@@ -13,27 +13,47 @@ writeScriptBin "usb-luks-key" ''
   HOSTNAME="''${USB_LUKS_HOSTNAME:-$(cat /etc/hostname 2>/dev/null || hostname 2>/dev/null || echo unknown)}"
   TEST_DEVICE="''${USB_LUKS_TEST_DEVICE:-}"
 
-  DEV="/dev/disk/by-label/''${LABEL}"
-  for _ in $(seq 1 "''${TIMEOUT}"); do
-    if [ -b "''${DEV}" ]; then
-      break
-    fi
-    sleep 1
-  done
+  log() {
+    echo "usb-luks-key: ''$*" >&2
+  }
 
-  if [ ! -b "''${DEV}" ]; then
-    echo "USB device with label ''${LABEL} not found after ''${TIMEOUT}s" >&2
-    exit 1
+  # A missing or unusable USB key is not fatal: systemd-cryptsetup will fall
+  # back to an interactive passphrase prompt. Exiting successfully keeps early
+  # boot moving instead of failing the whole initrd.
+  fallback() {
+    log "''$*"
+    log "no USB key loaded; falling back to passphrase prompt"
+    exit 0
+  }
+
+  wait_for() {
+    _path="''$1"
+    _i=0
+    while [ "''${_i}" -lt "''${TIMEOUT}" ]; do
+      if [ -e "''${_path}" ]; then
+        return 0
+      fi
+      sleep 1
+      _i=''$((_i + 1))
+    done
+    [ -e "''${_path}" ]
+  }
+
+  DEV="/dev/disk/by-label/''${LABEL}"
+  if ! wait_for "''${DEV}"; then
+    fallback "no USB device labelled ''${LABEL} after ''${TIMEOUT}s"
   fi
 
-  MOUNT=$(mktemp -d)
+  MOUNT="$(mktemp -d)"
   cleanup() {
     umount "''${MOUNT}" 2>/dev/null || true
     rmdir "''${MOUNT}" 2>/dev/null || true
   }
-  trap cleanup EXIT
+  trap cleanup EXIT INT TERM
 
-  mount -o ro "''${DEV}" "''${MOUNT}"
+  if ! mount -o ro "''${DEV}" "''${MOUNT}"; then
+    fallback "could not mount ''${DEV}"
+  fi
 
   SEARCH_DIR="''${MOUNT}"
   if [ -n "''${KEY_SUBDIR}" ]; then
@@ -41,28 +61,22 @@ writeScriptBin "usb-luks-key" ''
   fi
 
   KEY_FILE=""
-  for f in "''${HOSTNAME}.key" "key"; do
-    if [ -f "''${SEARCH_DIR}/''${f}" ]; then
-      KEY_FILE="''${SEARCH_DIR}/''${f}"
+  for candidate in "''${HOSTNAME}.key" "key"; do
+    if [ -f "''${SEARCH_DIR}/''${candidate}" ]; then
+      KEY_FILE="''${SEARCH_DIR}/''${candidate}"
       break
     fi
   done
 
   if [ -z "''${KEY_FILE}" ]; then
-    echo "No key file found on USB (looked for ''${HOSTNAME}.key and key in ''${SEARCH_DIR})" >&2
-    exit 1
+    fallback "no key file (''${HOSTNAME}.key or key) found in ''${SEARCH_DIR}"
   fi
 
   if [ -n "''${TEST_DEVICE}" ]; then
-    for _ in $(seq 1 "''${TIMEOUT}"); do
-      if [ -e "''${TEST_DEVICE}" ]; then
-        break
-      fi
-      sleep 1
-    done
-    if ! ${cryptsetup}/bin/cryptsetup open --test-passphrase --batch-mode --key-file="''${KEY_FILE}" "''${TEST_DEVICE}" </dev/null 2>/dev/null; then
-      echo "USB key does not unlock ''${TEST_DEVICE}" >&2
-      exit 1
+    if ! wait_for "''${TEST_DEVICE}"; then
+      log "LUKS device ''${TEST_DEVICE} did not appear; using key without validation"
+    elif ! ${cryptsetup}/bin/cryptsetup open --test-passphrase --batch-mode --key-file="''${KEY_FILE}" "''${TEST_DEVICE}" </dev/null 2>/dev/null; then
+      fallback "key ''${KEY_FILE} does not unlock ''${TEST_DEVICE}"
     fi
   fi
 
@@ -70,7 +84,7 @@ writeScriptBin "usb-luks-key" ''
   if [ -n "''${OUTDIR}" ]; then
     mkdir -p "''${OUTDIR}"
   fi
-  cat "''${KEY_FILE}" > "''${OUTPUT}"
-  chmod 400 "''${OUTPUT}"
-  echo "USB LUKS key (from ''${KEY_FILE}) written to ''${OUTPUT}"
+  cp "''${KEY_FILE}" "''${OUTPUT}"
+  chmod 0400 "''${OUTPUT}"
+  log "loaded LUKS key from ''${KEY_FILE}"
 ''
