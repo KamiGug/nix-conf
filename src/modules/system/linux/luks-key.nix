@@ -33,9 +33,10 @@
     # Validate that each device has a corresponding sops secret
     assertions =
       lib.mapAttrsToList (
-        name: cfg:
-          lib.mkAssert (builtins.hasAttr "path" (config.sops.secrets.${cfg.keyName} or {}))
-          "luksKey.devices.${name}: sops.secrets.${cfg.keyName} must be defined with initrd = true"
+        name: cfg: {
+          assertion = builtins.hasAttr "path" (config.sops.secrets.${cfg.keyName} or {});
+          message = "luksKey.devices.${name}: sops.secrets.${cfg.keyName} must be defined with path";
+        }
       )
       config.luksKey.devices;
 

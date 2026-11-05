@@ -1,16 +1,75 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  lib,
+  myLib,
+  ...
+}: let
+  domain = "lab.hm";
+  root = "/mnt/nas";
+  postgres = myLib.services.presets.postgres {
+    inherit root;
+    databases = {
+      nextcloud = {};
+    };
+  };
+  nextcloud = myLib.services.presets.nextcloud {
+    inherit root domain;
+    networks = ["nextcloud"];
+    postgres = {
+      host = postgres.fullName;
+    };
+  };
+  env = myLib.services.mkEnv {
+    inherit domain root;
+    services = [postgres nextcloud];
+  };
+in {
   imports = [
     ./hardware-configuration.nix
+    env.module
   ];
+
+  drives = [
+    {
+      name = "tank";
+      type = "z1";
+      mount = "/mnt/nas";
+      disks = [
+        "/dev/sda"
+        "/dev/sdc"
+        "/dev/sdd"
+      ];
+      encryptionKeys = [
+        {
+          device = "/dev/sda";
+          keyName = "common/encryption/keys/auto";
+        }
+        {
+          device = "/dev/sdc";
+          keyName = "common/encryption/keys/auto";
+        }
+        {
+          device = "/dev/sdd";
+          keyName = "common/encryption/keys/auto";
+        }
+      ];
+    }
+  ];
+
+  sopsSecrets.enable = true;
+
+  sops.secrets."common/encryption/keys/auto" = {
+    path = "/run/keys/common/encryption/keys/auto";
+  };
+  sops.secrets."common/encryption/keys/manual" = {
+    path = "/run/keys/common/encryption/keys/manual";
+  };
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.initrd.systemd.enable = true;
   boot.initrd.systemd.root = null;
-
-  usbLuksKey = {
-    enable = false;
-  };
+  boot.zfs.forceImportRoot = false;
 
   users.users = {
     "peon" = {
@@ -29,7 +88,6 @@
     enable = true;
     authorizedKeys.wisp = ["ssh/public/hosts/kknas"];
   };
-  # nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
     vim

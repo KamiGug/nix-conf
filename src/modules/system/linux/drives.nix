@@ -92,7 +92,13 @@
     name = driveName i drive;
     pool = poolName i drive;
     root = drive.mount == "/";
-    mkDisk = j: device: {
+    mkDisk = j: device: let
+      filtered = lib.filter (key: key.device == device) (drive.encryptionKeys or []);
+      encKeyFor =
+        if lib.length filtered > 0
+        then lib.head filtered
+        else null;
+    in {
       disk."${name}_${toString j}" = {
         type = "disk";
         inherit device;
@@ -105,10 +111,24 @@
             // {
               zfs = {
                 size = "100%";
-                content = {
-                  type = "zfs";
-                  inherit pool;
-                };
+                content =
+                  if encKeyFor != null
+                  then {
+                    type = "luks";
+                    name = "crypt_${name}_${toString j}";
+                    settings = {
+                      keyFile = "/run/keys/${encKeyFor.keyName}";
+                      allowDiscards = true;
+                    };
+                    content = {
+                      type = "zfs";
+                      inherit pool;
+                    };
+                  }
+                  else {
+                    type = "zfs";
+                    inherit pool;
+                  };
               };
             };
         };
