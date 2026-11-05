@@ -2,6 +2,7 @@ version: "3"
 
 vars:
   DEFAULT_MSG: "chore: build step"
+  NIX_FLAGS: '--extra-experimental-features "nix-command flakes"'
 
 tasks:
   switch:
@@ -15,7 +16,7 @@ tasks:
   iso:
     desc: Build the installer ISO
     cmds:
-      - nix build .#isoConfigurations.installer.config.system.build.isoImage
+      - nix {{.NIX_FLAGS}} build .#isoConfigurations.installer.config.system.build.isoImage
       - |
         echo "ISO image written to:"
         ls -lh "$(readlink -f result)/iso/"*.iso
@@ -29,11 +30,11 @@ tasks:
           echo "usage: task build:vm HOST=<nixosConfiguration>"
           echo
           echo "available nixosConfigurations:"
-          nix eval --json ".#nixosConfigurations" --apply 'builtins.attrNames' \
+          nix {{.NIX_FLAGS}} eval --json ".#nixosConfigurations" --apply 'builtins.attrNames' \
             | tr -d '[]"' | tr ',' '\n' | sed 's/^/  /'
           exit 1
         fi
-        nix build ".#nixosConfigurations.$HOST.config.system.build.vm" \
+        nix {{.NIX_FLAGS}} build ".#nixosConfigurations.$HOST.config.system.build.vm" \
           --out-link "result-vm-$HOST"
       - |
         HOST="{{.HOST}}"
@@ -55,7 +56,7 @@ tasks:
           echo "usage: task build:vm:<nixosConfiguration>"
           exit 1
         fi
-        nix build ".#nixosConfigurations.$HOST.config.system.build.vm" \
+        nix {{.NIX_FLAGS}} build ".#nixosConfigurations.$HOST.config.system.build.vm" \
           --out-link "result-vm-$HOST"
       - |
         HOST="{{index .MATCH 0}}"

@@ -9,6 +9,9 @@ USER_NAME=${USER:-$(whoami)}
 TRACE=${TRACE:-"true"}
 ADD_ALL=${ADD_ALL:-"true"}
 
+NIX_FLAGS=(--extra-experimental-features "nix-command flakes")
+REBUILD_FLAGS=(--option experimental-features "nix-command flakes")
+
 if [[ -n "${HELP:-}" ]]; then
   cat <<'EOF'
 Usage: switch.sh [MESSAGE] [TARGET]
@@ -58,45 +61,45 @@ fi
 case "$TARGET" in
   nixos)
     ATTR_PATH="nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"
-    SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}")
+    SWITCH_CMD=(sudo nixos-rebuild switch --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     LAST_GENERATION_NUMBER=$(nixos-rebuild list-generations | head -n2 | tail -n1 | cut -d ' ' -f1)
     if [[ "$TRACE" == 'true' ]]; then
-      DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nixos-rebuild dry-run --show-trace --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     else
-      DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nixos-rebuild dry-run --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     fi
     ;;
   darwin)
     ATTR_PATH="darwinConfigurations.${HOSTNAME}.system"
-    SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}")
+    SWITCH_CMD=(darwin-rebuild switch --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     LAST_GENERATION_NUMBER=$(darwin-rebuild --list-generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f 1)
     if [[ "$TRACE" == 'true' ]]; then
-      DRY_RUN_CMD=(darwin-rebuild check --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(darwin-rebuild check --show-trace --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     else
-      DRY_RUN_CMD=(darwin-rebuild check --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(darwin-rebuild check --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     fi
     ;;
   droid)
     ATTR_PATH="nixOnDroidConfigurations.${HOSTNAME}.config.system.build.toplevel"
-    SWITCH_CMD=(nix-on-droid switch --flake ".#${HOSTNAME}")
+    SWITCH_CMD=(nix-on-droid switch --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     # NOTE: NOT CHECKED
     LAST_GENERATION_NUMBER=$(nix-on-droid generations | grep current | sed 's/^[[:space:]]*//' | cut -d ' ' -f1)
     if [[ "$TRACE" == 'true' ]]; then
-      DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nix-on-droid dry-run --show-trace --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     else
-      DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}")
+      DRY_RUN_CMD=(nix-on-droid dry-run --flake ".#${HOSTNAME}" "${REBUILD_FLAGS[@]}")
     fi
     ;;
   home)
     ATTR="${USER_NAME}@${HOSTNAME}"
     ATTR_PATH="homeConfigurations.\"${ATTR}\".activationPackage"
-    SWITCH_CMD=(home-manager switch --flake ".#${ATTR}")
+    SWITCH_CMD=(home-manager switch --flake ".#${ATTR}" "${REBUILD_FLAGS[@]}")
     # NOTE: NOT CHECKED!
     LAST_GENERATION_NUMBER=$(home-manager generations | head -n1 | sed -E 's/.*id ([0-9]+).*/\1/')
     if [[ "$TRACE" == 'true' ]]; then
-      DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}")
+      DRY_RUN_CMD=(home-manager dry-run --show-trace --flake ".#${ATTR}" "${REBUILD_FLAGS[@]}")
     else
-      DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}")
+      DRY_RUN_CMD=(home-manager dry-run --flake ".#${ATTR}" "${REBUILD_FLAGS[@]}")
     fi
     ;;
   *)
@@ -115,7 +118,7 @@ fi
 
 echo "→ Checking flake attr: $ATTR_PATH"
 
-if ! nix eval ".#${ATTR_PATH}" >/dev/null; then
+if ! nix "${NIX_FLAGS[@]}" eval ".#${ATTR_PATH}" >/dev/null; then
   echo "→ Failed to evaluate flake output:"
   echo "   .#${ATTR_PATH}"
   exit 1
@@ -249,7 +252,7 @@ if [[ "$HAS_CHANGES" == true ]]; then
     echo "→ Changes detected on non-dev branch: $CURRENT_BRANCH"
 
     # check if host exists in flake
-    if nix eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
+    if nix "${NIX_FLAGS[@]}" eval ".#${ATTR_PATH}" >/dev/null 2>&1; then
       echo "→ Switching to $TARGET_BRANCH"
       git checkout -B "$TARGET_BRANCH"
     else

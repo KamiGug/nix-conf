@@ -41,7 +41,7 @@ in {
     rootPath =
       if builtins.isPath root
       then root
-      else builtins.toPath root;
+      else /. + root;
 
     index = file:
       builtins.fromJSON (
