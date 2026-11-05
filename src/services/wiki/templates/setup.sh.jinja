@@ -61,6 +61,8 @@ fi
 
 log "waiting for PostgreSQL at ${MW_DB_HOST}:${MW_DB_PORT}"
 for _ in $(seq 60); do
+  # Single quotes are intentional: this is PHP code, not a shell expansion.
+  # shellcheck disable=SC2016
   if php -r '$s = @fsockopen( getenv( "MW_DB_HOST" ), (int)getenv( "MW_DB_PORT" ), $errno, $errstr, 2 ); exit( $s ? 0 : 1 );'; then
     break
   fi

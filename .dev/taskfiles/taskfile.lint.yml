@@ -14,9 +14,10 @@ version: "3"
 #
 # Passing ALL=true widens every task from staged files to every tracked file.
 #
-# Generated sources are always skipped: Jinja templates (anything under a
-# templates/ dir), any file using the `${...}` placeholder syntax, and
-# sops-encrypted YAML.
+# Generated sources are not formatted directly: Jinja templates (anything
+# under a templates/ dir), any file using the `${...}` placeholder syntax, and
+# sops-encrypted YAML. Shell templates are rendered and shellchecked by
+# `lint:sh` instead.
 
 vars:
   ALL: '{{.ALL | default "false"}}'
@@ -102,9 +103,7 @@ tasks:
         set -euo pipefail
 
         # Shell scripts are .sh files, anything under a scripts/bash/ dir,
-        # or any other file carrying a shell shebang. Skip generated sources:
-        # Jinja templates (anything under a templates/ dir or with a .jinja/
-        # .j2 extension), since shellcheck cannot parse their template syntax.
+        # or any other file carrying a shell shebang.
         FILES=$(task lint:_staged_files ALL={{.ALL}} | while IFS= read -r f; do
           [ -f "$f" ] || continue
           case "$f" in
@@ -118,27 +117,70 @@ tasks:
               ;;
           esac
         done | grep -vE '(^|/)templates/|\.(jinja|j2)$' || true)
-        [ -n "$FILES" ] || exit 0
 
-        if [ "{{.FIX}}" = "true" ]; then
-          printf '%s\n' "$FILES" | xargs -r shfmt -w
-        else
-          printf '%s\n' "$FILES" | xargs -r shfmt -d
+        # Shell templates cannot be checked directly: render them first and
+        # lint the generated script. Use the nearest environment.sample.yml as
+        # the Jinja context when there is one, otherwise an empty context.
+        TEMPLATES=$(task lint:_staged_files ALL={{.ALL}} \
+          | grep -E '\.(sh|bash)\.(jinja|j2)$' || true)
+
+        [ -n "$FILES$TEMPLATES" ] || exit 0
+
+        if [ -n "$FILES" ]; then
+          if [ "{{.FIX}}" = "true" ]; then
+            printf '%s\n' "$FILES" | xargs -r shfmt -w
+          else
+            printf '%s\n' "$FILES" | xargs -r shfmt -d
+          fi
+
+          # shellcheck cannot auto-fix, so it runs in both modes. Force the
+          # bash dialect for shebang-less scripts (under scripts/bash/) that
+          # shellcheck would otherwise reject with SC2148. Run each file from
+          # its own directory so `# shellcheck source=` hints (which shellcheck
+          # resolves relative to the CWD) point at sibling files.
+          printf '%s\n' "$FILES" | while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            if head -n1 "$f" | grep -q '^#!'; then
+              (cd "$(dirname "$f")" && shellcheck -x "$(basename "$f")")
+            else
+              (cd "$(dirname "$f")" && shellcheck -s bash -x "$(basename "$f")")
+            fi
+          done
         fi
 
-        # shellcheck cannot auto-fix, so it runs in both modes. Force the
-        # bash dialect for shebang-less scripts (under scripts/bash/) that
-        # shellcheck would otherwise reject with SC2148. Run each file from
-        # its own directory so `# shellcheck source=` hints (which shellcheck
-        # resolves relative to the CWD) point at sibling files.
-        printf '%s\n' "$FILES" | while IFS= read -r f; do
-          [ -n "$f" ] || continue
-          if head -n1 "$f" | grep -q '^#!'; then
-            (cd "$(dirname "$f")" && shellcheck -x "$(basename "$f")")
-          else
-            (cd "$(dirname "$f")" && shellcheck -s bash -x "$(basename "$f")")
-          fi
-        done
+        if [ -n "$TEMPLATES" ]; then
+          TMP=$(mktemp -d)
+          trap 'rm -rf "$TMP"' EXIT
+
+          printf '%s\n' "$TEMPLATES" | while IFS= read -r t; do
+            [ -n "$t" ] || continue
+
+            CTX=""
+            DIR=$(dirname "$t")
+            while [ "$DIR" != "." ] && [ "$DIR" != "/" ]; do
+              if [ -f "$DIR/environment.sample.yml" ]; then
+                CTX="$DIR/environment.sample.yml"
+                break
+              fi
+              DIR=$(dirname "$DIR")
+            done
+            if [ -z "$CTX" ]; then
+              CTX="$TMP/context.json"
+              printf '{}\n' >"$CTX"
+            fi
+
+            OUT="$TMP/${t%.*}"
+            mkdir -p "$(dirname "$OUT")"
+            printf 'shellcheck (rendered from %s)\n' "$t" >&2
+            jinja2 --strict -o "$OUT" "$t" "$CTX"
+
+            if head -n1 "$OUT" | grep -q '^#!'; then
+              (cd "$(dirname "$OUT")" && shellcheck -x "$(basename "$OUT")")
+            else
+              (cd "$(dirname "$OUT")" && shellcheck -s bash -x "$(basename "$OUT")")
+            fi
+          done
+        fi
 
   lua:
     desc: "Lua: stylua"

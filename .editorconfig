@@ -70,8 +70,9 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
-# Jinja templates are generated sources: `task lint` skips anything
-# under templates/ or using the `${...}` placeholder syntax.
+# Jinja templates are generated sources: formatters skip anything under
+# templates/ or using the `${...}` placeholder syntax. Shell templates are
+# rendered and shellchecked by `task lint:sh`.
 [*.jinja]
 indent_style = space
 indent_size = 2
