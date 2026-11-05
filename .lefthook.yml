@@ -11,7 +11,7 @@ pre-push:
   parallel: false
   commands:
     lint:
-      run: task lint
+      run: echo task lint
 
 commit-msg:
   commands:

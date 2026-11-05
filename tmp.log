@@ -1,0 +1,867 @@
+commit e0a5317e2e1819c8e6f50a63a94b83c58ffeb0b5
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Nov 5 11:47:03 2026 +0100
+
+    feat: asdfg
+
+commit d34d266555e52e49ba18fdcbc26088798484b3fb
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Nov 5 09:59:13 2026 +0100
+
+    chore: qwer
+
+commit 3abfa6ce2189a3e977a7d47a4db4db5caede41ac
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Nov 5 09:30:44 2026 +0100
+
+    chore: asdf
+
+commit 2700bf8856845c0d274ac11c36451f85badad829
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Nov 4 09:44:22 2026 +0100
+
+    fix: usb key script
+
+commit e35b21388a26e1c7def4b837882027404ce238ff
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Nov 3 18:06:22 2026 +0100
+
+    feat(wip): asdf
+
+commit 940497ed1a04287c83b2928a7d457ee269943b77
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Nov 3 13:12:00 2026 +0100
+
+    feat(wip): kknas host
+
+commit 8b457a8d66f3bda6ef82100e4b10c9b0a7127b1d
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Nov 3 11:48:17 2026 +0100
+
+    chore: lint
+
+commit 6dee99502bbd34cd6d427b8ef8c883c2c05147e1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Nov 3 11:46:50 2026 +0100
+
+    feat: make wisp immutable
+
+commit bc39058da9eab37cbc2532d6ef1b1f26c1a43fe0
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Nov 1 21:45:08 2026 +0100
+
+    chore: build step
+      kkbook:446
+
+commit ff3bb22d98be5d9ab288b6ddcb13003ccbf578e8
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Oct 31 10:20:31 2026 +0100
+
+    chore: asdf
+
+commit d01c27fcea60d7c90e8ec4ddc7121a07f4e251c3
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 29 12:03:35 2026 +0100
+
+    chore: build step
+      kkbook:444
+
+commit 0897cb9ee9090fd4c89238025ff466e7312b9a90
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 29 10:31:00 2026 +0100
+
+    chore: build step
+      kkbook:444
+
+commit 7226897ead84bc170b172979f9e437b26eac8090
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 29 00:53:13 2026 +0100
+
+    chore: build step
+      kkbook:443
+
+commit 1617cd5eb3f673ef99424de09945fea39de58239
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 28 23:56:16 2026 +0100
+
+    feat: secrets, disko
+
+commit 2d7f2b970c30824f944e1986fc4f43525ce051f1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 16 19:56:53 2026 +0200
+
+    chore: build step
+      kktab:18
+
+commit 9ce410a0b796339560ccb5d9c897f97ef1b5a888
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 23 12:01:12 2026 +0200
+
+    chore: build step
+      kkbook:441
+
+commit 86880dbc646fad52f74056e39d924c7cf53875ad
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 22 14:18:51 2026 +0200
+
+    Revert "chore: build step"
+    
+    This reverts commit 2e31d500584d8deb3d1dd3bc52da48ed85b36de7.
+
+commit 2e31d500584d8deb3d1dd3bc52da48ed85b36de7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 21 14:42:53 2026 +0200
+
+    chore: build step
+      kkbook:439
+
+commit 3e77e8150ee0d10ebb9343de527ce40cc043e107
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 21 14:30:49 2026 +0200
+
+    docs: plan
+
+commit c3c651aaa1a0391076a90824e128221bc7885d31
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 21 13:57:12 2026 +0200
+
+    chore: build step
+      kkbook:438
+
+commit 78991f15a5ffa0cccc2c15dc5295eee3db6e19c3
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 21 06:33:06 2026 +0200
+
+    chore: build step
+      kg-continabook:79
+
+commit a3d2095815bc16c46934fcba34df614b27282d36
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 13:41:54 2026 +0200
+
+    chore: build step
+      kkbook:438
+
+commit 0b50a2a6d5a7b86b282b613f0eb958f9d94d51d7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 11:08:03 2026 +0200
+
+    chore: build step
+      kkbook:437
+
+commit 386c5598b1b954f8496cbfb9699e7416bfd95659
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 10:01:45 2026 +0200
+
+    chore: build step
+      kkbook:436
+
+commit 1984045e297fac49a73bf08d17c1c5c7e70fd884
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 09:46:03 2026 +0200
+
+    chore: build step
+      kkbook:436
+
+commit f72e110fe1938cbc386058f012bba8b35cf75a92
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 08:38:17 2026 +0200
+
+    chore: build step
+      kkbook:435
+
+commit ea5befb351421e591f4919eb574151303de4ac88
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 20 08:20:20 2026 +0200
+
+    chore: build step
+      kg-continabook:78
+
+commit 3bb807f6eae1f4ebf16afef2ecca5b8a54daa810
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Oct 19 20:42:03 2026 +0200
+
+    chore: lint:fix
+
+commit 53bb1658e3c67aa1f7631498ee23b79e78d12b4d
+Author: Test <test@test.com>
+Date:   Mon Oct 19 20:33:18 2026 +0200
+
+    chore: build step
+      kkbook:434
+
+commit 5eecd12b7a08acfedc2d46736afa85fa5e6c8ac7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Oct 19 11:52:35 2026 +0200
+
+    chore: build step
+      kg-continabook:77
+
+commit 70837daeed203e2e731287f23a6f48f88cea3553
+Author: Test <test@test.com>
+Date:   Sun Oct 18 21:40:39 2026 +0200
+
+    chore: build step
+      kkbook:433
+
+commit 27ef553fef8c7dc665b19381b4c007b17d932f78
+Author: Test <test@test.com>
+Date:   Sun Oct 18 09:31:02 2026 +0200
+
+    chore: build step
+      kkbook:432
+
+commit 4f5ad3a80006cda49c5b95e9051e9ea71c9226fe
+Author: Test <test@test.com>
+Date:   Sun Oct 18 09:06:53 2026 +0200
+
+    chore: build step
+      kkbook:431
+
+commit c59119da3fb8f1b8fcc7bfc64d02b29f4f95d285
+Author: Test <test@test.com>
+Date:   Fri Oct 16 11:06:53 2026 +0200
+
+    chore: build step
+      kkbook:430
+
+commit 31a44ed3c2d50efa67668791fb24e0ea6cf8d6f7
+Author: Test <test@test.com>
+Date:   Fri Oct 16 11:01:19 2026 +0200
+
+    chore: build step
+      kkbook:429
+
+commit 7717a748cbbe4a414861709b857032abd5922e96
+Author: Test <test@test.com>
+Date:   Thu Oct 15 11:29:51 2026 +0200
+
+    chore: build step
+      kkbook:428
+
+commit 6f1681d38fc56db1ac15b0bb1d927c55d3a9d385
+Author: Test <test@test.com>
+Date:   Thu Oct 15 07:28:22 2026 +0200
+
+    chore: build step
+      kkbook:427
+
+commit b85b2b1bffb978f75046e6b821f6b49956c0ef59
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 15 07:17:53 2026 +0200
+
+    chore: build step
+      kg-continabook:76
+
+commit d75d67cdab865d203d0363ce45140437e52a41f0
+Merge: 8c697f4 1d7496a
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 15 07:16:43 2026 +0200
+
+    Merge remote-tracking branch 'refs/remotes/origin/dev-kakoune' into dev-kakoune
+
+commit 1d7496a8a4c9f3c41feb62e4b1e8d2b691785d98
+Author: Test <test@test.com>
+Date:   Thu Oct 15 07:05:02 2026 +0200
+
+    chore: build step
+      kkbook:426
+
+commit 3dcc897b888a412ff2798f34ac00d002eb23041f
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:19:54 2026 +0200
+
+    chore: build step
+      kkbook:425
+
+commit 367b9aab370aaa55a9b2d3a8382a9ef6ce6ad398
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(zellij): migrate config to program directory
+
+commit 0d6323833a22d1654fc5bedfb2cf610f7f84b7e1
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(yazi): migrate config to program directory
+
+commit 0f292ce117f31ccc936b7654b657a4bb9e24a967
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(waybar): migrate config to program directory
+
+commit c0df3dab572da91bec630994b9a7091c443a1863
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(tmux): migrate config to program directory
+
+commit 9e9e71407ac4f3714d227e3b43fbfef69f5225a0
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    fix(gen-msg): pass patch via opencode --file
+
+commit f69bb0187dbc5b992503f1de26fcce2d4c556808
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    feat(opencode): update desktop notifications
+
+commit 33297f85f7f05db5595a56efcb73ba8d22c892ed
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(niri-noctalia): migrate config to program directory
+
+commit ce6a159b4603efe8941cf0467584c097e19d5501
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(lazygit): migrate config to program directory
+
+commit 5e6b3708d3f70daa157d4cec2811bd3b21589805
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    chore(home-modules): update module list
+
+commit a3f85e303bfa13643f80017e18b6c450a0d56517
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(hammerspoon): migrate config to program directory
+
+commit 2a85f2b99f073fd02696c624626ca919f03d5689
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    chore(editorconfig): note templates/ linting
+
+commit b8389e6cff18c7011459029af492344c24997a1d
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    chore(lint): retarget lint tasks at templates/
+
+commit d3f77555dc55ec0160106379e615aef7fe210d43
+Author: Test <test@test.com>
+Date:   Wed Oct 14 13:09:28 2026 +0200
+
+    refactor(lib): rework program library
+
+commit 8c697f40e5a7d7f6e68d1e57532775e6f44fdc96
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 14 07:35:23 2026 +0200
+
+    chore: build step
+      kg-continabook:75
+
+commit 3921eca4d6cd36b2629c1e2f298c69cf03262a1d
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 14 06:42:35 2026 +0200
+
+    chore: build step
+      kg-continabook:74
+
+commit 366c76bab0cb6094d5a5c4e65eb5cbb86dedbfc2
+Author: Test <test@test.com>
+Date:   Tue Oct 13 11:07:16 2026 +0200
+
+    chore: build step
+      kkbook:424
+
+commit d21b683830414c4a57836c8a22881024eca10efb
+Author: Test <test@test.com>
+Date:   Tue Oct 13 07:57:10 2026 +0200
+
+    chore: build step
+      kkbook:423
+
+commit 90eaac3d0111fcc04caf61dde6f0f61b1acde991
+Author: Test <test@test.com>
+Date:   Tue Oct 13 07:43:40 2026 +0200
+
+    chore: build step
+      kkbook:422
+
+commit a053f57547556d5d3db545c8afab6e88d3bd67aa
+Author: Test <test@test.com>
+Date:   Tue Oct 13 06:55:41 2026 +0200
+
+    chore: build step
+      kkbook:420
+
+commit 061a478f12d947046e2e0467a14591a1d3e868db
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Oct 12 16:30:47 2026 +0200
+
+    chore: build step
+      kkbook:419
+
+commit d603baf7d727b03d1c149b6c52327ddc243aefe4
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Oct 12 12:24:12 2026 +0200
+
+    chore: build step
+      kkbook:418
+
+commit 265ba6322f8ce273245f1237cce0b9b33e536a0b
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Oct 10 22:58:57 2026 +0200
+
+    chore: build step
+      kkbook:417
+
+commit b2f0e6fd42b0b6a56f01902e6d5b21d2f74478fc
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 13:49:37 2026 +0200
+
+    chore: build step
+      kkbook:416
+
+commit 2fda6ff7a6482b28af9b947f5cb951f0741d9480
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 12:47:49 2026 +0200
+
+    chore: build step
+      kkbook:415
+
+commit 041a95d3a46582e56ebdeb77f23e05c182c03ea6
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 10:47:12 2026 +0200
+
+    chore: build step
+      kkbook:414
+
+commit 882cdea3f158e9e1c7939466738fc0afc378b1bf
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 10:36:34 2026 +0200
+
+    chore: build step
+      kkbook:413
+
+commit cbb2839fd93668f21c08e2bd24f58956c6e88938
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 10:05:13 2026 +0200
+
+    chore: build step
+      kkbook:412
+
+commit 2dac9ac22ba32efb45d2b3dcea63db8a83c2eb28
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 09:05:09 2026 +0200
+
+    chore: build step
+      kkbook:411
+
+commit 6d009e3a4116fc348da9803cab8f34237dd76263
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 08:46:12 2026 +0200
+
+    chore: build step
+      kkbook:410
+
+commit 84310885493ae83b4b4f693efe451eaab3f3c99a
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 08:19:27 2026 +0200
+
+    chore: build step
+      kkbook:409
+
+commit 4283f32d7e113ebee654184c04e7147f21f7f41e
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Oct 9 06:59:03 2026 +0200
+
+    chore: build step
+      kkbook:408
+
+commit caa9abe97046e78ba5a0330a687a7f0274c7427e
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 8 14:51:51 2026 +0200
+
+    chore: build step
+      kkbook:407
+
+commit d5ea3818489c953cfff09537b9d42e85d372f7c1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 8 11:41:33 2026 +0200
+
+    chore: build step
+      kkbook:406
+
+commit 412e68b2c7b59e423ca313a57038f88ccacf174b
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 8 09:31:23 2026 +0200
+
+    chore: build step
+      kkbook:404
+
+commit 6ce7ca6228e55fe4532166857b0c6e77d17ca279
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Oct 8 06:45:20 2026 +0200
+
+    chore: build step
+      kkbook:404
+
+commit 3fc2f453c57c576f259c1efdb83ab11524af5e0d
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 7 20:06:09 2026 +0200
+
+    chore: build step
+      kkbook:402
+
+commit 2d3160b1e123b89cc4b9bec8df4379adde4dd7a9
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 7 15:58:16 2026 +0200
+
+    chore: build step
+      kkbook:401
+
+commit c4ed4d323f7b2315b9e3ab1592d33ef65d3014cb
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Oct 7 14:46:31 2026 +0200
+
+    chore: build step
+      kkbook:400
+
+commit 856e90b3ab7c4a5f9c7f8f03d9d8904a73b5c6e1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 6 12:56:20 2026 +0200
+
+    chore: build step
+      kkbook:399
+
+commit 78af273431c519fffdf9162911cafcb577c367d4
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 6 11:10:29 2026 +0200
+
+    chore: build step
+      kkbook:398
+
+commit ee1212872ce4aa9061d8bd974c270208c649e684
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 6 11:00:42 2026 +0200
+
+    chore: build step
+      kkbook:398
+
+commit a05833e69dc7974bdff2392811a65e74f9ebe34f
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Oct 6 10:07:10 2026 +0200
+
+    feat(wip): homelab
+
+commit b8641a34727ad9a44471e0d586d2d503653a87f1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Jul 27 08:44:47 2026 +0200
+
+    chore: build step
+
+commit ce90f89dcb3bd9f379ee62829f7145701de79204
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Jul 19 20:39:17 2026 +0200
+
+    feat: update nvidia driver for kkbook
+
+commit 780e5cbe9dbc5a7e1ce0f67362f14aa281da7227
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Jul 19 20:37:14 2026 +0200
+
+    chore: make task switch take in HOSTNAME
+
+commit 54f3b1a34b606365a2ff36b22c6348fa7b029c42
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Jul 15 11:58:51 2026 +0200
+
+    feat: add fish to peon-no-gui
+
+commit d8eca223ff8d7e7d628d45c8c56c13c1a9d140a1
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Jul 15 11:53:58 2026 +0200
+
+    feat: avahi daemon
+
+commit ea80c6a8e97e10da86205446485ea3b2e53f5451
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Jul 11 21:01:33 2026 +0200
+
+    chore: update todo
+
+commit f5937fc66b4e0892fccccb1a34055726244af3d7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Jul 11 21:01:25 2026 +0200
+
+    feat: update gaming module
+
+commit 44902f5c24bf7eebba130091869e4ce770385457
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Jun 28 06:18:30 2026 +0200
+
+    feat: add steam wrapper
+
+commit 5dca6e7b2753cc7da58bc7b68e6bfd0002039deb
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Jun 28 06:18:16 2026 +0200
+
+    feat: add mcat
+
+commit fdfb0a58452b43aa285bb90da41dcd872f92669b
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Jun 8 14:44:20 2026 +0200
+
+    fix: remove service list nesting
+
+commit c209a55b7a46aca83caf9b07221e8b3e9c1d0598
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Jun 3 08:59:04 2026 +0200
+
+    feat(macos): install dbgate
+
+commit cde98d9379edce4e5b17359886b14a4e38852905
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Jun 3 08:58:46 2026 +0200
+
+    fix(macos): install discord via homebre
+
+commit 0e99b64443c94ae10b66d93ee43cae46bf5cb95d
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Jun 3 08:58:10 2026 +0200
+
+    feat: add nvr to common system module
+
+commit 02608dc22fe065c3b77ec7b0102ee596087bf902
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Jun 2 08:10:58 2026 +0200
+
+    chore: update flake
+
+commit db6e73edf5b2f79db53ea72866424a788a7e47a9
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Jun 2 07:35:07 2026 +0200
+
+    feat: add php lsp to zed
+
+commit e4fd084718dd91c8d9064bcb0b32aa06426cd3f2
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun May 31 17:23:56 2026 +0200
+
+    feat(wip): enable SANE
+    
+    still does not work
+
+commit d6ad418ca5b1c35f20c82afc0384f1bc9820af13
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun May 31 17:23:33 2026 +0200
+
+    feat: add prefer-no-csd
+
+commit ad310aebeb880de330107261cddb719283374728
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue May 26 21:39:56 2026 +0200
+
+    feat: add some tools
+
+commit 19a1fd54c0e557138269c7c9eaaabbfb38822710
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue May 26 21:39:40 2026 +0200
+
+    feat: gaming module
+
+commit 95bdf8e1ab6aa2bfbab802b0cef6934776394587
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed May 20 09:17:27 2026 +0200
+
+    feat(wip): add paperWM.spoon
+
+commit 02614f5c288d58d574a14590d1deca8e211e1a4d
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed May 20 09:16:58 2026 +0200
+
+    chore: move karabiner-elements under mac dir
+
+commit e8ca576b092cf58b7578a65c8551407bfa8bfb3a
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon May 18 09:25:34 2026 +0200
+
+    feat: add direnv support to zed
+
+commit 7097c07d843afd399a9823a8d0c5e650062d1846
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon May 18 09:19:14 2026 +0200
+
+    fix: install csharp lsp on linux but not on macos
+
+commit 8ea3b4558e652e9a6fdf5fa447ef3146be06cfc0
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon May 18 09:11:31 2026 +0200
+
+    feat: update packages
+
+commit 9377a8cc3badb304e1f8e8a076ce1fd3b38ca3f6
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon May 18 09:09:58 2026 +0200
+
+    feat: change launcher shortcut from mod+z to mod+space
+
+commit 3b24d93722380794d0f83e8920a1fd06929220af
+Author: Kamil Gugala <kg@Kamils-MacBook-Pro.local>
+Date:   Mon May 11 01:59:08 2026 +0200
+
+    feat: continabook
+
+commit b7557f5fdfe9690d5455c1aee15fd17e246a7501
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 15:48:00 2026 +0200
+
+    feat: add starship
+
+commit f7bf69285836507fc1f85fcfd91df383b354c5db
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 14:53:28 2026 +0200
+
+    feat: use podman instead of docker
+
+commit a64fc74c9a0aa6928b654e2821fe17415d5ece2c
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 14:53:03 2026 +0200
+
+    feat: add fish config
+
+commit a29a16a2cb462b312d9116301446160a9f0a90b7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 14:52:04 2026 +0200
+
+    fix: niri keybinds
+
+commit 8be423e88adfc3932cca17543290f061de903cd8
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 14:51:46 2026 +0200
+
+    feat: make kitty key binds more akin to tmux
+
+commit 5de8b2d6084a55f07d044f09e8e4e872ef013338
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 29 14:50:14 2026 +0200
+
+    chore: move terminal configs to a separate dir
+
+commit 6e5778673cb6a500d000c4c7eddb1686c4e1cbf7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Thu Apr 23 08:19:45 2026 +0200
+
+    feat: kktab
+
+commit 2f37022476be77b664d2773d4e8ba49f1715c89e
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 15 11:56:29 2026 +0200
+
+    chore: update switch.sh to not switch/commit if there are no changes
+
+commit 906ca3f2d7f7f4b05f5c2119eab762fbaaf506cc
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Apr 1 16:12:34 2026 +0200
+
+    feat: add switch task + git hooks + format code base
+
+commit aac4c016cdf1bd8d6602e0167ba812a0a176166e
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Mar 22 00:01:52 2026 +0100
+
+    chore: add to todo.txt
+
+commit 9f6a8aa68167107e6beba1a5b665b777d0f6e09c
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Mar 22 00:01:38 2026 +0100
+
+    feat: install keepassxc
+
+commit 864afbbe2b71477822d2eb03e4790afd9e242f18
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Mar 22 00:01:27 2026 +0100
+
+    feat: add scan-pkgs.nix
+
+commit 86aa1e22ed7e0b2f921cf0352df29c5c46b529c5
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Mar 22 00:00:38 2026 +0100
+
+    feat: add initial blender config
+
+commit 11d4a6d5f6af9f06070f9ebea27184825f8a48d4
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sun Mar 22 00:00:15 2026 +0100
+
+    feat: make niri usable with just left hand
+
+commit 04144d1ea589bfb52a891b64300d6b93bfe61164
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Mar 21 23:59:57 2026 +0100
+
+    feat: use more zsh features
+
+commit 2bac4126abe4825fd32ea0425fa4ceaccf54e794
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Feb 25 08:32:20 2026 +0100
+
+    feat: ai service module
+
+commit c1891d85b3a1199c7ca41c938d3bf2a1cf965ba7
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Feb 23 17:56:19 2026 +0100
+
+    chore: change tmux settings for gui
+
+commit 5c5277393001089c772af05945f12c2a14a4251a
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Feb 23 17:56:00 2026 +0100
+
+    feat: add hook on cd to enter a nix shell
+
+commit 96b62ffb44d453c6151b3bf5235814d73f31d673
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Sat Feb 21 09:01:48 2026 +0100
+
+    feat: use noctalia-shell for niri
+
+commit 629a6567fc94a907a05ed734a6dbeb3d75937446
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Feb 18 15:45:54 2026 +0100
+
+    fix: fix kkbook after adding common-gui-linux.nix
+
+commit dd5d18758129104684aa61cd23004ae56144cb31
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Wed Feb 18 10:42:36 2026 +0100
+
+    feat(wip): add kkserv host
+
+commit 528cf5c779993a9fd97f08df0b9e711bb25b91dd
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Tue Feb 17 18:39:35 2026 +0100
+
+    feat: a lot of things
+
+commit e5520c1f80eef11aed957b98333cac0a00752016
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Mon Feb 16 00:54:14 2026 +0100
+
+    feat: a lot of things
+    
+    asd
+    
+    as
+
+commit a74e93e107ffaea557e8d0295ba2f5681592fd34
+Author: Kamil <gug.kamil@gmail.com>
+Date:   Fri Jan 30 19:41:41 2026 +0100
+
+    init
+    
+    asd
+    
+    fix: lazygit aliases
+    
+    asdfg
