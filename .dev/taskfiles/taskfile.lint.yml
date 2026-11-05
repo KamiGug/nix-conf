@@ -102,7 +102,9 @@ tasks:
         set -euo pipefail
 
         # Shell scripts are .sh files, anything under a scripts/bash/ dir,
-        # or any other file carrying a shell shebang.
+        # or any other file carrying a shell shebang. Skip generated sources:
+        # Jinja templates (anything under a templates/ dir or with a .jinja/
+        # .j2 extension), since shellcheck cannot parse their template syntax.
         FILES=$(task lint:_staged_files ALL={{.ALL}} | while IFS= read -r f; do
           [ -f "$f" ] || continue
           case "$f" in
@@ -115,7 +117,7 @@ tasks:
               fi
               ;;
           esac
-        done)
+        done | grep -vE '(^|/)templates/|\.(jinja|j2)$' || true)
         [ -n "$FILES" ] || exit 0
 
         if [ "{{.FIX}}" = "true" ]; then

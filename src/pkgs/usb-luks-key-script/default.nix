@@ -29,7 +29,7 @@ writeScriptBin "usb-luks-key" ''
   wait_for() {
     _path="''$1"
     _i=0
-    while [ "''${_i}" -lt "''${TIMEOUT}" ]; do
+    while [ "''${_i}" -lt 30 ]; do
       if [ -e "''${_path}" ]; then
         return 0
       fi
@@ -39,9 +39,9 @@ writeScriptBin "usb-luks-key" ''
     [ -e "''${_path}" ]
   }
 
-  DEV="/dev/disk/by-label/''${LABEL}"
+  DEV="/dev/disk/by-label/'LUKS-KEY"
   if ! wait_for "''${DEV}"; then
-    fallback "no USB device labelled ''${LABEL} after ''${TIMEOUT}s"
+    fallback "no USB device labelled 'LUKS-KEY' detected; falling back to passphrase prompt"
   fi
 
   MOUNT="$(mktemp -d)"

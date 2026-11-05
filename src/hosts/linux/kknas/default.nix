@@ -1,4 +1,8 @@
-{pkgs, lib, ...}: let
+{
+  pkgs,
+  lib,
+  ...
+}: let
   manualKey = "/run/secrets/common/encryption/keys/manual";
   autoKey = "/run/secrets/common/encryption/keys/auto";
 
@@ -40,61 +44,7 @@ in {
   ];
 
   disko.devices = {
-    disk =
-      {
-        os = {
-          type = "disk";
-          device = "/dev/sdb";
-          content = {
-            type = "gpt";
-            partitions = {
-              ESP = {
-                size = "1G";
-                type = "EF00";
-                content = {
-                  type = "filesystem";
-                  format = "vfat";
-                  mountpoint = "/boot";
-                  mountOptions = ["fmask=0077" "dmask=0077"];
-                };
-              };
-              swap = {
-                size = "9G";
-                content = {
-                  type = "luks";
-                  name = "crypt_swap";
-                  settings = {
-                    keyFile = autoKey;
-                    allowDiscards = true;
-                  };
-                  additionalKeyFiles = [manualKey];
-                  content = {
-                    type = "swap";
-                  };
-                };
-              };
-              root = {
-                size = "100%";
-                content = {
-                  type = "luks";
-                  name = "crypt_root";
-                  settings = {
-                    keyFile = autoKey;
-                    allowDiscards = true;
-                  };
-                  additionalKeyFiles = [manualKey];
-                  content = {
-                    type = "filesystem";
-                    format = "ext4";
-                    mountpoint = "/";
-                  };
-                };
-              };
-            };
-          };
-        };
-      }
-      // builtins.listToAttrs dataDisks;
+    disk = builtins.listToAttrs dataDisks;
 
     zpool.tank = {
       type = "zpool";
@@ -124,12 +74,12 @@ in {
   };
 
   users.users = {
-  "peon" = {
-    isNormalUser = true;
-    description = "Peon";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
-  };
+    "peon" = {
+      isNormalUser = true;
+      description = "Peon";
+      extraGroups = ["networkmanager" "wheel"];
+      packages = with pkgs; [];
+    };
   };
 
   networking.hostName = "kknas";
@@ -145,5 +95,4 @@ in {
   environment.systemPackages = with pkgs; [
     vim
   ];
-  system.stateVersion = "25.11";
 }
