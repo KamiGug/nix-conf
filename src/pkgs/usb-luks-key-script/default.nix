@@ -61,7 +61,7 @@ writeScriptBin "usb-luks-key" ''
   fi
 
   KEY_FILE=""
-  for candidate in "''${HOSTNAME}.key" "key"; do
+  for candidate in "''${HOSTNAME}.key" "''${HOSTNAME}" "key" "auto.key" "auto" "manual.key" "manual"; do
     if [ -f "''${SEARCH_DIR}/''${candidate}" ]; then
       KEY_FILE="''${SEARCH_DIR}/''${candidate}"
       break
@@ -69,7 +69,16 @@ writeScriptBin "usb-luks-key" ''
   done
 
   if [ -z "''${KEY_FILE}" ]; then
-    fallback "no key file (''${HOSTNAME}.key or key) found in ''${SEARCH_DIR}"
+    for candidate in "''${SEARCH_DIR}"/*.key; do
+      if [ -f "''${candidate}" ]; then
+        KEY_FILE="''${candidate}"
+        break
+      fi
+    done
+  fi
+
+  if [ -z "''${KEY_FILE}" ]; then
+    fallback "no LUKS key file found in ''${SEARCH_DIR}"
   fi
 
   if [ -n "''${TEST_DEVICE}" ]; then

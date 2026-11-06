@@ -74,7 +74,11 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    boot.initrd.kernelModules = ["usb_storage" "sd_mod" "vfat" "ext4" "f2fs" "exfat"];
+    boot.initrd.kernelModules = ["xhci_pci" "usb_storage" "sd_mod" "vfat" "ext4" "f2fs" "exfat"];
+
+    fileSystems = lib.mkIf (config.networking.hostName == "kknas") {
+      "/mnt/nas".options = lib.mkForce ["defaults" "nofail"];
+    };
 
     # The actual script is referenced by name from the service below. Nix does
     # not track that textual reference, so add the package to the initrd
