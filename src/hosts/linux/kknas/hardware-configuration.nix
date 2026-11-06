@@ -11,6 +11,13 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
+  luksKey.enable = lib.mkForce false;
+  usbLuksKey.devices = [
+    "crypt_tank_0"
+    "crypt_tank_1"
+    "crypt_tank_2"
+  ];
+
   boot.initrd.availableKernelModules = ["xhci_pci" "ahci" "ohci_pci" "ehci_pci" "usb_storage" "usbhid" "sd_mod"];
   boot.initrd.kernelModules = [];
   boot.kernelModules = ["kvm-amd"];
