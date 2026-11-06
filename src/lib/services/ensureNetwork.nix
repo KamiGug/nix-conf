@@ -5,7 +5,7 @@
 }: let
   fullName = "app-service-${name}${postfix}";
   unitName = "ensure-${name}${postfix}-${backend}-network-exists";
-  bin = pkgs.lib.getBin pkgs.${backend};
+  bin = pkgs.lib.getExe pkgs.${backend};
 in
   assert builtins.isString name || throw "network name must be a string";
   assert builtins.isString postfix || throw "postfix must be a string";
